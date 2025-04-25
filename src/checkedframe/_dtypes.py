@@ -9,10 +9,9 @@ def _checked_cast(s: nw.Series, to_dtype) -> nw.Series:
     # backend works because Polars doesn't have a UInt128 type and the original column
     # is just returned.
 
-    to_nw_dtype = to_dtype._nw_dtype
-    s_cast = s.cast(to_nw_dtype)
+    s_cast = s.cast(to_dtype)
 
-    if s_cast.dtype != to_nw_dtype:
+    if s_cast.dtype != to_dtype:
         dtype_name = to_dtype.__name__
 
         raise TypeError(
@@ -100,7 +99,7 @@ def _monkeypatch(cls, _min, _max, _safe_cast):
 
 def _int8_safe_cast(s: nw.Series, to_dtype):
     if to_dtype in (Int8, Int16, Int32, Int64, Int128, Float32, Float64, String):
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
     elif to_dtype in (UInt8, UInt16, UInt32, UInt64, UInt128):
         return _int_to_uint_cast(s, to_dtype)
     elif to_dtype is Boolean:
@@ -113,10 +112,8 @@ Int8 = _monkeypatch(nw.Int8, -128, 127, _int8_safe_cast)
 
 
 def _int16_safe_cast(s: nw.Series, to_dtype):
-    _nw_dtype = to_dtype._nw_dtype
-
     if to_dtype in (Int16, Int32, Int64, Int128, Float32, Float64, String):
-        return s.cast(_nw_dtype)
+        return _checked_cast(s, to_dtype)
     elif to_dtype in (UInt16, UInt32, UInt64, UInt128):
         return _int_to_uint_cast(s, to_dtype)
     elif to_dtype in (Int8, UInt8):
@@ -134,7 +131,7 @@ def _int32_safe_cast(s: nw.Series, to_dtype):
     if to_dtype is Int32:
         return s
     elif to_dtype in (Int64, Int128, Float64, String):
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
     elif to_dtype is Boolean:
         return _numeric_to_boolean_cast(s, to_dtype)
     elif to_dtype in (UInt32, UInt64, UInt128):
@@ -154,7 +151,7 @@ def _int64_safe_cast(s: nw.Series, to_dtype) -> nw.Series:
     if to_dtype is Int64:
         return s
     elif to_dtype is Int128:
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
     elif to_dtype is Boolean:
         return _numeric_to_boolean_cast(s, to_dtype)
     elif to_dtype in (UInt64, UInt128):
@@ -218,7 +215,7 @@ def _uint8_safe_cast(s: nw.Series, to_dtype) -> nw.Series:
         Float32,
         Float64,
     ):
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
     elif to_dtype is Boolean:
         return _numeric_to_boolean_cast(s, to_dtype)
     elif to_dtype is Int8:
@@ -241,7 +238,7 @@ def _uint16_safe_cast(s: nw.Series, to_dtype) -> nw.Series:
         Float32,
         Float64,
     ):
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
     elif to_dtype is Boolean:
         return _numeric_to_boolean_cast(s, to_dtype)
     elif to_dtype in (Int8, Int16, UInt8):
@@ -263,7 +260,7 @@ def _uint32_safe_cast(s: nw.Series, to_dtype) -> nw.Series:
         UInt128,
         Float64,
     ):
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
     elif to_dtype is Boolean:
         return _numeric_to_boolean_cast(s, to_dtype)
     elif to_dtype in (Int8, Int16, Int32, UInt8, UInt16, Float32):
@@ -284,7 +281,7 @@ def _uint64_safe_cast(s: nw.Series, to_dtype) -> nw.Series:
         Int128,
         UInt128,
     ):
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
     elif to_dtype is Boolean:
         return _numeric_to_boolean_cast(s, to_dtype)
     elif to_dtype in (
@@ -339,7 +336,7 @@ UInt128 = _monkeypatch(
 
 def _float32_safe_cast(s: nw.Series, to_dtype) -> nw.Series:
     if to_dtype is Float64:
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
     elif to_dtype is Boolean:
         return _numeric_to_boolean_cast(s, to_dtype)
     elif to_dtype in (
