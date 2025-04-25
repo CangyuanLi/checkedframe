@@ -1,0 +1,12 @@
+[project]
+name = "checkedframe"
+version = "0.0.1"
+description = "A generic dataframe validation library"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [{ name = "Cangyuan Li", email = "everest229@gmail.com" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = ["narwhals>=1.0.0"]
