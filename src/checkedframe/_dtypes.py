@@ -3,10 +3,29 @@ from __future__ import annotations
 import narwhals.stable.v1 as nw
 
 
+def _checked_cast(s: nw.Series, to_dtype) -> nw.Series:
+    # We need this because narwhals will just silently not cast if the datatype isn't
+    # supported by the physical backend. E.g., casting a float to UInt128 with Polars
+    # backend works because Polars doesn't have a UInt128 type and the original column
+    # is just returned.
+
+    to_nw_dtype = to_dtype._nw_dtype
+    s_cast = s.cast(to_nw_dtype)
+
+    if s_cast.dtype != to_nw_dtype:
+        dtype_name = to_dtype.__name__
+
+        raise TypeError(
+            f"Cannot cast {s.dtype} to {dtype_name}; {dtype_name} not supported by your DataFrame library"
+        )
+
+    return s_cast
+
+
 def _int_to_uint_cast(s: nw.Series, to_dtype) -> nw.Series:
     s_min = s.min()
     if s_min >= 0:
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
 
     raise TypeError(
         f"Cannot safely cast {s.dtype} to {to_dtype.__name__}; actual min {s_min} < allowed min 0"
@@ -17,7 +36,7 @@ def _allowed_max_cast(s: nw.Series, to_dtype) -> nw.Series:
     allowed_max = to_dtype._max
     s_max = s.max()
     if s_max <= allowed_max:
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
 
     raise TypeError(
         f"Cannot safely cast {s.dtype} to {to_dtype.__name__}; actual max {s_max} > allowed max {allowed_max}"
@@ -31,7 +50,7 @@ def _allowed_range_cast(s: nw.Series, to_dtype) -> nw.Series:
     s_max = s.max()
 
     if s_min >= allowed_min and s_max <= allowed_max:
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
 
     raise TypeError(
         f"Cannot safely cast {s.dtype} to {to_dtype.__name__}; invalid range [{s_min}, {s_max}], expected range [{allowed_min:,}, {allowed_max:,}]"
@@ -40,7 +59,7 @@ def _allowed_range_cast(s: nw.Series, to_dtype) -> nw.Series:
 
 def _numeric_to_boolean_cast(s: nw.Series, to_dtype) -> nw.Series:
     if s.__eq__(1).__or__(s.__eq__(0)).all():
-        return s.cast(to_dtype._nw_dtype)
+        return _checked_cast(s, to_dtype)
 
     raise TypeError(
         f"Cannot safely cast {s.dtype} to {to_dtype.__name__}; all values must be either 1 or 0"
@@ -48,14 +67,26 @@ def _numeric_to_boolean_cast(s: nw.Series, to_dtype) -> nw.Series:
 
 
 def _fallback_cast(s: nw.Series, to_dtype) -> nw.Series:
-    s_cast = s.cast(to_dtype._nw_dtype)
+    err = TypeError(
+        f"Cannot safely cast {s.dtype} to {to_dtype.__name__}; casting resulted in different series"
+    )
+
+    try:
+        s_cast = _checked_cast(s, to_dtype)
+    except Exception as e:
+        # There are a couple of different failure modes. One is that the native library
+        # cannot do this particular cast--these all return different exceptions, so we
+        # just catch Exception. However, the cast could "succeed" but fail due to the
+        # issue described in _checked_cast.
+        if type(e) is TypeError:
+            raise e
+
+        raise err
 
     if s_cast.__eq__(s).all():
         return s_cast
 
-    raise TypeError(
-        f"Cannot safely cast {s.dtype} to {to_dtype.__name__}; casting resulted in different series"
-    )
+    raise err
 
 
 def _monkeypatch(cls, _min, _max, _safe_cast):
