@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import functools
 import inspect
+from collections.abc import Collection
 from typing import Callable, Literal, Optional
 
 import narwhals.stable.v1 as nw
@@ -33,7 +36,7 @@ def _in_range(
     min_value: float,
     max_value: float,
     closed: IntervalType,
-):
+) -> nw.Series:
     if closed == "both":
         return (s >= min_value) & (s <= max_value)
     elif closed == "left":
@@ -44,6 +47,10 @@ def _in_range(
         return (s > min_value) & (s < max_value)
     else:
         raise ValueError("Invalid argument to `closed`")
+
+
+def _is_in(s: nw.Series, other: Collection) -> nw.Series:
+    return s.is_in(other)
 
 
 class Check:
@@ -104,7 +111,9 @@ class Check:
         )
 
     @staticmethod
-    def in_range(min_value: float, max_value: float, closed: IntervalType = "both"):
+    def in_range(
+        min_value: float, max_value: float, closed: IntervalType = "both"
+    ) -> Check:
         if closed == "both":
             l_paren, r_paren = "[]"
         elif closed == "left":
@@ -123,4 +132,15 @@ class Check:
             native=False,
             name="in_range",
             description=f"Must be in range {l_paren}{min_value}, {max_value}{r_paren}",
+        )
+
+    @staticmethod
+    def is_in(other: Collection) -> Check:
+        return Check(
+            func=functools.partial(_is_in, other=other),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="is_in",
+            description=f"Must be in allowed values {other}",
         )
