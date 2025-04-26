@@ -89,18 +89,6 @@ def _fallback_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
     raise err
 
 
-def _monkeypatch(
-    cls,
-    **kwargs,
-):
-    cls._nw_dtype = cls
-
-    for k, v in kwargs.items():
-        setattr(cls, k, v)
-
-    return cls
-
-
 class Int8(nw.Int8):
     _min = -128
     _max = 127
@@ -580,13 +568,7 @@ class Unknown(nw.Unknown):
 
 
 class Array(nw.Array):
-    """_summary_
-
-    Parameters
-    ----------
-    nw : _type_
-        _description_
-    """
+    """Represent a fixed length list."""
 
     def __init__(self, inner, shape):
         super().__init__(inner, shape)
