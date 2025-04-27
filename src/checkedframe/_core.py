@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import inspect
 from collections import defaultdict
 from collections.abc import Sequence
-from typing import Callable, Optional
+from typing import Optional
 
 import narwhals.stable.v1 as nw
 import narwhals.stable.v1.typing as nwt
@@ -49,6 +48,23 @@ def _run_check(
 
 
 class Column:
+    """Represents a column in a DataFrame.
+
+    Parameters
+    ----------
+    dtype : nw.dtypes.DType
+        The type of the column
+    nullable : bool, optional
+        Whether to allow nulls, by default False
+    required : bool, optional
+        Whether the column is required to be present, by default True
+    cast : bool, optional
+        Whether to automatically try to cast the column to the expected data type, by
+        default False
+    checks : Optional[Sequence[Check]], optional
+        Checks to run on the column, by default None
+    """
+
     def __init__(
         self,
         dtype: nw.dtypes.DType,
@@ -153,6 +169,64 @@ def _validate(self: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataF
 
 
 class Schema:
+    """A lightweight schema representing a DataFrame. Briefly, a schema consists of
+    columns and their associated data types. In addition, the schema stores checks that
+    can be run either on a specific column or the entire DataFrame. Since `checkedframe`
+    leverages `narwhals`, any Narwhals-compatible DataFrame (Pandas, Polars, Modin,
+    PyArrow, cuDF) is valid.
+
+    A Schema can be used in two ways. It can either be initialized directly from a
+    dictionary or inherited from in a class.
+
+    Parameters
+    ----------
+    expected_schema : dict[str, Column]
+        A dictionary of column names and data types
+    checks : Optional[Sequence[Check]], optional
+        A list of checks to run, by default None
+
+    Examples
+    --------
+    Let's say we have a Polars DataFrame we want to validate. We have one column, a
+    string, that should be 3 characters.
+
+    .. code-block:: python
+
+        import polars as pl
+
+        df = pl.DataFrame({"col1": ["abc", "ef"]})
+
+    Via inheritance:
+
+    .. code-block:: python
+
+        import checkedframe as cf
+
+        class MySchema(cf.Schema):
+            col1 = cf.Column(cf.String)
+
+            @cf.Check(column="col1")
+            def check_length(s: pl.Series) -> pl.Series:
+                return s.str.len_bytes() == 3
+
+        MySchema.validate(df)
+
+    Via explicit construction:
+
+    .. code-block:: python
+
+        import checkedframe as cf
+
+        MySchema = cf.Schema({
+            "col1": cf.Column(
+                cf.String,
+                checks=[cf.Check(lambda s: s.str.len_bytes() == 3)]
+            )
+        })
+
+        MySchema.validate(df)
+    """
+
     def __init__(
         self,
         expected_schema: dict[str, Column],
@@ -182,6 +256,26 @@ class Schema:
 
     @classmethod
     def validate(cls, df: nwt.IntoDataFrameT, cast: bool = False) -> nwt.IntoDataFrameT:
+        """Validate the given DataFrame
+
+        Parameters
+        ----------
+        df : nwt.IntoDataFrameT
+            Any Narwhals-compatible DataFrame, see https://narwhals-dev.github.io/narwhals/
+            for more information
+        cast : bool, optional
+            Whether to cast columns, by default False
+
+        Returns
+        -------
+        nwt.IntoDataFrameT
+            Your original DataFrame
+
+        Raises
+        ------
+        SchemaError
+            If validation fails
+        """
         return _validate(cls._parse_into_schema(), df, cast)
 
     def __validate(

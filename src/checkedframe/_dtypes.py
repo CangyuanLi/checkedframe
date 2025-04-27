@@ -14,7 +14,6 @@ def _checked_cast(s: nw.Series, to_dtype) -> nw.Series:
     s_cast = s.cast(to_nw_dtype)
 
     if s_cast.dtype != to_nw_dtype:
-
         raise TypeError(
             f"Cannot cast {s.dtype} to {to_dtype}; {to_dtype} not supported by your DataFrame library"
         )
@@ -97,7 +96,7 @@ class Int8(nw.Int8):
         super().__init__()
 
     @staticmethod
-    def to_narwhals():
+    def to_narwhals() -> nw.Int8:
         return nw.Int8
 
     @staticmethod
@@ -149,7 +148,7 @@ class Int32(nw.Int32):
         return nw.Int32
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype):
+    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
         if to_dtype is Int32:
             return s
         elif to_dtype in (Int64, Int128, Float64, String):
@@ -568,9 +567,7 @@ class Unknown(nw.Unknown):
 
 
 class Array(nw.Array):
-    """Represent a fixed length list."""
-
-    def __init__(self, inner, shape):
+    def __init__(self, inner, shape: int | tuple[int, ...]):
         super().__init__(inner, shape)
 
     def to_narwhals(self):

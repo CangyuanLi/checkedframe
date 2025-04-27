@@ -54,6 +54,30 @@ def _is_in(s: nw.Series, other: Collection) -> nw.Series:
 
 
 class Check:
+    """Represents a check to run.
+
+    Parameters
+    ----------
+    func : Optional[Callable], optional
+        The check to run, by default None
+    column : Optional[str], optional
+        The column associated with the check, by default None
+    input_type : Optional[Literal["auto", "Frame", "Series"]], optional
+        The input to the check function. If "auto", attempts to determine via the
+        context, by default "auto"
+    return_type : Literal["auto", "bool", "Expr", "Series"], optional
+        The return type of the check function. If "auto", attempts to determine via the
+        return type annotation and number of arguments, by default "auto"
+    native : bool, optional
+        Whether to run the check on the native DataFrame or the Narwhals DataFrame, by
+        default True
+    name : Optional[str], optional
+        The name of the check, by default None
+    description : Optional[str], optional
+        The description of the check. If None, attempts to read from the __doc__
+        attribute, by default None
+    """
+
     def __init__(
         self,
         func: Optional[Callable] = None,
