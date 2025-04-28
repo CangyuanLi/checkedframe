@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Union
+
 import narwhals.stable.v1 as nw
-from narwhals.stable.v1.dtypes import DType
 
 
-def _checked_cast(s: nw.Series, to_dtype) -> nw.Series:
+def _checked_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
     # We need this because narwhals will just silently not cast if the datatype isn't
     # supported by the physical backend. E.g., casting a float to UInt128 with Polars
     # backend works because Polars doesn't have a UInt128 type and the original column
@@ -123,7 +125,7 @@ class Int16(nw.Int16):
         return nw.Int16
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype):
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         if to_dtype in (Int16, Int32, Int64, Int128, Float32, Float64, String):
             return _checked_cast(s, to_dtype)
         elif to_dtype in (UInt16, UInt32, UInt64, UInt128):
@@ -148,7 +150,7 @@ class Int32(nw.Int32):
         return nw.Int32
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         if to_dtype is Int32:
             return s
         elif to_dtype in (Int64, Int128, Float64, String):
@@ -175,7 +177,7 @@ class Int64(nw.Int64):
         return nw.Int64
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         if to_dtype is Int64:
             return s
         elif to_dtype is Int128:
@@ -202,7 +204,7 @@ class Int128(nw.Int128):
         return nw.Int128
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         if to_dtype is Int128:
             return s
         elif to_dtype is Boolean:
@@ -238,7 +240,7 @@ class UInt8(nw.UInt8):
         return nw.UInt8
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
 
         if to_dtype in (
             Int16,
@@ -273,7 +275,7 @@ class UInt16(nw.UInt16):
         return nw.UInt16
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
 
         if to_dtype in (
             Int32,
@@ -306,7 +308,7 @@ class UInt32(nw.UInt32):
         return nw.UInt32
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
 
         if to_dtype is UInt32:
             return s
@@ -338,7 +340,7 @@ class UInt64(nw.UInt64):
         return nw.UInt64
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         if to_dtype is UInt64:
             return s
         elif to_dtype in (
@@ -376,7 +378,7 @@ class UInt128(nw.UInt128):
         return nw.UInt128
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         if to_dtype is Boolean:
             return _numeric_to_boolean_cast(s, to_dtype)
         elif to_dtype in (
@@ -411,7 +413,7 @@ class Float32(nw.Float32):
         return nw.Float32
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         if to_dtype is Float64:
             return _checked_cast(s, to_dtype)
         elif to_dtype is Boolean:
@@ -567,23 +569,27 @@ class Unknown(nw.Unknown):
 
 
 class Array(nw.Array):
-    def __init__(self, inner, shape: int | tuple[int, ...]):
+    def __init__(self, inner: DType, shape: int | tuple[int, ...]):
         super().__init__(inner, shape)
+
+        self.inner: DType
 
     def to_narwhals(self):
         return nw.Array(self.inner.to_narwhals(), self.shape)
 
 
 class List(nw.List):
-    def __init__(self, inner):
+    def __init__(self, inner: DType):
         super().__init__(inner)
+
+        self.inner: DType
 
     def to_narwhals(self):
         return nw.List(self.inner.to_narwhals())
 
 
 class Struct(nw.Struct):
-    def __init__(self, fields):
+    def __init__(self, fields: Mapping[str, DType]):
         super().__init__(fields)
 
     def to_narwhals(self):
@@ -592,3 +598,31 @@ class Struct(nw.Struct):
             dct[field.name] = field.dtype.to_narwhals()
 
         return nw.Struct(dct)
+
+
+DType = Union[
+    Array,
+    Binary,
+    Boolean,
+    Date,
+    Datetime,
+    Decimal,
+    Duration,
+    Float32,
+    Float64,
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    Int128,
+    List,
+    Object,
+    String,
+    Struct,
+    UInt8,
+    UInt16,
+    UInt32,
+    UInt64,
+    UInt128,
+    Unknown,
+]
