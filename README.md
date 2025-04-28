@@ -1,3 +1,32 @@
+# checkedframe:
+[![PyPI version](https://badge.fury.io/py/checkedframe.svg)](https://badge.fury.io/py/checkedframe)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/checkedframe)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Tests](https://github.com/CangyuanLi/checkedframe/actions/workflows/tests.yaml/badge.svg)
+
+<p align="center">
+  <a href="https://cangyuanli.github.io/checkedframe/latest/">Documentation</a>
+<br>
+</p>
+
+## What is it?
+
+**checkedframe** is a lightweight library for DataFrame validation built on top of **narwhals**.
+
+## Why use checkedframe?
+
+# Usage:
+
+## Installing
+
+The easiest way is to install **checkedframe** is from PyPI using pip:
+
+```sh
+pip install checkedframe
+```
+
+## Examples
+
 ```python
 import checkedframe as cf
 import polars as pl
