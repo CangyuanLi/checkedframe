@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 import inspect
 from collections.abc import Collection
-from typing import Callable, Literal, Optional
+from typing import Any, Callable, Literal, Optional
 
 import narwhals.stable.v1 as nw
 
@@ -47,6 +47,22 @@ def _in_range(
         return (s > min_value) & (s < max_value)
     else:
         raise ValueError("Invalid argument to `closed`")
+
+
+def _lt(s: nw.Series, other) -> nw.Series:
+    return s < other
+
+
+def _le(s: nw.Series, other) -> nw.Series:
+    return s <= other
+
+
+def _gt(s: nw.Series, other) -> nw.Series:
+    return s > other
+
+
+def _ge(s: nw.Series, other) -> nw.Series:
+    return s >= other
 
 
 def _is_in(s: nw.Series, other: Collection) -> nw.Series:
@@ -178,6 +194,92 @@ class Check:
             native=False,
             name="in_range",
             description=f"Must be in range {l_paren}{min_value}, {max_value}{r_paren}",
+        )
+
+    @staticmethod
+    def lt(other: Any) -> Check:
+        """Tests whether all values in the Series are less than the given value.
+
+        Parameters
+        ----------
+        other : Any
+
+        Returns
+        -------
+        Check
+        """
+        return Check(
+            func=functools.partial(_lt, other=other),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="less_than",
+            description=f"Must be < {other}",
+        )
+
+    @staticmethod
+    def le(other: Any) -> Check:
+        """Tests whether all values in the Series are less than or equal to the given
+        value.
+
+        Parameters
+        ----------
+        other : Any
+
+        Returns
+        -------
+        Check
+        """
+        return Check(
+            func=functools.partial(_le, other=other),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="less_than_or_equal_to",
+            description=f"Must be <= {other}",
+        )
+
+    @staticmethod
+    def gt(other: Any) -> Check:
+        """Tests whether all values in the Series are greater than the given value.
+
+        Parameters
+        ----------
+        other : Any
+
+        Returns
+        -------
+        Check
+        """
+        return Check(
+            func=functools.partial(_gt, other=other),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="greater_than",
+            description=f"Must be > {other}",
+        )
+
+    @staticmethod
+    def ge(other: Any) -> Check:
+        """Tests whether all values in the Series are greater than or equal to the given
+        value.
+
+        Parameters
+        ----------
+        other : Any
+
+        Returns
+        -------
+        Check
+        """
+        return Check(
+            func=functools.partial(_ge, other=other),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="greater_than_or_equal_to",
+            description=f"Must be >= {other}",
         )
 
     @staticmethod
