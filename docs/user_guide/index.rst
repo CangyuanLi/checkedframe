@@ -1,10 +1,10 @@
 User Guide
 ==========
 
-.. include:: ../../README.md
-   :parser: myst_parser.sphinx_
+Welcome to the user guide!
 
 .. toctree::
     :maxdepth: 1
 
+    quickstart.rst
     installation.rst
