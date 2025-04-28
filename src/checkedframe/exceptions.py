@@ -5,10 +5,13 @@ from collections.abc import Mapping
 from typing import Optional
 
 
-class ColumnNotFoundError(Exception): ...
+class ColumnNotFoundError(Exception):
+    """Raised when a required column is not found in the Schema."""
 
 
 class ValidationError(Exception):
+    """Raised when a check fails."""
+
     def __init__(self, check):
         self.check = check
 
@@ -32,6 +35,8 @@ class _ErrorStore:
 
 
 class SchemaError(Exception):
+    """Raised when the given DataFrame does not match the given Schema."""
+
     def __init__(
         self, errors: Mapping[str, _ErrorStore], failed_checks: list[ValidationError]
     ):
