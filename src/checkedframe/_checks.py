@@ -204,6 +204,17 @@ class Check:
 
     @staticmethod
     def is_id(subset: str | list[str]) -> Check:
+        """Tests whether the given column(s) identify the DataFrame.
+
+        Parameters
+        ----------
+        subset : str | list[str]
+            The columns that identify the DataFrame
+
+        Returns
+        -------
+        Check
+        """
         return Check(
             func=functools.partial(_is_id, subset=subset),
             input_type="Frame",
