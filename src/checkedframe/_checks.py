@@ -53,6 +53,13 @@ def _is_in(s: nw.Series, other: Collection) -> nw.Series:
     return s.is_in(other)
 
 
+def _is_id(df: nw.DataFrame, subset: str | list[str]) -> bool:
+    n_rows = df.shape[0]
+    n_unique_rows = df.select(subset).unique().shape[0]
+
+    return n_rows == n_unique_rows
+
+
 class Check:
     """Represents a check to run.
 
@@ -138,6 +145,21 @@ class Check:
     def in_range(
         min_value: float, max_value: float, closed: IntervalType = "both"
     ) -> Check:
+        """Tests whether all values of the Series are in the given range.
+
+        Parameters
+        ----------
+        min_value : float
+            The lower bound
+        max_value : float
+            The upper bound
+        closed : IntervalType, optional
+            Describes the interval type, by default "both"
+
+        Returns
+        -------
+        Check
+        """
         if closed == "both":
             l_paren, r_paren = "[]"
         elif closed == "left":
@@ -160,6 +182,17 @@ class Check:
 
     @staticmethod
     def is_in(other: Collection) -> Check:
+        """Tests whether all values of the Series are in the given collection.
+
+        Parameters
+        ----------
+        other : Collection
+            The collection
+
+        Returns
+        -------
+        Check
+        """
         return Check(
             func=functools.partial(_is_in, other=other),
             input_type="Series",
@@ -167,4 +200,15 @@ class Check:
             native=False,
             name="is_in",
             description=f"Must be in allowed values {other}",
+        )
+
+    @staticmethod
+    def is_id(subset: str | list[str]) -> Check:
+        return Check(
+            func=functools.partial(_is_id, subset=subset),
+            input_type="Frame",
+            return_type="bool",
+            native=False,
+            name="is_id",
+            description=f"{subset} must uniquely identify the DataFrame",
         )
