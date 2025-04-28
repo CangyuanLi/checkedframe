@@ -26,11 +26,17 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.linkcode",
     "sphinx_copybutton",
+    "sphinx_multiversion",
     "myst_parser",
 ]
 
 
 templates_path = ["_templates"]
+html_sidebars = {
+    "**": [
+        "versioning.html",
+    ],
+}
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
