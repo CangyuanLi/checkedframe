@@ -32,11 +32,7 @@ extensions = [
 
 
 templates_path = ["_templates"]
-html_sidebars = {
-    "**": [
-        "versioning.html",
-    ],
-}
+html_sidebars = {"**": ["search-field.html", "sidebar-nav-bs.html"]}
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
@@ -81,5 +77,6 @@ def linkcode_resolve(domain, info):
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "pydata_sphinx_theme"
+html_theme_options = {"show_nav_level": 2, "collapse_navigation": False}
 html_static_path = ["_static"]
 html_show_sourcelink = False
