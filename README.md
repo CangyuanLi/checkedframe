@@ -5,7 +5,7 @@
 ![Tests](https://github.com/CangyuanLi/checkedframe/actions/workflows/tests.yaml/badge.svg)
 
 <p align="center">
-  <a href="https://cangyuanli.github.io/checkedframe/latest/">Documentation</a>
+  <a href="https://cangyuanli.github.io/checkedframe/">Documentation</a>
 <br>
 </p>
 
