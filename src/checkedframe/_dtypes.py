@@ -13,7 +13,10 @@ def _checked_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
     # is just returned.
 
     to_nw_dtype = to_dtype.to_narwhals()
-    s_cast = s.cast(to_nw_dtype)
+    try:
+        s_cast = s.cast(to_nw_dtype)
+    except Exception:
+        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype}")
 
     if s_cast.dtype != to_nw_dtype:
         raise TypeError(
@@ -68,26 +71,14 @@ def _numeric_to_boolean_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
 
 
 def _fallback_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
-    err = TypeError(
-        f"Cannot safely cast {s.dtype} to {to_dtype.__name__}; casting resulted in different series"
-    )
-
-    try:
-        s_cast = _checked_cast(s, to_dtype)
-    except Exception as e:
-        # There are a couple of different failure modes. One is that the native library
-        # cannot do this particular cast--these all return different exceptions, so we
-        # just catch Exception. However, the cast could "succeed" but fail due to the
-        # issue described in _checked_cast.
-        if type(e) is TypeError:
-            raise e
-
-        raise err
+    s_cast = _checked_cast(s, to_dtype)
 
     if s_cast.__eq__(s).all():
         return s_cast
 
-    raise err
+    raise TypeError(
+        f"Cannot safely cast {s.dtype} to {to_dtype}; casting resulted in different series"
+    )
 
 
 class Int8(nw.Int8):
