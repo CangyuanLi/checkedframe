@@ -93,7 +93,7 @@ class Int8(nw.Int8):
         return nw.Int8
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype):
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         if to_dtype in (Int8, Int16, Int32, Int64, Int128, Float32, Float64, String):
             return _checked_cast(s, to_dtype)
         elif to_dtype in (UInt8, UInt16, UInt32, UInt64, UInt128):
@@ -101,7 +101,7 @@ class Int8(nw.Int8):
         elif to_dtype is Boolean:
             return _numeric_to_boolean_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class Int16(nw.Int16):
@@ -117,7 +117,9 @@ class Int16(nw.Int16):
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
-        if to_dtype in (Int16, Int32, Int64, Int128, Float32, Float64, String):
+        if to_dtype is Int16:
+            return s
+        elif to_dtype in (Int32, Int64, Int128, Float32, Float64, String):
             return _checked_cast(s, to_dtype)
         elif to_dtype in (UInt16, UInt32, UInt64, UInt128):
             return _int_to_uint_cast(s, to_dtype)
@@ -126,7 +128,7 @@ class Int16(nw.Int16):
         elif to_dtype is Boolean:
             return _numeric_to_boolean_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class Int32(nw.Int32):
@@ -153,7 +155,7 @@ class Int32(nw.Int32):
         elif to_dtype in (Int8, Int16, UInt8, UInt16, Float32):
             return _allowed_range_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class Int64(nw.Int64):
@@ -180,7 +182,7 @@ class Int64(nw.Int64):
         elif to_dtype in (Int8, Int16, Int32, UInt8, UInt16, UInt32, Float32, Float64):
             return _allowed_range_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class Int128(nw.Int128):
@@ -216,7 +218,7 @@ class Int128(nw.Int128):
         ):
             return _allowed_range_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class UInt8(nw.UInt8):
@@ -251,7 +253,7 @@ class UInt8(nw.UInt8):
         elif to_dtype is Int8:
             return _allowed_max_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype}")
+        return _checked_cast(s, to_dtype)
 
 
 class UInt16(nw.UInt16):
@@ -267,8 +269,9 @@ class UInt16(nw.UInt16):
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
-
-        if to_dtype in (
+        if to_dtype is UInt16:
+            return s
+        elif to_dtype in (
             Int32,
             Int64,
             Int128,
@@ -284,7 +287,7 @@ class UInt16(nw.UInt16):
         elif to_dtype in (Int8, Int16, UInt8):
             return _allowed_max_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class UInt32(nw.UInt32):
@@ -300,7 +303,6 @@ class UInt32(nw.UInt32):
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
-
         if to_dtype is UInt32:
             return s
         elif to_dtype in (
@@ -316,7 +318,7 @@ class UInt32(nw.UInt32):
         elif to_dtype in (Int8, Int16, Int32, UInt8, UInt16, Float32):
             return _allowed_max_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class UInt64(nw.UInt64):
@@ -354,7 +356,7 @@ class UInt64(nw.UInt64):
         ):
             return _allowed_max_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class UInt128(nw.UInt128):
@@ -370,7 +372,9 @@ class UInt128(nw.UInt128):
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
-        if to_dtype is Boolean:
+        if to_dtype is UInt128:
+            return s
+        elif to_dtype is Boolean:
             return _numeric_to_boolean_cast(s, to_dtype)
         elif to_dtype in (
             Int8,
@@ -387,7 +391,7 @@ class UInt128(nw.UInt128):
         ):
             return _allowed_max_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class Float32(nw.Float32):
@@ -405,7 +409,9 @@ class Float32(nw.Float32):
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
-        if to_dtype is Float64:
+        if to_dtype is Float32:
+            return s
+        elif to_dtype is Float64:
             return _checked_cast(s, to_dtype)
         elif to_dtype is Boolean:
             return _numeric_to_boolean_cast(s, to_dtype)
@@ -423,7 +429,7 @@ class Float32(nw.Float32):
         ):
             return _fallback_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class Float64(nw.Float64):
@@ -439,7 +445,9 @@ class Float64(nw.Float64):
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
-        if to_dtype is Boolean:
+        if to_dtype is Float64:
+            return s
+        elif to_dtype is Boolean:
             return _numeric_to_boolean_cast(s, to_dtype)
         elif to_dtype in (
             Int8,
@@ -456,7 +464,7 @@ class Float64(nw.Float64):
         ):
             return _fallback_cast(s, to_dtype)
 
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype.__name__}")
+        return _checked_cast(s, to_dtype)
 
 
 class Decimal(nw.Decimal):
@@ -467,6 +475,10 @@ class Decimal(nw.Decimal):
     def to_narwhals():
         return nw.Decimal
 
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
+
 
 class Binary(nw.Binary):
     def __init__(self):
@@ -475,6 +487,10 @@ class Binary(nw.Binary):
     @staticmethod
     def to_narwhals():
         return nw.Binary
+
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
 
 
 class Boolean(nw.Boolean):
@@ -485,6 +501,10 @@ class Boolean(nw.Boolean):
     def to_narwhals():
         return nw.Boolean
 
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
+
 
 class Categorical(nw.Categorical):
     def __init__(self):
@@ -494,6 +514,10 @@ class Categorical(nw.Categorical):
     def to_narwhals():
         return nw.Categorical
 
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
+
 
 class Date(nw.Date):
     def __init__(self):
@@ -502,6 +526,10 @@ class Date(nw.Date):
     @staticmethod
     def to_narwhals():
         return nw.Date
+
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
 
 
 class Datetime(nw.Datetime):
@@ -517,6 +545,10 @@ class Datetime(nw.Datetime):
     def __to_narwhals(self):
         return nw.Datetime(time_unit=self.time_unit, time_zone=self.time_zone)
 
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
+
 
 class Duration(nw.Duration):
     def __init__(self, time_unit="us"):
@@ -531,6 +563,10 @@ class Duration(nw.Duration):
     def __to_narwhals(self):
         return nw.Duration(time_unit=self.time_unit)
 
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
+
 
 class String(nw.String):
     def __init__(self):
@@ -539,6 +575,10 @@ class String(nw.String):
     @staticmethod
     def to_narwhals():
         return nw.String
+
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
 
 
 class Object(nw.Object):
@@ -549,6 +589,10 @@ class Object(nw.Object):
     def to_narwhals():
         return nw.Object
 
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
+
 
 class Unknown(nw.Unknown):
     def __init__(self):
@@ -557,6 +601,10 @@ class Unknown(nw.Unknown):
     @staticmethod
     def to_narwhals():
         return nw.Unknown
+
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
 
 
 class Array(nw.Array):
@@ -568,6 +616,10 @@ class Array(nw.Array):
     def to_narwhals(self):
         return nw.Array(self.inner.to_narwhals(), self.shape)
 
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
+
 
 class List(nw.List):
     def __init__(self, inner: DType):
@@ -577,6 +629,10 @@ class List(nw.List):
 
     def to_narwhals(self):
         return nw.List(self.inner.to_narwhals())
+
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
 
 
 class Struct(nw.Struct):
@@ -589,6 +645,10 @@ class Struct(nw.Struct):
             dct[field.name] = field.dtype.to_narwhals()
 
         return nw.Struct(dct)
+
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
 
 
 DType = Union[
