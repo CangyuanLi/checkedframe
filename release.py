@@ -23,7 +23,7 @@ def main():
     )
 
     print("uploading docs")
-    subprocess.run(["update_docs.py"])
+    subprocess.run(["python", "update_docs.py"])
 
     print("uploading to pypi")
     subprocess.run(["pyproject", "upload"])
