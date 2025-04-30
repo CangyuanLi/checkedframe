@@ -23,9 +23,7 @@ def main():
     )
 
     print("uploading docs")
-    subprocess.run(["sphinx-build", "docs/", "_build/html/"])
-    subprocess.run(["sphinx-multiversion", "docs/", "_build/html/"])
-    subprocess.run(["ghp-import", "-n", "-p", "-f", "docs/_build/html/"])
+    subprocess.run(["update_docs.py"])
 
     print("uploading to pypi")
     subprocess.run(["pyproject", "upload"])

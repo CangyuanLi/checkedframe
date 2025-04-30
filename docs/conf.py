@@ -77,6 +77,13 @@ def linkcode_resolve(domain, info):
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "pydata_sphinx_theme"
-html_theme_options = {"show_nav_level": 2, "collapse_navigation": False}
+html_theme_options = {
+    "show_nav_level": 2,
+    "collapse_navigation": False,
+    # "switcher": {
+    #     "json_url": "https://github.com/CangyuanLi/checkedframe/_static/switcher.json",
+    #     "version_match": "latest",
+    # },
+}
 html_static_path = ["_static"]
 html_show_sourcelink = False
