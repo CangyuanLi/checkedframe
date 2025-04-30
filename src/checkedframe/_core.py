@@ -113,24 +113,13 @@ def _validate(self: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataF
             pass
         else:
             if expected_col.cast or cast:
-                if hasattr(actual_dtype, "_safe_cast"):
-                    try:
-                        nw_df = nw_df.with_columns(
-                            actual_dtype._safe_cast(
-                                nw_df[expected_name], expected_dtype
-                            )
-                        )
-                    except TypeError as e:
-                        error_store.invalid_dtype = e
-                        continue
-                else:
-                    try:
-                        nw_df = nw_df.with_columns(
-                            nw.col(expected_name).cast(expected_dtype)
-                        )
-                    except Exception as e:
-                        error_store.invalid_dtype = e
-                        continue
+                try:
+                    nw_df = nw_df.with_columns(
+                        actual_dtype._safe_cast(nw_df[expected_name], expected_dtype)
+                    )
+                except TypeError as e:
+                    error_store.invalid_dtype = e
+                    continue
             else:
                 error_store.invalid_dtype = TypeError(
                     f"Expected {expected_dtype.__name__}, got {actual_dtype}"
