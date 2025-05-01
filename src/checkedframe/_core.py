@@ -8,6 +8,7 @@ import narwhals.stable.v1 as nw
 import narwhals.stable.v1.typing as nwt
 
 from ._checks import Check
+from ._dtypes import DType, _nw_type_to_cf_type
 from .exceptions import ColumnNotFoundError, SchemaError, ValidationError, _ErrorStore
 
 
@@ -67,7 +68,7 @@ class Column:
 
     def __init__(
         self,
-        dtype: nw.dtypes.DType,
+        dtype: DType,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -109,13 +110,15 @@ def _validate(self: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataF
         # check data types
         actual_dtype = df_schema[expected_name]
         expected_dtype = expected_col.dtype
-        if actual_dtype == expected_col.dtype:
+        if actual_dtype == expected_col.dtype.to_narwhals():
             pass
         else:
             if expected_col.cast or cast:
                 try:
                     nw_df = nw_df.with_columns(
-                        actual_dtype._safe_cast(nw_df[expected_name], expected_dtype)
+                        _nw_type_to_cf_type(actual_dtype)._safe_cast(
+                            nw_df[expected_name], expected_dtype
+                        )
                     )
                 except TypeError as e:
                     error_store.invalid_dtype = e
