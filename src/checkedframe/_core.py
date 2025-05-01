@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from collections import defaultdict
 from collections.abc import Sequence
 from typing import Optional
@@ -232,11 +233,13 @@ class Schema:
     def _parse_into_schema(cls) -> Schema:
         schema_dict = {}
         checks = []
-        for attr, val in cls.__dict__.items():
+        attr_list = inspect.getmembers(cls)
+
+        for attr, val in attr_list:
             if isinstance(val, Column):
                 schema_dict[attr] = val
 
-        for attr, val in cls.__dict__.items():
+        for attr, val in attr_list:
             if isinstance(val, Check):
                 if val.column is not None:
                     if val.column in schema_dict:
