@@ -520,6 +520,19 @@ class Categorical(nw.Categorical):
         return _checked_cast(s, to_dtype)
 
 
+class Enum(nw.Enum):
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def to_narwhals():
+        return nw.Enum
+
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
+        return _checked_cast(s, to_dtype)
+
+
 class Date(nw.Date):
     def __init__(self):
         super().__init__()
@@ -690,6 +703,7 @@ DType = Union[
     Datetime,
     Decimal,
     Duration,
+    Enum,
     Float32,
     Float64,
     Int8,
@@ -715,6 +729,7 @@ _NARWHALS_DTYPE_TO_CHECKEDFRAME_DTYPE_MAPPER = {
     nw.Date: Date,
     nw.Datetime: Datetime,
     nw.Decimal: Decimal,
+    nw.Enum: Enum,
     nw.Float32: Float32,
     nw.Float64: Float64,
     nw.Int8: Int8,
