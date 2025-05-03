@@ -9,7 +9,7 @@ import narwhals.stable.v1 as nw
 import narwhals.stable.v1.typing as nwt
 
 from ._checks import Check
-from ._dtypes import DType, _nw_type_to_cf_type
+from ._dtypes import Column, _nw_type_to_cf_type
 from .exceptions import ColumnNotFoundError, SchemaError, ValidationError, _ErrorStore
 
 
@@ -47,39 +47,6 @@ def _run_check(
             passed_check = nw.from_native(passed_check, series_only=True).all()
 
         return passed_check
-
-
-class Column:
-    """Represents a column in a DataFrame.
-
-    Parameters
-    ----------
-    dtype : nw.dtypes.DType
-        The type of the column
-    nullable : bool, optional
-        Whether to allow nulls, by default False
-    required : bool, optional
-        Whether the column is required to be present, by default True
-    cast : bool, optional
-        Whether to automatically try to cast the column to the expected data type, by
-        default False
-    checks : Optional[Sequence[Check]], optional
-        Checks to run on the column, by default None
-    """
-
-    def __init__(
-        self,
-        dtype: DType,
-        nullable: bool = False,
-        required: bool = True,
-        cast: bool = False,
-        checks: Optional[Sequence[Check]] = None,
-    ):
-        self.dtype = dtype
-        self.nullable = nullable
-        self.cast = cast
-        self.required = required
-        self.checks = [] if checks is None else checks
 
 
 def _validate(self: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:

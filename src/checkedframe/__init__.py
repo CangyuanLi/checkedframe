@@ -1,11 +1,13 @@
 # ruff: noqa: F401
 from checkedframe import exceptions
 
-from ._core import Check, Column, Schema
+from ._checks import Check
+from ._core import Schema
 from ._dtypes import (
     Array,
     Binary,
     Boolean,
+    Column,
     Date,
     Datetime,
     Decimal,

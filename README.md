@@ -34,10 +34,10 @@ from checkedframe.polars import DataFrame
 
 
 class AASchema(cf.Schema):
-    reason_code = cf.Column(cf.String)
-    reason_code_description = cf.Column(cf.String, nullable=True)
-    shap = cf.Column(cf.Float64, cast=True)
-    rank = cf.Column(cf.UInt8, cast=True)
+    reason_code = cf.String()
+    reason_code_description = cf.String(nullable=True)
+    shap = cf.Float64(cast=True)
+    rank = cf.UInt8(cast=True)
 
 
     @cf.Check(column="reason_code")
