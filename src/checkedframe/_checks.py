@@ -28,25 +28,16 @@ def _resolve_return_type_from_annotation(func: Callable):
     return "auto"
 
 
-IntervalType = Literal["both", "left", "right", "neither"]
+ClosedInterval = Optional[Literal["both", "left", "right"]]
 
 
-def _in_range(
+def _is_between(
     s: nw.Series,
-    min_value: float,
-    max_value: float,
-    closed: IntervalType,
+    lower_bound,
+    upper_bound,
+    closed: ClosedInterval,
 ) -> nw.Series:
-    if closed == "both":
-        return (s >= min_value) & (s <= max_value)
-    elif closed == "left":
-        return (s > min_value) & (s <= max_value)
-    elif closed == "right":
-        return (s >= min_value) & (s < max_value)
-    elif closed == "both":
-        return (s > min_value) & (s < max_value)
-    else:
-        raise ValueError("Invalid argument to `closed`")
+    return s.is_between(lower_bound, upper_bound, closed=closed)
 
 
 def _lt(s: nw.Series, other) -> nw.Series:
@@ -158,19 +149,17 @@ class Check:
         )
 
     @staticmethod
-    def in_range(
-        min_value: float, max_value: float, closed: IntervalType = "both"
-    ) -> Check:
+    def is_between(lower_bound, upper_bound, closed: ClosedInterval = "both") -> Check:
         """Tests whether all values of the Series are in the given range.
 
         Parameters
         ----------
-        min_value : float
+        lower_bound : Any
             The lower bound
-        max_value : float
+        upper_bound : Any
             The upper bound
-        closed : IntervalType, optional
-            Describes the interval type, by default "both"
+        closed : ClosedInterval, optional
+            Defines which sides of the interval are closed, by default "both"
 
         Returns
         -------
@@ -187,13 +176,13 @@ class Check:
 
         return Check(
             func=functools.partial(
-                _in_range, min_value=min_value, max_value=max_value, closed=closed
+                _is_between, lower_bound, upper_bound, closed=closed
             ),
             input_type="Series",
             return_type="Series",
             native=False,
-            name="in_range",
-            description=f"Must be in range {l_paren}{min_value}, {max_value}{r_paren}",
+            name="is_between",
+            description=f"Must be in range {l_paren}{lower_bound}, {upper_bound}{r_paren}",
         )
 
     @staticmethod
