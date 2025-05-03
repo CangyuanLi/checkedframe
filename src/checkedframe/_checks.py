@@ -60,6 +60,10 @@ def _is_in(s: nw.Series, other: Collection) -> nw.Series:
     return s.is_in(other)
 
 
+def _is_finite(s: nw.Series) -> nw.Series:
+    return s.is_finite()
+
+
 def _is_id(df: nw.DataFrame, subset: str | list[str]) -> bool:
     n_rows = df.shape[0]
     n_unique_rows = df.select(subset).unique().shape[0]
@@ -291,6 +295,16 @@ class Check:
             native=False,
             name="is_in",
             description=f"Must be in allowed values {other}",
+        )
+
+    def is_finite() -> Check:
+        return Check(
+            func=_is_finite,
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="is_finite",
+            description="All values must be finite",
         )
 
     @staticmethod
