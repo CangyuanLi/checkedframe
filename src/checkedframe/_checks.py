@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import functools
 import inspect
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from typing import Any, Callable, Literal, Optional
 
 import narwhals.stable.v1 as nw
+
+col = nw.col
+lit = nw.lit
 
 
 def _resolve_return_type_from_annotation(func: Callable):
@@ -56,6 +59,40 @@ def _ge(s: nw.Series, other) -> nw.Series:
     return s >= other
 
 
+def _eq(s: nw.Series, other) -> nw.Series:
+    return s == other
+
+
+def _approx_eq(
+    left: nw.Expr,
+    right: nw.Expr,
+    rtol: float,
+    atol: float,
+    nan_equal: bool,
+) -> nw.Series:
+    res = (
+        left.__sub__(right)
+        .abs()
+        .__le__(nw.lit(atol).__add__(rtol).__mul__(right.abs()))
+    )
+
+    if nan_equal:
+        res = res.__or__(left.is_nan().__and__(right.is_nan()))
+
+    return res
+
+
+def _series_lit_approx_eq(
+    left: nw.Series, right: float, rtol: float, atol: float, nan_equal: bool
+) -> nw.Series:
+    name = "__checkedframe_approx_eq__"
+    return left.to_frame().select(
+        _approx_eq(
+            nw.col(left.name), nw.lit(right), rtol=rtol, atol=atol, nan_equal=nan_equal
+        ).alias(name)
+    )[name]
+
+
 def _is_in(s: nw.Series, other: Collection) -> nw.Series:
     return s.is_in(other)
 
@@ -64,11 +101,99 @@ def _is_finite(s: nw.Series) -> nw.Series:
     return s.is_finite()
 
 
+def _is_sorted(s: nw.Series, descending: bool) -> bool:
+    return s.is_sorted(descending=descending)
+
+
 def _is_id(df: nw.DataFrame, subset: str | list[str]) -> bool:
     n_rows = df.shape[0]
     n_unique_rows = df.select(subset).unique().shape[0]
 
     return n_rows == n_unique_rows
+
+
+def _series_equals(
+    left: nw.Series,
+    right: nw.Series,
+    check_dtypes: bool = True,
+    check_exact: bool = False,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+) -> bool:
+    if check_dtypes:
+        if left.dtype != right.dtype:
+            return False
+
+    if left.dtype.is_float() and not check_exact:
+        return (
+            left.to_frame()
+            .with_columns(right)
+            .select(
+                _approx_eq(
+                    nw.col(left.name),
+                    nw.col(right.name),
+                    rtol=rtol,
+                    atol=atol,
+                    nan_equal=True,
+                ).all()
+            )
+            .item()
+        )
+    else:
+        return (left == right).all()
+
+
+def _frame_equals(
+    left: nw.DataFrame,
+    right: nw.DataFrame,
+    check_column_order: bool = True,
+    check_dtypes: bool = True,
+    check_exact: bool = False,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+) -> bool:
+    l_cols = left.columns
+    r_cols = right.columns
+    if check_column_order:
+        if l_cols != r_cols:
+            return False
+    else:
+        if set(l_cols) != set(r_cols):
+            return False
+
+    results = []
+    for c in l_cols:
+        results.append(
+            _series_equals(
+                left[c],
+                right[c],
+                check_dtypes=check_dtypes,
+                check_exact=check_exact,
+                rtol=rtol,
+                atol=atol,
+            )
+        )
+
+    return all(results)
+
+
+def _frame_is_sorted(
+    df: nw.DataFrame,
+    by: str | Sequence[str],
+    descending: bool | Sequence[bool],
+    compare_all: bool,
+) -> bool:
+    if compare_all:
+        df_sorted = df.sort(by=by, descending=descending)
+
+        return _frame_equals(df, df_sorted, check_exact=True)
+    else:
+        if isinstance(by, str):
+            return df[by].is_sorted(descending=descending)
+        else:
+            return _frame_equals(
+                df.select(by), df.select(by).sort(descending=descending)
+            )
 
 
 def _str_ends_with(s: nw.Series, suffix: str) -> nw.Series:
@@ -222,7 +347,7 @@ class Check:
             l_paren, r_paren = "[)"
         elif closed == "right":
             l_paren, r_paren = "(]"
-        elif closed == "neither":
+        elif closed is None:
             l_paren, r_paren = "()"
 
         return Check(
@@ -323,6 +448,57 @@ class Check:
         )
 
     @staticmethod
+    def eq(other: Any) -> Check:
+        """Tests whether all values in the Series are equal to the given value.
+
+        Parameters
+        ----------
+        other : Any
+
+        Returns
+        -------
+        Check
+        """
+        return Check(
+            func=functools.partial(_eq, other=other),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="equal_to",
+            description=f"Must be = {other}",
+        )
+
+    @staticmethod
+    def approx_eq(
+        other: Any, rtol: float = 1e-5, atol: float = 1e-8, nan_equal: bool = False
+    ) -> Check:
+        """Tests whether all values in the Series are approximately equal to the given
+        value.
+
+        Parameters
+        ----------
+        other : Any
+
+        Returns
+        -------
+        Check
+        """
+        return Check(
+            func=functools.partial(
+                _series_lit_approx_eq,
+                other=other,
+                rtol=rtol,
+                atoL=atol,
+                nan_equal=nan_equal,
+            ),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="approximately_equal_to",
+            description=f"Must be approximately equal to {other} ({rtol=}, {atol=}, {nan_equal=})",
+        )
+
+    @staticmethod
     def is_in(other: Collection) -> Check:
         """Tests whether all values of the Series are in the given collection.
 
@@ -352,6 +528,35 @@ class Check:
             native=False,
             name="is_finite",
             description="All values must be finite",
+        )
+
+    def is_sorted(descending: bool = False) -> Check:
+        order = "descending" if descending else "ascending"
+
+        return Check(
+            func=functools.partial(_is_sorted, descending=descending),
+            input_type="Series",
+            return_type="bool",
+            native=False,
+            name="is_sorted",
+            description=f"Must be sorted in {order} order",
+        )
+
+    @staticmethod
+    def is_sorted_by(
+        by: str | Sequence[str],
+        descending: bool | Sequence[bool] = False,
+        compare_all: bool = True,
+    ) -> Check:
+        return Check(
+            func=functools.partial(
+                _frame_is_sorted, by=by, descending=descending, compare_all=compare_all
+            ),
+            input_type="Frame",
+            return_type="bool",
+            native=False,
+            name="is_sorted_by",
+            description=f"Must be sorted by {by}, where descending is {descending}",
         )
 
     @staticmethod
