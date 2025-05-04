@@ -358,6 +358,35 @@ attribute, by default None</p></li>
 </dd>
 </dl>
 <dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.approx_eq">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">approx_eq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nan_equal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.approx_eq" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether all values in the Series are approximately equal to the given
+value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.eq">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.eq" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether all values in the Series are equal to the given value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.ge">
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.ge" title="Link to this definition">#</a></dt>
 <dd><p>Tests whether all values in the Series are greater than or equal to the given
@@ -387,15 +416,15 @@ value.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="checkedframe._checks.Check.in_range">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">in_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">closed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'both'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'left'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'right'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'neither'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'both'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.in_range" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="checkedframe._checks.Check.is_between">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">closed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'both'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'left'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'right'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'both'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_between" title="Link to this definition">#</a></dt>
 <dd><p>Tests whether all values of the Series are in the given range.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>min_value</strong> (<em>float</em>) – The lower bound</p></li>
-<li><p><strong>max_value</strong> (<em>float</em>) – The upper bound</p></li>
-<li><p><strong>closed</strong> (<em>IntervalType</em><em>, </em><em>optional</em>) – Describes the interval type, by default “both”</p></li>
+<li><p><strong>lower_bound</strong> (<em>Any</em>) – The lower bound</p></li>
+<li><p><strong>upper_bound</strong> (<em>Any</em>) – The upper bound</p></li>
+<li><p><strong>closed</strong> (<em>ClosedInterval</em><em>, </em><em>optional</em>) – Defines which sides of the interval are closed, by default “both”</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -513,9 +542,11 @@ value.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check"><code class="docutils literal notranslate"><span class="pre">Check</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.approx_eq"><code class="docutils literal notranslate"><span class="pre">Check.approx_eq()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.eq"><code class="docutils literal notranslate"><span class="pre">Check.eq()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.ge"><code class="docutils literal notranslate"><span class="pre">Check.ge()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.gt"><code class="docutils literal notranslate"><span class="pre">Check.gt()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.in_range"><code class="docutils literal notranslate"><span class="pre">Check.in_range()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_between"><code class="docutils literal notranslate"><span class="pre">Check.is_between()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_id"><code class="docutils literal notranslate"><span class="pre">Check.is_id()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_in"><code class="docutils literal notranslate"><span class="pre">Check.is_in()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.le"><code class="docutils literal notranslate"><span class="pre">Check.le()</span></code></a></li>

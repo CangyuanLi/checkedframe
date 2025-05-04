@@ -333,10 +333,10 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">AASchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
-    <span class="n">reason_code</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">)</span>
-    <span class="n">reason_code_description</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">shap</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">rank</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">UInt8</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">reason_code</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+    <span class="n">reason_code_description</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">shap</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">UInt8</span><span class="p">(</span><span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
     <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;reason_code&quot;</span><span class="p">)</span>
