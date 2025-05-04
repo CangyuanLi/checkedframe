@@ -71,6 +71,53 @@ def _is_id(df: nw.DataFrame, subset: str | list[str]) -> bool:
     return n_rows == n_unique_rows
 
 
+def _str_ends_with(s: nw.Series, suffix: str) -> nw.Series:
+    return s.str.ends_with(suffix)
+
+
+def _str_starts_with(s: nw.Series, prefix: str) -> nw.Series:
+    return s.str.starts_with(prefix)
+
+
+def _str_contains(s: nw.Series, pattern: str, literal: bool = False) -> nw.Series:
+    return s.str.contains(pattern, literal)
+
+
+class _BuiltinStringMethods:
+    @staticmethod
+    def ends_with(suffix: str) -> Check:
+        return Check(
+            func=functools.partial(_str_ends_with, suffix=suffix),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="ends_with",
+            description=f"Must end with {suffix}",
+        )
+
+    @staticmethod
+    def starts_with(prefix: str) -> Check:
+        return Check(
+            func=functools.partial(_str_starts_with, prefix=prefix),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="starts_with",
+            description=f"Must start with {prefix}",
+        )
+
+    @staticmethod
+    def contains(pattern: str, literal: bool = False) -> Check:
+        return Check(
+            func=functools.partial(_str_contains, pattern=pattern, literal=literal),
+            input_type="Series",
+            return_type="Series",
+            native=False,
+            name="contains",
+            description=f"Must contain {pattern}",
+        )
+
+
 class Check:
     """Represents a check to run.
 
@@ -328,3 +375,8 @@ class Check:
             name="is_id",
             description=f"{subset} must uniquely identify the DataFrame",
         )
+
+    @staticmethod
+    @property
+    def str():
+        return _BuiltinStringMethods
