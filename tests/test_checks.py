@@ -13,6 +13,15 @@ def test_is_between():
     S.validate(df)
 
 
+def test_lt():
+    df = pl.DataFrame({"a": [1, None, 4, 5, 6]})
+
+    class S(cf.Schema):
+        a = cf.Int64(nullable=True, checks=[cf.Check.lt(7)])
+
+    S.validate(df)
+
+
 def test_is_sorted_by():
     df = pl.DataFrame({"a": [1, 3, 2], "b": [1, 1, 2]})
 
