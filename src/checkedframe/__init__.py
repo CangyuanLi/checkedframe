@@ -1,7 +1,7 @@
 # ruff: noqa: F401
 from checkedframe import exceptions
 
-from ._checks import Check
+from ._checks import Check, col, lit
 from ._core import Schema
 from ._dtypes import (
     Array,
