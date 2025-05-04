@@ -352,7 +352,10 @@ class Check:
 
         return Check(
             func=functools.partial(
-                _is_between, lower_bound, upper_bound, closed=closed
+                _is_between,
+                lower_bound=lower_bound,
+                upper_bound=upper_bound,
+                closed=closed,
             ),
             input_type="Series",
             return_type="Series",
