@@ -37,3 +37,37 @@ def test_readme_example():
 
     with pytest.raises(cf.exceptions.SchemaError):
         AASchema.validate(df)
+
+
+def test_mutation():
+    # Check that we aren't accidentally mutating columns / checks
+    class BaseSchema(cf.Schema):
+        is_true = cf.Boolean()
+
+    class Schema1(BaseSchema):
+        @cf.Check(column="is_true")
+        def check_is_all_true(s: pl.Series) -> pl.Series:
+            return s.all()
+
+    class Schema2(BaseSchema):
+        x = cf.Int64()
+
+    df = pl.DataFrame({"is_true": [True, False], "x": [1, 1]})
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        Schema1.validate(df)
+
+    Schema2.validate(df)
+
+
+def test_columns():
+    class BaseSchema(cf.Schema):
+        x = cf.Int64()
+        y = cf.Int64()
+
+    assert BaseSchema.columns() == ["x", "y"]
+
+    class Schema1(BaseSchema):
+        z = cf.Int64()
+
+    assert Schema1.columns() == ["x", "y", "z"]
