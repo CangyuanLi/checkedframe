@@ -110,6 +110,7 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
                 check,
                 nw_df,
                 check_name=check_name,
+                check_input_type=check.input_type,
                 series_name=expected_name,
             )
 
