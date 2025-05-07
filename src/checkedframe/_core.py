@@ -15,24 +15,28 @@ from .exceptions import ColumnNotFoundError, SchemaError, ValidationError, _Erro
 
 
 def _run_check(
-    check: Check, nw_df: nw.DataFrame, series_name: Optional[str] = None
+    check: Check,
+    nw_df: nw.DataFrame,
+    check_name: str,
+    check_input_type: str,
+    series_name: Optional[str] = None,
 ) -> bool:
-    if check.input_type is None or check.return_type == "Expr":
+    if check_input_type is None or check.return_type == "Expr":
         if check.native:
             frame = nw_df.to_native()
         else:
             frame = nw_df
 
-        return frame.select(check.func().alias(check.name))[check.name].all()
+        return frame.select(check.func().alias(check_name))[check_name].all()
     else:
-        if check.input_type in ("auto", "Series"):
+        if check_input_type in ("auto", "Series"):
             if series_name is None:
                 raise ValueError(
                     "Series cannot be automatically determined in this context"
                 )
 
             input_ = nw_df[series_name]
-        elif check.input_type == "Frame":
+        elif check_input_type == "Frame":
             input_ = nw_df
         else:
             raise ValueError("Invalid input type")
@@ -50,13 +54,13 @@ def _run_check(
         return passed_check
 
 
-def _validate(self: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:
+def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:
     nw_df = nw.from_native(df, eager_only=True)
     df_schema = nw_df.collect_schema()
 
     errors = defaultdict(_ErrorStore)
 
-    for expected_name, expected_col in self.expected_schema.items():
+    for expected_name, expected_col in schema.expected_schema.items():
         error_store = errors[expected_name]
 
         # check existence
@@ -100,23 +104,30 @@ def _validate(self: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataF
 
         # user checks
         for i, check in enumerate(expected_col.checks):
-            if check.name is None:
-                check.name = f"check_{i}"
+            check_name = f"check_{i}" if check.name is None else check.name
 
-            passed_check = _run_check(check, nw_df, expected_name)
+            passed_check = _run_check(
+                check,
+                nw_df,
+                check_name=check_name,
+                series_name=expected_name,
+            )
 
             if not passed_check:
                 error_store.failed_checks.append(ValidationError(check))
 
     failed_checks: list[ValidationError] = []
-    for i, check in enumerate(self.checks):
-        if check.name is None:
-            check.name = f"frame_check_{i}"
+    for i, check in enumerate(schema.checks):
+        check_name = f"frame_check_{i}" if check.name is None else check.name
 
         if check.input_type == "auto":
-            check.input_type = "Expr" if check._func_n_params == 0 else "Frame"
+            check_input_type = "Expr" if check._func_n_params == 0 else "Frame"
+        else:
+            check_input_type = check.input_type
 
-        passed_check = _run_check(check, nw_df)
+        passed_check = _run_check(
+            check, nw_df, check_name=check_name, check_input_type=check_input_type
+        )
 
         if not passed_check:
             failed_checks.append(ValidationError(check))
