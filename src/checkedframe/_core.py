@@ -208,6 +208,21 @@ class Schema:
         self.expected_schema = expected_schema
         self.checks = [] if checks is None else checks
         self.validate = self.__validate
+        self.columns = self.__columns
+
+    @classmethod
+    def columns(cls) -> list[str]:
+        attr_list = inspect.getmembers(cls)
+
+        cols = []
+        for attr, val in attr_list:
+            if isinstance(val, Column):
+                cols.append(attr)
+
+        return cols
+
+    def __columns(self) -> list[str]:
+        return list(self.expected_schema.keys())
 
     @classmethod
     def _parse_into_schema(cls) -> Schema:
