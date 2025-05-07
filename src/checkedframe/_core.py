@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import inspect
 from collections import defaultdict
 from collections.abc import Sequence
@@ -204,7 +205,11 @@ class Schema:
 
         for attr, val in attr_list:
             if isinstance(val, Column):
-                schema_dict[attr] = val
+                new_val = copy.copy(val)
+                # We may modify checks, which is a list, so we need to copy it
+                new_val.checks = list(val.checks)
+
+                schema_dict[attr] = new_val
 
         for attr, val in attr_list:
             if isinstance(val, Check):
