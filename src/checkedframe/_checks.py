@@ -523,6 +523,7 @@ class Check:
             description=f"Must be in allowed values {other}",
         )
 
+    @staticmethod
     def is_finite() -> Check:
         return Check(
             func=_is_finite,
@@ -533,6 +534,7 @@ class Check:
             description="All values must be finite",
         )
 
+    @staticmethod
     def is_sorted(descending: bool = False) -> Check:
         order = "descending" if descending else "ascending"
 
