@@ -489,9 +489,9 @@ class Check:
         return Check(
             func=functools.partial(
                 _series_lit_approx_eq,
-                other=other,
+                right=other,
                 rtol=rtol,
-                atoL=atol,
+                atol=atol,
                 nan_equal=nan_equal,
             ),
             input_type="Series",
