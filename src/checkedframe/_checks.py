@@ -347,7 +347,7 @@ class Check:
             l_paren, r_paren = ("[", ")")
         elif closed == "right":
             l_paren, r_paren = ("(", "]")
-        elif closed is None:
+        elif closed == "none":
             l_paren, r_paren = ("(", ")")
 
         return Check(
