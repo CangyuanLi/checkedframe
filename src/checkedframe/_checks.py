@@ -342,13 +342,13 @@ class Check:
         Check
         """
         if closed == "both":
-            l_paren, r_paren = "[]"
+            l_paren, r_paren = ("[", "]")
         elif closed == "left":
-            l_paren, r_paren = "[)"
+            l_paren, r_paren = ("[", ")")
         elif closed == "right":
-            l_paren, r_paren = "(]"
+            l_paren, r_paren = ("(", "]")
         elif closed is None:
-            l_paren, r_paren = "()"
+            l_paren, r_paren = ("(", ")")
 
         return Check(
             func=functools.partial(
