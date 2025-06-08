@@ -31,7 +31,7 @@ def _resolve_return_type_from_annotation(func: Callable):
     return "auto"
 
 
-ClosedInterval = Optional[Literal["both", "left", "right"]]
+ClosedInterval = Literal["left", "right", "none", "both"]
 
 
 def _is_between(
