@@ -58,16 +58,16 @@ class SchemaError(Exception):
             bullets = []
             error_count = 0
 
-            if (e := error_store.missing_column) is not None:
-                bullets.append(_wrap_err(e))
+            if (e1 := error_store.missing_column) is not None:
+                bullets.append(_wrap_err(e1))
                 error_count += 1
 
-            if (e := error_store.invalid_dtype) is not None:
-                bullets.append(_wrap_err(e))
+            if (e2 := error_store.invalid_dtype) is not None:
+                bullets.append(_wrap_err(e2))
                 error_count += 1
 
-            if (e := error_store.invalid_nulls) is not None:
-                bullets.append(_wrap_err(e))
+            if (e3 := error_store.invalid_nulls) is not None:
+                bullets.append(_wrap_err(e3))
                 error_count += 1
 
             if len(error_store.failed_checks) > 0:
