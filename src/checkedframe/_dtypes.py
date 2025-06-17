@@ -70,7 +70,7 @@ def _int_to_uint_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         return _checked_cast(s, to_dtype)
 
     raise TypeError(
-        f"Cannot safely cast {s.dtype} to {to_dtype.__name__}; actual min {s_min} < allowed min 0"
+        f"Cannot safely cast {s.dtype} to {to_dtype}; actual min {s_min} < allowed min 0"
     )
 
 
@@ -95,7 +95,7 @@ def _allowed_range_cast(s: nw.Series, to_dtype: DType) -> nw.Series:
         return _checked_cast(s, to_dtype)
 
     raise TypeError(
-        f"Cannot safely cast {s.dtype} to {to_dtype.__name__}; invalid range [{s_min}, {s_max}], expected range [{allowed_min:,}, {allowed_max:,}]"
+        f"Cannot safely cast {s.dtype} to {to_dtype}; invalid range [{s_min}, {s_max}], expected range [{allowed_min:,}, {allowed_max:,}]"
     )
 
 
