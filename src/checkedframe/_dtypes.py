@@ -8,8 +8,10 @@ from narwhals.stable.v1.dtypes import DType as NarwhalsDType
 
 from ._checks import Check
 
+if TYPE_CHECKING:
+    from datetime import timezone
 
-class Column:
+    TimeUnit = Literal["ns", "us", "ms", "s"]
     """Represents a column in a DataFrame.
 
     Parameters
