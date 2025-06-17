@@ -16,9 +16,13 @@ if TYPE_CHECKING:
 
 
 class _DType:
-    @staticmethod
     @abstractmethod
+    @staticmethod
     def to_narwhals() -> NarwhalsDType | type[NarwhalsDType]: ...
+
+    @abstractmethod
+    @staticmethod
+    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series: ...
 
 
 class _BoundedDType(_DType):
@@ -55,6 +59,9 @@ class _Column:
         self.cast = cast
         self.required = required
         self.checks = [] if checks is None else checks
+
+
+class _TypedColumn(_Column, _DType): ...
 
 
 def _checked_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
