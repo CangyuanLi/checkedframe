@@ -16,12 +16,12 @@ if TYPE_CHECKING:
 
 
 class _DType:
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def to_narwhals() -> NarwhalsDType | type[NarwhalsDType]: ...
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series: ...
 
 
