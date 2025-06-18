@@ -7,7 +7,6 @@ from ._dtypes import (
     Array,
     Binary,
     Boolean,
-    Column,
     Date,
     Datetime,
     Decimal,
