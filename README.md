@@ -40,12 +40,12 @@ class AASchema(cf.Schema):
     rank = cf.UInt8(cast=True)
 
 
-    @cf.Check(column="reason_code")
+    @cf.Check(columns="reason_code")
     def check_reason_code_length(s: pl.Series) -> pl.Series:
         """Reason codes must be exactly 3 chars"""
         return s.str.len_bytes() == 3
     
-    @cf.Check(column="reason_code")
+    @cf.Check(columns="reason_code")
     def check_is_id(s: pl.Series) -> bool:
         """Reason code must uniquely identify dataset"""
         return s.n_unique() == s.len()
