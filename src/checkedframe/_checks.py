@@ -11,6 +11,31 @@ col = nw.col
 lit = nw.lit
 
 
+class staticproperty:
+    """
+    A decorator that allows defining a read-only, class-level attribute
+    that is computed by a function which takes no arguments (like a static method).
+    """
+
+    def __init__(self, func):
+        if not callable(func):
+            raise TypeError("staticproperty can only decorate callables")
+        self.func = func
+        self.__doc__ = getattr(func, "__doc__")
+        self.__name__ = getattr(func, "__name__")
+
+    def __get__(self, obj, objtype=None):
+        # The decorated function (self.func) is called directly with NO arguments.
+        # It MUST be defined to accept zero arguments.
+        return self.func()
+
+    def __set__(self, obj, value):
+        raise AttributeError(f"can't set attribute '{self.__name__}'")
+
+    def __delete__(self, obj):
+        raise AttributeError(f"can't delete attribute '{self.__name__}'")
+
+
 def _resolve_return_type_from_annotation(func: Callable):
     try:
         dtype = str(func.__annotations__["return"])
@@ -69,7 +94,7 @@ def _approx_eq(
     rtol: float,
     atol: float,
     nan_equal: bool,
-) -> nw.Series:
+) -> nw.Expr:
     res = (
         left.__sub__(right)
         .abs()
@@ -189,10 +214,12 @@ def _frame_is_sorted(
         return _frame_equals(df, df_sorted, check_exact=True)
     else:
         if isinstance(by, str):
+            assert isinstance(descending, bool)
+
             return df[by].is_sorted(descending=descending)
         else:
             return _frame_equals(
-                df.select(by), df.select(by).sort(descending=descending)
+                df.select(by), df.select(by).sort(by=by, descending=descending)
             )
 
 
@@ -205,7 +232,7 @@ def _str_starts_with(s: nw.Series, prefix: str) -> nw.Series:
 
 
 def _str_contains(s: nw.Series, pattern: str, literal: bool = False) -> nw.Series:
-    return s.str.contains(pattern, literal)
+    return s.str.contains(pattern, literal=literal)
 
 
 class _BuiltinStringMethods:
@@ -243,6 +270,10 @@ class _BuiltinStringMethods:
         )
 
 
+CheckInputType = Optional[Literal["auto", "Frame", "Expr", "Series"]]
+CheckReturnType = Literal["auto", "bool", "Expr", "Series"]
+
+
 class Check:
     """Represents a check to run.
 
@@ -250,8 +281,8 @@ class Check:
     ----------
     func : Optional[Callable], optional
         The check to run, by default None
-    column : Optional[str], optional
-        The column associated with the check, by default None
+    columns : Optional[str | list[str]], optional
+        The columns associated with the check, by default None
     input_type : Optional[Literal["auto", "Frame", "Series"]], optional
         The input to the check function. If "auto", attempts to determine via the
         context, by default "auto"
@@ -271,9 +302,9 @@ class Check:
     def __init__(
         self,
         func: Optional[Callable] = None,
-        column: Optional[str] = None,
-        input_type: Optional[Literal["auto", "Frame", "Series"]] = "auto",
-        return_type: Literal["auto", "bool", "Expr", "Series"] = "auto",
+        columns: Optional[str | list[str]] = None,
+        input_type: CheckInputType = "auto",
+        return_type: CheckReturnType = "auto",
         native: bool = True,
         name: Optional[str] = None,
         description: Optional[str] = None,
@@ -284,12 +315,13 @@ class Check:
         self.native = native
         self.name = name
         self.description = description
-        self.column = column
+        self.columns = [columns] if isinstance(columns, str) else columns
 
         if self.func is not None:
             self._set_params()
 
-    def _set_params(self):
+    def _set_params(self) -> None:
+        assert self.func is not None
         self._func_n_params = len(inspect.signature(self.func).parameters)
 
         if self.input_type == "auto":
@@ -298,7 +330,7 @@ class Check:
 
         if self.return_type == "auto" and self.func is not None:
             if self.input_type is None:
-                self.return_type == "Expr"
+                self.return_type = "Expr"
             else:
                 self.return_type = _resolve_return_type_from_annotation(
                     self.func,
@@ -313,12 +345,12 @@ class Check:
         if self.description is None:
             self.description = "" if self.func.__doc__ is None else self.func.__doc__
 
-    def __call__(self, func):
+    def __call__(self, func: Callable):
         return Check(
             func=func,
-            column=self.column,
-            input_type=self.input_type,
-            return_type=self.return_type,
+            columns=self.columns,
+            input_type=self.input_type,  # type: ignore
+            return_type=self.return_type,  # type: ignore
             native=self.native,
             name=self.name,
             description=self.description,
@@ -586,7 +618,7 @@ class Check:
             description=f"{subset} must uniquely identify the DataFrame",
         )
 
+    @staticproperty
     @staticmethod
-    @property
     def str():
         return _BuiltinStringMethods

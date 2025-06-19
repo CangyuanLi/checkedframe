@@ -245,9 +245,10 @@ class Schema:
 
         for attr, val in attr_list:
             if isinstance(val, Check):
-                if val.column is not None:
-                    if val.column in schema_dict:
-                        schema_dict[val.column].checks.append(val)
+                if val.columns is not None:
+                    for c in val.columns:
+                        if c in schema_dict:
+                            schema_dict[c].checks.append(val)
                 else:
                     checks.append(val)
 
