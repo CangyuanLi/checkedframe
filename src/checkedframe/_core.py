@@ -3,14 +3,13 @@ from __future__ import annotations
 import copy
 import inspect
 from collections import defaultdict
-from collections.abc import Sequence
 from typing import Optional
 
 import narwhals.stable.v1 as nw
 import narwhals.stable.v1.typing as nwt
 
-from ._checks import Check
-from ._dtypes import Column, _nw_type_to_cf_type
+from ._checks import Check, CheckInputType
+from ._dtypes import _Column, _nw_type_to_cf_type, _TypedColumn
 from .exceptions import ColumnNotFoundError, SchemaError, ValidationError, _ErrorStore
 
 
@@ -18,9 +17,10 @@ def _run_check(
     check: Check,
     nw_df: nw.DataFrame,
     check_name: str,
-    check_input_type: str,
+    check_input_type: CheckInputType,
     series_name: Optional[str] = None,
 ) -> bool:
+    assert check.func is not None
     if check_input_type is None or check.return_type == "Expr":
         if check.native:
             frame = nw_df.to_native()
@@ -37,7 +37,11 @@ def _run_check(
 
             input_ = nw_df[series_name]
         elif check_input_type == "Frame":
-            input_ = nw_df
+            # mypy complains here that the input type is Series, not DataFrame, but it
+            # is only a Series if the above branch is hit, which means this branch is
+            # not
+
+            input_ = nw_df  # type: ignore[assignment]
         else:
             raise ValueError("Invalid input type")
 
@@ -56,9 +60,9 @@ def _run_check(
 
 def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:
     nw_df = nw.from_native(df, eager_only=True)
-    df_schema = nw_df.collect_schema()
+    df_schema = nw_df.collect_schema()  # type: ignore[attribute]
 
-    errors = defaultdict(_ErrorStore)
+    errors: dict[str, _ErrorStore] = defaultdict(_ErrorStore)
 
     for expected_name, expected_col in schema.expected_schema.items():
         error_store = errors[expected_name]
@@ -82,15 +86,14 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
 
         # check data types
         actual_dtype = df_schema[expected_name]
-        expected_dtype = expected_col.dtype
-        if actual_dtype == expected_col.dtype.to_narwhals():
+        if actual_dtype == expected_col.to_narwhals():
             pass
         else:
             if expected_col.cast or cast:
                 try:
                     nw_df = nw_df.with_columns(
                         _nw_type_to_cf_type(actual_dtype)._safe_cast(
-                            nw_df[expected_name], expected_dtype
+                            nw_df[expected_name], expected_col
                         )
                     )
                 except TypeError as e:
@@ -98,7 +101,7 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
                     continue
             else:
                 error_store.invalid_dtype = TypeError(
-                    f"Expected {expected_dtype.__name__}, got {actual_dtype}"
+                    f"Expected {expected_col}, got {actual_dtype}"
                 )
                 continue
 
@@ -110,7 +113,7 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
                 check,
                 nw_df,
                 check_name=check_name,
-                check_input_type=check.input_type,
+                check_input_type=check.input_type,  # type: ignore[assignment]
                 series_name=expected_name,
             )
 
@@ -121,10 +124,11 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
     for i, check in enumerate(schema.checks):
         check_name = f"frame_check_{i}" if check.name is None else check.name
 
+        check_input_type: CheckInputType
         if check.input_type == "auto":
-            check_input_type = "Expr" if check._func_n_params == 0 else "Frame"
+            check_input_type = "Expr" if check._func_n_params == 0 else "Frame"  # type: ignore[assignment]
         else:
-            check_input_type = check.input_type
+            check_input_type = check.input_type  # type: ignore[assignment]
 
         passed_check = _run_check(
             check, nw_df, check_name=check_name, check_input_type=check_input_type
@@ -176,7 +180,7 @@ class Schema:
         import checkedframe as cf
 
         class MySchema(cf.Schema):
-            col1 = cf.Column(cf.String)
+            col1 = cf.String()
 
             @cf.Check(column="col1")
             def check_length(s: pl.Series) -> pl.Series:
@@ -202,13 +206,13 @@ class Schema:
 
     def __init__(
         self,
-        expected_schema: dict[str, Column],
-        checks: Optional[Sequence[Check]] = None,
+        expected_schema: dict[str, _TypedColumn],
+        checks: Optional[list[Check]] = None,
     ):
         self.expected_schema = expected_schema
         self.checks = [] if checks is None else checks
-        self.validate = self.__validate
-        self.columns = self.__columns
+        self.validate = self.__validate  # type: ignore
+        self.columns = self.__columns  # type: ignore
 
     @classmethod
     def columns(cls) -> list[str]:
@@ -216,7 +220,7 @@ class Schema:
 
         cols = []
         for attr, val in attr_list:
-            if isinstance(val, Column):
+            if isinstance(val, _Column):
                 cols.append(attr)
 
         return cols
@@ -226,17 +230,19 @@ class Schema:
 
     @classmethod
     def _parse_into_schema(cls) -> Schema:
-        schema_dict = {}
+        schema_dict: dict[str, _TypedColumn] = {}
         checks = []
         attr_list = inspect.getmembers(cls)
 
         for attr, val in attr_list:
-            if isinstance(val, Column):
+            if isinstance(val, _Column):
                 new_val = copy.copy(val)
                 # We may modify checks, which is a list, so we need to copy it
                 new_val.checks = list(val.checks)
 
-                schema_dict[attr] = new_val
+                # TODO: A TypedColumn is a Column and a DType, but the isinstance check
+                # above does not work on TypedColumn, only Column.
+                schema_dict[attr] = new_val  # type: ignore[assignment]
 
         for attr, val in attr_list:
             if isinstance(val, Check):
