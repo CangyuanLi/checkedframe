@@ -46,7 +46,7 @@ def test_mutation():
 
     class Schema1(BaseSchema):
         @cf.Check(columns="is_true")
-        def check_is_all_true(s: pl.Series) -> pl.Series:
+        def check_is_all_true(s: pl.Series) -> bool:
             return s.all()
 
     class Schema2(BaseSchema):
