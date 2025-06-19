@@ -6,17 +6,17 @@ import checkedframe as cf
 
 def test_readme_example():
     class AASchema(cf.Schema):
-        reason_code = cf.Column(cf.String)
-        reason_code_description = cf.Column(cf.String, nullable=True)
-        shap = cf.Column(cf.Float64, cast=True)
-        rank = cf.Column(cf.UInt8, cast=True)
+        reason_code = cf.String()
+        reason_code_description = cf.String(nullable=True)
+        shap = cf.Float64(cast=True)
+        rank = cf.UInt8(cast=True)
 
-        @cf.Check(column="reason_code")
+        @cf.Check(columns="reason_code")
         def check_reason_code_length(s: pl.Series) -> pl.Series:
             """Reason codes must be exactly 3 chars"""
             return s.str.len_bytes() == 3
 
-        @cf.Check(column="reason_code")
+        @cf.Check(columns="reason_code")
         def check_is_id(s: pl.Series) -> bool:
             """Reason code must uniquely identify dataset"""
             return s.n_unique() == s.len()
@@ -45,7 +45,7 @@ def test_mutation():
         is_true = cf.Boolean()
 
     class Schema1(BaseSchema):
-        @cf.Check(column="is_true")
+        @cf.Check(columns="is_true")
         def check_is_all_true(s: pl.Series) -> pl.Series:
             return s.all()
 
