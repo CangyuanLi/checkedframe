@@ -195,8 +195,7 @@ class Schema:
         import checkedframe as cf
 
         MySchema = cf.Schema({
-            "col1": cf.Column(
-                cf.String,
+            "col1": cf.String(
                 checks=[cf.Check(lambda s: s.str.len_bytes() == 3)]
             )
         })
