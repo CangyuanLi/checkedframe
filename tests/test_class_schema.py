@@ -1,20 +1,22 @@
+import polars as pl
+
 import checkedframe as cf
 
 
 def test_inheritance():
     class A(cf.Schema):
-        col1 = cf.Column(cf.String)
+        col1 = cf.String()
 
-        @cf.Check(column="col1")
+        @cf.Check(columns="col1")
         def a_check() -> bool:
             return True
 
         @cf.Check(input_type="Frame")
-        def df_check(df) -> bool:
+        def df_check(df: pl.DataFrame) -> bool:
             return df.height == 2
 
     class B(A):
-        col2 = cf.Column(cf.Int64)
+        col2 = cf.Int64()
 
     schema = B._parse_into_schema()
 
