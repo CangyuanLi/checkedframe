@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import pickle
+from pathlib import Path
 from typing import Callable
 
-from mypy.nodes import CallExpr, Decorator, MemberExpr, TypeInfo
+from mypy.nodes import CallExpr, Decorator, MemberExpr, NameExpr, TypeInfo
 from mypy.plugin import (
     ClassDefContext,
     MethodContext,
@@ -16,18 +18,25 @@ CHECK_DECORATOR_FULLNAME = "checkedframe._checks.Check"
 
 
 def mark_checks_as_staticmethod(ctx: ClassDefContext) -> None:
-    """Mark all methods decorated with `@rule` as `staticmethod`s."""
-    info = ctx.cls.info
-    for sym in info.names.values():
+    for sym in ctx.cls.info.names.values():
         if not isinstance(sym.node, Decorator):
             continue
-        decorator = sym.node.original_decorators[0]
-        if not isinstance(decorator, CallExpr):
-            continue
-        if not isinstance(decorator.callee, MemberExpr):
-            continue
-        if decorator.callee.fullname == CHECK_DECORATOR_FULLNAME:
-            sym.node.func.is_static = True
+
+        for decorator in sym.node.original_decorators:
+            if isinstance(decorator, CallExpr):
+                dec = decorator.callee
+
+                if not isinstance(dec, (NameExpr, MemberExpr)):
+                    continue
+            elif isinstance(decorator, (NameExpr, MemberExpr)):
+                dec = decorator
+            else:
+                continue
+
+            dec_name = dec.fullname
+
+            if dec_name == CHECK_DECORATOR_FULLNAME:
+                sym.node.func.is_static = True
 
 
 class CheckedframePlugin(Plugin):
@@ -45,6 +54,7 @@ class CheckedframePlugin(Plugin):
                     mark_checks_as_staticmethod(ctx)
 
                 return _hook
+
         return None
 
 
