@@ -618,7 +618,7 @@ class Check:
             description=f"{subset} must uniquely identify the DataFrame",
         )
 
-    @staticproperty
     @staticmethod
+    @staticproperty
     def str():
         return _BuiltinStringMethods
