@@ -1,17 +1,9 @@
 from __future__ import annotations
 
-import pickle
-from pathlib import Path
 from typing import Callable
 
 from mypy.nodes import CallExpr, Decorator, MemberExpr, NameExpr, TypeInfo
-from mypy.plugin import (
-    ClassDefContext,
-    MethodContext,
-    MethodSigContext,
-    Plugin,
-    SemanticAnalyzerPluginInterface,
-)
+from mypy.plugin import ClassDefContext, Plugin
 
 SCHEMA_FULLNAME = "checkedframe._core.Schema"
 CHECK_DECORATOR_FULLNAME = "checkedframe._checks.Check"
