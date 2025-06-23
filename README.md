@@ -11,21 +11,25 @@
 
 ## What is it?
 
-**checkedframe** is a lightweight library for DataFrame validation built on top of **narwhals**.
+**checkedframe** is a lightweight library for DataFrame validation built on top of **narwhals**. This means it has first-class support for all the engines that **narwhals** supports (primarily Pandas, Polars, cuDF, Modin, and PyArrow). 
 
 ## Why use checkedframe?
+
+
+|                        | [checkedframe](https://github.com/cangyuanli/checkedframe) | [pandera](https://pandera.readthedocs.io/) | [patito](https://patito.readthedocs.io/) | [dataframely](https://github.com/...) |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------ | ---------------------------------------- | ------------------------------------- |
+| **DataFrame agnostic** | ✅                                                          | 🟡 (1.)                                     | 🟡 (polars + duckdb-only)                 | ❌ (polars-only)                       |
+| **Lightweight**        | ✅                                                          | ❌ (pydantic)                               | ❌ (pydantic)                             | ✅                                     |
+| **Custom checks**      | ✅ (2.)                                                     | ✅                                          | ✅                                        | 🟡                                     |
+| **Nested types**       | ✅ (2.)                                                     | ✅                                          | ✅                                        | 🟡                                     |
+| **Battle-tested**      | ❌ (You can help!)                                          | ✅                                          | 🟡                                        | ✅                                     |
 
 - ✅ = Fully supported  
 - 🟡 = Partial/limited support  
 - ❌ = Not supported  
 
-
-|                        | [checkedframe](https://github.com/cangyuanli/checkedframe) | [pandera](https://pandera.readthedocs.io/) | [patito](https://patito.readthedocs.io/) | [dataframely](https://github.com/...) |
-| ---------------------- | ---------------------------------------------------------- | ------------------------------------------ | ---------------------------------------- | ------------------------------------- |
-| **DataFrame Agnostic** | ✅                                                          | 🟡 (1.)                                     | ❌ (polars-only)                          | ❌ (polars-only)                       |
-| **Lightweight**        | ✅                                                          | ❌ (pydantic)                               | ✅                                        | ✅                                     |
-
-1. While **pandera** does support multiple libraries, it requires code changes to switch between them. **pandera** must 
+1. While **pandera** does support multiple libraries, it requires code changes to switch between them. Feature completeness also varies across different engines.
+2. 2. 
 
 ### Notes:  
 
