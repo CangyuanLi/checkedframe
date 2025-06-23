@@ -15,6 +15,24 @@
 
 ## Why use checkedframe?
 
+- ✅ = Fully supported  
+- 🟡 = Partial/limited support  
+- ❌ = Not supported  
+
+
+|                        | [checkedframe](https://github.com/cangyuanli/checkedframe) | [pandera](https://pandera.readthedocs.io/) | [patito](https://patito.readthedocs.io/) | [dataframely](https://github.com/...) |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------ | ---------------------------------------- | ------------------------------------- |
+| **DataFrame Agnostic** | ✅                                                          | 🟡 (1.)                                     | ❌ (polars-only)                          | ❌ (polars-only)                       |
+| **Lightweight**        | ✅                                                          | ❌ (pydantic)                               | ✅                                        | ✅                                     |
+
+1. While **pandera** does support multiple libraries, it requires code changes to switch between them. **pandera** must 
+
+### Notes:  
+
+- *DataFrameLy appears to be a less-maintained/niche library (couldn’t find official docs).  
+
+Would you like me to refine any features or add more libraries (e.g., `great-expectations`)?
+
 # Usage:
 
 ## Installing
@@ -54,8 +72,8 @@ class AASchema(cf.Schema):
 
 df = pl.DataFrame(
     {
-        "reason_code": ["abc", "abc", "o9"],
-        "reason_code_description": ["a desc here", "another desc", None],
+        "reason_code": ["R23", "R23", "R9"],
+        "reason_code_description": ["Credit score too low", "Income too low", None],
         "shap": [1, 2, 3],
         "rank": [-1, 2, 1],
     }
