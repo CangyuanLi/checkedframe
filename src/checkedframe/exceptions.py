@@ -12,16 +12,16 @@ class ColumnNotFoundError(Exception):
 class ValidationError(Exception):
     """Raised when a check fails."""
 
-    def __init__(self, check):
+    def __init__(self, check, err_msg: str = ""):
         self.check = check
 
-        super().__init__(f"{check.name} failed: {check.description}")
+        super().__init__(f"{check.name} failed{err_msg}: {check.description}")
 
 
 @dataclasses.dataclass
 class _ErrorStore:
     missing_column: Optional[ColumnNotFoundError] = None
-    invalid_nulls: Optional[ValueError] = None
+    invalid_nulls: Optional[ValidationError] = None
     invalid_dtype: Optional[TypeError] = None
     failed_checks: list[ValidationError] = dataclasses.field(default_factory=list)
 

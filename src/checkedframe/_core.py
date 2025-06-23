@@ -13,13 +13,47 @@ from ._dtypes import _Column, _nw_type_to_cf_type, _TypedColumn
 from .exceptions import ColumnNotFoundError, SchemaError, ValidationError, _ErrorStore
 
 
+class _NullValueCheck:
+    def __init__(self):
+        self.name = "NullValueCheck"
+        self.description = "Nulls found in non-nullable column"
+
+
 def _run_check(
     check: Check,
     nw_df: nw.DataFrame,
     check_name: str,
     check_input_type: CheckInputType,
     series_name: Optional[str] = None,
-) -> bool:
+) -> tuple[bool, Optional[int]]:
+    """_summary_
+
+    Parameters
+    ----------
+    check : Check
+        _description_
+    nw_df : nw.DataFrame
+        _description_
+    check_name : str
+        _description_
+    check_input_type : CheckInputType
+        _description_
+    series_name : Optional[str], optional
+        , by default None
+
+    Returns
+    -------
+    bool | int
+        Returns either a boolean that is True when the check passes or an integer
+        representing the number of rows that fail the check.
+
+    Raises
+    ------
+    ValueError
+        _description_
+    ValueError
+        _description_
+    """
     assert check.func is not None
     if check_input_type is None or check.return_type == "Expr":
         if check.native:
@@ -27,7 +61,11 @@ def _run_check(
         else:
             frame = nw_df
 
-        return frame.select(check.func().alias(check_name))[check_name].all()
+        n_failed = (
+            frame.select(check.func().alias(check_name))[check_name].__invert__().sum()
+        )
+
+        return (n_failed == 0, n_failed)
     else:
         if check_input_type in ("auto", "Series"):
             if series_name is None:
@@ -51,17 +89,28 @@ def _run_check(
         passed_check = check.func(input_)
 
         if isinstance(passed_check, bool):
-            return passed_check
+            return (passed_check, None)
         else:
-            passed_check = nw.from_native(passed_check, series_only=True).all()
+            n_failed = nw.from_native(passed_check, series_only=True).__invert__().sum()
 
-        return passed_check
+        return (n_failed == 0, n_failed)
+
+
+def _build_check_err(check: Check, n_failed: Optional[int], n_rows: int):
+    if n_failed is not None:
+        failed_pct = n_failed / n_rows
+        err_msg = f" for {n_failed} / {n_rows} rows ({failed_pct:.2%})"
+    else:
+        err_msg = ""
+
+    return ValidationError(check, err_msg)
 
 
 def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:
     nw_df = nw.from_native(df, eager_only=True)
     df_schema = nw_df.collect_schema()  # type: ignore[attribute]
 
+    n_rows = nw_df.shape[0]
     errors: dict[str, _ErrorStore] = defaultdict(_ErrorStore)
 
     for expected_name, expected_col in schema.expected_schema.items():
@@ -79,9 +128,12 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
 
         # check nullability
         if not expected_col.nullable:
-            if nw_df[expected_name].is_null().any():
-                error_store.invalid_nulls = ValueError(
-                    "Null values in non-nullable column"
+            null_count = nw_df[expected_name].is_null().sum()
+            if null_count > 0:
+                null_pct = null_count / n_rows
+                error_store.invalid_nulls = ValidationError(
+                    _NullValueCheck,
+                    f" for {null_count} / {n_rows} rows ({null_pct:.2%})",
                 )
 
         # check data types
@@ -117,8 +169,10 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
                 series_name=expected_name,
             )
 
-            if not passed_check:
-                error_store.failed_checks.append(ValidationError(check))
+            if not passed_check[0]:
+                error_store.failed_checks.append(
+                    _build_check_err(check, passed_check[1], n_rows)
+                )
 
     failed_checks: list[ValidationError] = []
     for i, check in enumerate(schema.checks):
@@ -134,8 +188,8 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
             check, nw_df, check_name=check_name, check_input_type=check_input_type
         )
 
-        if not passed_check:
-            failed_checks.append(ValidationError(check))
+        if not passed_check[0]:
+            failed_checks.append(_build_check_err(check, passed_check[1], n_rows))
 
     schema_error = SchemaError(errors, failed_checks)
 
