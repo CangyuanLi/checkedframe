@@ -8,6 +8,7 @@ def test_readme_example():
     class AASchema(cf.Schema):
         reason_code = cf.String()
         reason_code_description = cf.String(nullable=True)
+        features = cf.List(cf.String)
         shap = cf.Float64(cast=True)
         rank = cf.UInt8(cast=True)
 
@@ -16,15 +17,12 @@ def test_readme_example():
             """Reason codes must be exactly 3 chars"""
             return s.str.len_bytes() == 3
 
-        @cf.Check(columns="reason_code")
-        def check_is_id(s: pl.Series) -> bool:
-            """Reason code must uniquely identify dataset"""
-            return s.n_unique() == s.len()
-
         @cf.Check
         def check_row_height(df: pl.DataFrame) -> bool:
             """DataFrame must have 2 rows"""
             return df.height == 2
+
+        _id_check = cf.Check.is_id("reason_code")
 
     df = pl.DataFrame(
         {
@@ -37,6 +35,43 @@ def test_readme_example():
 
     with pytest.raises(cf.exceptions.SchemaError):
         AASchema.validate(df)
+
+    try:
+        AASchema.validate(df)
+    except cf.exceptions.SchemaError as e:
+        errors = e.errors
+
+        assert len(e.failed_checks) == 2
+
+        reason_code_errors = errors["reason_code"]
+        assert reason_code_errors.missing_column is None
+        assert reason_code_errors.invalid_dtype is None
+        assert reason_code_errors.invalid_nulls is None
+        assert len(reason_code_errors.failed_checks) == 1
+
+        reason_code_description_errors = errors["reason_code_description"]
+        assert reason_code_description_errors.missing_column is None
+        assert reason_code_description_errors.invalid_dtype is None
+        assert reason_code_description_errors.invalid_nulls is None
+        assert len(reason_code_description_errors.failed_checks) == 0
+
+        features_errors = errors["features"]
+        assert features_errors.missing_column is not None
+        assert features_errors.invalid_dtype is None
+        assert features_errors.invalid_nulls is None
+        assert len(features_errors.failed_checks) == 0
+
+        shap_errors = errors["shap"]
+        assert shap_errors.missing_column is None
+        assert shap_errors.invalid_dtype is None
+        assert shap_errors.invalid_nulls is None
+        assert len(shap_errors.failed_checks) == 0
+
+        rank_errors = errors["rank"]
+        assert rank_errors.missing_column is None
+        assert rank_errors.invalid_dtype is not None
+        assert rank_errors.invalid_nulls is None
+        assert len(rank_errors.failed_checks) == 0
 
 
 def test_mutation():
