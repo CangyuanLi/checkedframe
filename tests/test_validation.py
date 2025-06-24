@@ -5,6 +5,11 @@ import checkedframe as cf
 
 
 def test_readme_example():
+    import polars as pl
+
+    import checkedframe as cf
+    from checkedframe.polars import DataFrame
+
     class AASchema(cf.Schema):
         reason_code = cf.String()
         reason_code_description = cf.String(nullable=True)
@@ -17,6 +22,11 @@ def test_readme_example():
             """Reason codes must be exactly 3 chars"""
             return s.str.len_bytes() == 3
 
+        @cf.Check(columns="shap")
+        def check_shap_is_reasonable() -> pl.Expr:
+            """Shap values must be reasonable"""
+            return pl.col("shap").lt(5).and_(pl.col("shap").gt(0.01))
+
         @cf.Check
         def check_row_height(df: pl.DataFrame) -> bool:
             """DataFrame must have 2 rows"""
@@ -26,15 +36,15 @@ def test_readme_example():
 
     df = pl.DataFrame(
         {
-            "reason_code": ["abc", "abc", "o9"],
-            "reason_code_description": ["a desc here", "another desc", None],
+            "reason_code": ["R23", "R23", "R9"],
+            "reason_code_description": ["Credit score too low", "Income too low", None],
             "shap": [1, 2, 3],
             "rank": [-1, 2, 1],
         }
     )
 
     with pytest.raises(cf.exceptions.SchemaError):
-        AASchema.validate(df)
+        x: DataFrame[AASchema] = AASchema.validate(df)
 
     try:
         AASchema.validate(df)
