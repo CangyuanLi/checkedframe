@@ -11,31 +11,33 @@
 
 ## What is it?
 
-**checkedframe** is a lightweight library for DataFrame validation built on top of **narwhals**. This means it has first-class support for all the engines that **narwhals** supports (primarily Pandas, Polars, cuDF, Modin, and PyArrow). 
+**checkedframe** is a lightweight and flexible library for DataFrame validation built on top of **narwhals**. This means it has first-class support for both **narhwals** itself and all the engines that **narwhals** supports (primarily Pandas, Polars, cuDF, Modin, and PyArrow). 
 
 ## Why use checkedframe?
 
+The key advantages of **checkedframe** are DataFrame agnosticism (validate Pandas, Polars, Modin, etc. with a single unified API), separation from the **pydantic** ecosystem (which is fantastic but not suited for columnar data and relies too heavily on brittle type annotation magic), and a flexible, intuitive API for user-defined functions. Below is a (subjective) comparison of **checkedframe** and several other popular DataFrame validation libraries. If there are any errors / you want your library to be added, please send a PR!
 
-|                        | [checkedframe](https://github.com/cangyuanli/checkedframe) | [pandera](https://pandera.readthedocs.io/) | [patito](https://patito.readthedocs.io/) | [dataframely](https://github.com/...) |
-| ---------------------- | ---------------------------------------------------------- | ------------------------------------------ | ---------------------------------------- | ------------------------------------- |
-| **DataFrame agnostic** | ✅                                                          | 🟡 (1.)                                     | 🟡 (polars + duckdb-only)                 | ❌ (polars-only)                       |
-| **Lightweight**        | ✅                                                          | ❌ (pydantic)                               | ❌ (pydantic)                             | ✅                                     |
-| **Custom checks**      | ✅ (2.)                                                     | ✅                                          | ✅                                        | 🟡                                     |
-| **Nested types**       | ✅ (2.)                                                     | ✅                                          | ✅                                        | 🟡                                     |
-| **Battle-tested**      | ❌ (You can help!)                                          | ✅                                          | 🟡                                        | ✅                                     |
+|                                    | [checkedframe](https://github.com/cangyuanli/checkedframe) | [pandera](https://pandera.readthedocs.io/) | [patito](https://patito.readthedocs.io/) | [dataframely](https://github.com/...) | [great-expectations](https://github.com/...) | [pointblank](https://github.com/...) |
+| ---------------------------------- | ---------------------------------------------------------- | ------------------------------------------ | ---------------------------------------- | ------------------------------------- | -------------------------------------------- | ------------------------------------ |
+| **DataFrame agnostic**             | ✅                                                          | 🟡 (1.)                                     | ❌ (polars-only)                          | ❌ (polars-only)                       | ❌ (pandas-only)                              | ✅                                    |
+| **Lightweight**                    | ✅                                                          | ❌ (pydantic)                               | ❌ (pydantic)                             | ✅                                     | ❌                                            | 🟡                                    |
+| **Custom checks**                  | ✅                                                          | 🟡 (2.)                                     | ❌                                        | 🟡 (3.)                                | ❌                                            | 🟡                                    |
+| **Static typing**                  | ✅                                                          | ✅                                          | ✅                                        | ✅                                     | ❌                                            | ❌                                    |
+| **Nested types**                   | ✅                                                          | ✅                                          | ✅                                        | ✅                                     | ❌                                            | ✅                                    |
+| **Safe casting**                   | ✅                                                          | ✅                                          | ❌                                        | 🟡 (4.)                                | ❌                                            | ❌                                    |
+| **Filtering**                      | ❌                                                          | ❌                                          | ❌                                        | ✅                                     | ❌                                            | ❌                                    |
+| **Supports older Python versions** | ✅ (3.9+)                                                   | ✅                                          | ✅                                        | ❌ (3.11+)                             | ✅                                            | 🟡  (3.10+)                           |
+| **Battle-tested**                  | ❌ (You can help!)                                          | ✅                                          | 🟡                                        | 🟡                                     | ✅                                            | 🟡                                    |
 
 - ✅ = Fully supported  
 - 🟡 = Partial/limited support  
 - ❌ = Not supported  
 
 1. While **pandera** does support multiple libraries, it requires code changes to switch between them. Feature completeness also varies across different engines.
-2. 2. 
+2. This is quite subjective, but I find writing non-trivial checks (e.g. those requiring multiple columns, group-by, etc.) non-intuitive and difficult
+3. Checks must return an expr, which hampers checks such as a t-test between two columns
+4. Either all columns are cast or none are
 
-### Notes:  
-
-- *DataFrameLy appears to be a less-maintained/niche library (couldn’t find official docs).  
-
-Would you like me to refine any features or add more libraries (e.g., `great-expectations`)?
 
 # Usage:
 
@@ -65,6 +67,11 @@ class AASchema(cf.Schema):
     def check_reason_code_length(s: pl.Series) -> pl.Series:
         """Reason codes must be exactly 3 chars"""
         return s.str.len_bytes() == 3
+
+    @cf.Check(columns="shap")
+    def check_shap_is_reasonable() -> pl.Expr:
+        """Shap values must be reasonable"""
+        return pl.col("shap").lt(5).and_(pl.col("shap").gt(0.01))
 
     @cf.Check
     def check_row_height(df: pl.DataFrame) -> bool:
@@ -97,3 +104,16 @@ checkedframe.exceptions.SchemaError: Found 5 error(s)
   * is_id failed: reason_code must uniquely identify the DataFrame
   * check_row_height failed: DataFrame must have 2 rows
 ```
+
+Let's walk through the code step by step. We declare a schema (note that we inherit from `cf.Schema`) that represents a dataframe with 5 columns called `reason_code`, `reason_code_description`, `features`, `shap`, and `rank`. We declare the data type of each column, e.g. `String`, `Float64`, and so on. In addition, we declare certain properties about the columns. For example, we are OK with nulls in `reason_code_description` (by default, columns are not assumed to be nullable), so we set `nullable=True`. For `shap` and `rank`, we expect the specified data type but don't error if the column is not exactly that data type. Instead, since `cast=True`, we try to (safely) cast the column to the specified data type if possible. 
+
+Next, we use checks to assert different properties about our data. For example, we expect that all reason codes are exactly 3 characters long. Note the flexibility in how we perform checks. In the first example, we operate on the series. In the second example, we use expressions. In the third, we operate on the dataframe. In the fourth, we also operate on the dataframe but use a built-in check for convenience. All of these constructs are perfectly valid, with no need to switch between different decorators or remember complex arguments. In this example, the inputs and outputs of the checks are automatically determined from the type hints, but they can also be specified manually in case this fails.
+
+```python
+  @cf.Check(columns="reason_code", input_type="Series", return_type="Series")
+  def check_reason_code_length(s):
+      """Reason codes must be exactly 3 chars"""
+      return s.str.len_bytes() == 3
+```
+
+Finally, when calling `AASchema.validate` on our bad data, we get a nice error message, including clear descriptions of why casting failed, why checks failed (and for what number of rows, if applicable), and so on.
