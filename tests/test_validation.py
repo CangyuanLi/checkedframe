@@ -136,3 +136,12 @@ def test_nan_inf_raises_if_disallowed():
 
     with pytest.raises(cf.exceptions.SchemaError):
         MySchema.validate(df)
+
+
+def test_nan_inf_passes_if_allowed():
+    class MySchema(cf.Schema):
+        x = cf.Float64(allow_nan=True, allow_inf=True)
+
+    df = pl.DataFrame({"x": [float("nan"), float("inf"), float("-inf")]})
+
+    MySchema.validate(df)
