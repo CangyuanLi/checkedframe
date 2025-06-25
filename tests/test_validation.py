@@ -116,3 +116,13 @@ def test_columns():
         z = cf.Int64()
 
     assert Schema1.columns() == ["x", "y", "z"]
+
+
+def test_null_in_non_nullable_raises():
+    class MySchema(cf.Schema):
+        x = cf.Int64()
+
+    df = pl.DataFrame({"x": [None, 1]})
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        MySchema.validate(df)

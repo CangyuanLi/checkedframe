@@ -132,7 +132,7 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
             if null_count > 0:
                 null_pct = null_count / n_rows
                 error_store.invalid_nulls = ValidationError(
-                    _NullValueCheck,
+                    _NullValueCheck(),
                     f" for {null_count} / {n_rows} rows ({null_pct:.2%})",
                 )
 
