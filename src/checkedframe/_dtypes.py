@@ -61,7 +61,7 @@ class _Column:
         self.checks = [] if checks is None else checks
 
 
-class _TypedColumn(_Column, _DType): ...
+class _TypedColumn(_Column, _DType, NarwhalsDType): ...
 
 
 def _checked_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
@@ -601,6 +601,8 @@ class Float32(nw.Float32, _Column, _BoundedDType):
     def __init__(
         self,
         nullable: bool = False,
+        allow_nan: bool = False,
+        allow_inf: bool = False,
         required: bool = True,
         cast: bool = False,
         checks: Optional[list[Check]] = None,
@@ -613,6 +615,9 @@ class Float32(nw.Float32, _Column, _BoundedDType):
             cast=cast,
             checks=checks,
         )
+
+        self.allow_nan = allow_nan
+        self.allow_inf = allow_inf
 
     @staticmethod
     def to_narwhals():
@@ -650,6 +655,8 @@ class Float64(nw.Float64, _Column, _BoundedDType):
     def __init__(
         self,
         nullable: bool = False,
+        allow_nan: bool = False,
+        allow_inf: bool = False,
         required: bool = True,
         cast: bool = False,
         checks: Optional[list[Check]] = None,
@@ -662,6 +669,9 @@ class Float64(nw.Float64, _Column, _BoundedDType):
             cast=cast,
             checks=checks,
         )
+
+        self.allow_nan = allow_nan
+        self.allow_inf = allow_inf
 
     @staticmethod
     def to_narwhals():

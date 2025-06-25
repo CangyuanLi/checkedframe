@@ -126,3 +126,13 @@ def test_null_in_non_nullable_raises():
 
     with pytest.raises(cf.exceptions.SchemaError):
         MySchema.validate(df)
+
+
+def test_nan_inf_raises_if_disallowed():
+    class MySchema(cf.Schema):
+        x = cf.Float64()
+
+    df = pl.DataFrame({"x": [float("nan"), float("inf"), float("-inf")]})
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        MySchema.validate(df)

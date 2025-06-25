@@ -12,11 +12,26 @@ from ._checks import Check, CheckInputType
 from ._dtypes import _Column, _nw_type_to_cf_type, _TypedColumn
 from .exceptions import ColumnNotFoundError, SchemaError, ValidationError, _ErrorStore
 
+INFINITY = float("inf")
+NEGATIVE_INFINITY = float("-inf")
+
 
 class _NullValueCheck:
     def __init__(self):
         self.name = "NullValueCheck"
         self.description = "Nulls found in non-nullable column"
+
+
+class _NanValueCheck:
+    def __init__(self):
+        self.name = "NaNValueCheck"
+        self.description = "NaNs found but not allowed"
+
+
+class _InfValueCheck:
+    def __init__(self):
+        self.name = "InfValueCheck"
+        self.description = "-inf/inf found but not allowed"
 
 
 def _run_check(
@@ -136,6 +151,33 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
                     f" for {null_count} / {n_rows} rows ({null_pct:.2%})",
                 )
 
+        # check nan-ability
+        if hasattr(expected_col, "allow_nan"):
+            if not expected_col.allow_nan:
+                nan_count = nw_df[expected_name].is_nan().sum()
+                if nan_count > 0:
+                    nan_pct = nan_count / n_rows
+                    error_store.failed_checks.append(
+                        ValidationError(
+                            _NanValueCheck(),
+                            f" for {nan_count} / {n_rows} rows ({nan_pct:.2%})",
+                        )
+                    )
+
+        # check inf-ability
+        if hasattr(expected_col, "allow_inf"):
+            if not expected_col.allow_inf:
+                nan_count = (
+                    nw_df[expected_name].is_in((INFINITY, NEGATIVE_INFINITY)).sum()
+                )
+                if nan_count > 0:
+                    nan_pct = nan_count / n_rows
+                    error_store.failed_checks.append(
+                        ValidationError(
+                            _InfValueCheck(),
+                            f" for {nan_count} / {n_rows} rows ({nan_pct:.2%})",
+                        )
+                    )
         # check data types
         actual_dtype = df_schema[expected_name]
         if actual_dtype == expected_col.to_narwhals():
