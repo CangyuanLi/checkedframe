@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Literal, Optional, Union
 import narwhals.stable.v1 as nw
 from narwhals.stable.v1.dtypes import DType as NarwhalsDType
 
-from ._checks import Check
-
 if TYPE_CHECKING:
     from datetime import timezone
+
+    from ._checks import Check
 
     TimeUnit = Literal["ns", "us", "ms", "s"]
 
