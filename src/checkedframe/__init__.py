@@ -1,5 +1,5 @@
 # ruff: noqa: F401
-from checkedframe import exceptions
+from checkedframe import exceptions, selectors
 
 from ._checks import Check, col, lit
 from ._core import Schema

@@ -11,6 +11,7 @@ import narwhals.stable.v1.typing as nwt
 from ._checks import Check, CheckInputType
 from ._dtypes import _Column, _nw_type_to_cf_type, _TypedColumn
 from .exceptions import ColumnNotFoundError, SchemaError, ValidationError, _ErrorStore
+from .selectors import Selector
 
 INFINITY = float("inf")
 NEGATIVE_INFINITY = float("-inf")
@@ -341,8 +342,13 @@ class Schema:
 
         for attr, val in attr_list:
             if isinstance(val, Check):
-                if val.columns is not None:
-                    for c in val.columns:
+                if (cols_or_selector := val.columns) is not None:
+                    if isinstance(cols_or_selector, Selector):
+                        cols = cols_or_selector(schema_dict)
+                    else:
+                        cols = cols_or_selector
+
+                    for c in cols:
                         if c in schema_dict:
                             schema_dict[c].checks.append(val)
                 else:
