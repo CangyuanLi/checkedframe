@@ -7,6 +7,8 @@ from typing import Any, Callable, Literal, Optional
 
 import narwhals.stable.v1 as nw
 
+from .selectors import Selector
+
 col = nw.col
 lit = nw.lit
 
@@ -302,7 +304,7 @@ class Check:
     def __init__(
         self,
         func: Optional[Callable] = None,
-        columns: Optional[str | list[str]] = None,
+        columns: Optional[str | list[str] | Selector] = None,
         input_type: CheckInputType = "auto",
         return_type: CheckReturnType = "auto",
         native: bool = True,
