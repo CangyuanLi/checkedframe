@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import inspect
 from collections import defaultdict
 from typing import Optional
 
@@ -10,6 +9,7 @@ import narwhals.stable.v1.typing as nwt
 
 from ._checks import Check, CheckInputType
 from ._dtypes import _Column, _nw_type_to_cf_type, _TypedColumn
+from ._utils import get_class_members
 from .exceptions import ColumnNotFoundError, SchemaError, ValidationError, _ErrorStore
 from .selectors import Selector
 
@@ -337,7 +337,8 @@ class Schema(metaclass=_SchemaCacheMeta):
 
         schema_dict: dict[str, _TypedColumn] = {}
         checks = []
-        attr_list = inspect.getmembers(cls)
+
+        attr_list = get_class_members(cls)
 
         for attr, val in attr_list:
             if isinstance(val, _Column):
