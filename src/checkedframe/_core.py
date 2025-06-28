@@ -242,7 +242,15 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
     return nw_df.to_native()
 
 
-class Schema:
+class _SchemaCacheMeta(type):
+    def __new__(cls, name, bases, namespace):
+        new_class = super().__new__(cls, name, bases, namespace)
+        new_class._schema = None
+
+        return new_class
+
+
+class Schema(metaclass=_SchemaCacheMeta):
     """A lightweight schema representing a DataFrame. Briefly, a schema consists of
     columns and their associated data types. In addition, the schema stores checks that
     can be run either on a specific column or the entire DataFrame. Since `checkedframe`
@@ -300,6 +308,8 @@ class Schema:
         MySchema.validate(df)
     """
 
+    _schema: Optional[Schema]
+
     def __init__(
         self,
         expected_schema: dict[str, _TypedColumn],
@@ -312,20 +322,19 @@ class Schema:
 
     @classmethod
     def columns(cls) -> list[str]:
-        attr_list = inspect.getmembers(cls)
+        if cls._schema is None:
+            cls._schema = cls._parse_into_schema()
 
-        cols = []
-        for attr, val in attr_list:
-            if isinstance(val, _Column):
-                cols.append(attr)
-
-        return cols
+        return list(cls._schema.expected_schema.keys())
 
     def __columns(self) -> list[str]:
         return list(self.expected_schema.keys())
 
     @classmethod
     def _parse_into_schema(cls) -> Schema:
+        if cls._schema is not None:
+            return cls._schema
+
         schema_dict: dict[str, _TypedColumn] = {}
         checks = []
         attr_list = inspect.getmembers(cls)
@@ -354,7 +363,10 @@ class Schema:
                 else:
                     checks.append(val)
 
-        return Schema(expected_schema=schema_dict, checks=checks)
+        res = Schema(expected_schema=schema_dict, checks=checks)
+        cls._schema = res
+
+        return res
 
     @classmethod
     def validate(cls, df: nwt.IntoDataFrameT, cast: bool = False) -> nwt.IntoDataFrameT:
