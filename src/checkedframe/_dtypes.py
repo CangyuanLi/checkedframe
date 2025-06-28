@@ -50,11 +50,13 @@ class _Column:
 
     def __init__(
         self,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
         checks: Optional[list[Check]] = None,
     ):
+        self.name = name
         self.nullable = nullable
         self.cast = cast
         self.required = required
@@ -145,6 +147,8 @@ class Int8(nw.Int8, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -153,6 +157,7 @@ class Int8(nw.Int8, _Column, _BoundedDType):
         nw.Int8.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -181,6 +186,8 @@ class Int16(nw.Int16, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -189,6 +196,7 @@ class Int16(nw.Int16, _Column, _BoundedDType):
         nw.Int16.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -222,6 +230,8 @@ class Int32(nw.Int32, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -230,6 +240,7 @@ class Int32(nw.Int32, _Column, _BoundedDType):
         nw.Int32.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -263,6 +274,8 @@ class Int64(nw.Int64, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -271,6 +284,7 @@ class Int64(nw.Int64, _Column, _BoundedDType):
         nw.Int64.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -304,6 +318,8 @@ class Int128(nw.Int128, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -312,6 +328,7 @@ class Int128(nw.Int128, _Column, _BoundedDType):
         nw.Int128.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -354,6 +371,8 @@ class UInt8(nw.UInt8, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -362,6 +381,7 @@ class UInt8(nw.UInt8, _Column, _BoundedDType):
         nw.UInt8.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -404,6 +424,8 @@ class UInt16(nw.UInt16, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -412,6 +434,7 @@ class UInt16(nw.UInt16, _Column, _BoundedDType):
         nw.UInt16.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -452,6 +475,8 @@ class UInt32(nw.UInt32, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -460,6 +485,7 @@ class UInt32(nw.UInt32, _Column, _BoundedDType):
         nw.UInt32.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -497,6 +523,8 @@ class UInt64(nw.UInt64, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -505,6 +533,7 @@ class UInt64(nw.UInt64, _Column, _BoundedDType):
         nw.UInt64.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -549,6 +578,8 @@ class UInt128(nw.UInt128, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -557,6 +588,7 @@ class UInt128(nw.UInt128, _Column, _BoundedDType):
         nw.UInt128.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -600,6 +632,8 @@ class Float32(nw.Float32, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         allow_nan: bool = False,
         allow_inf: bool = False,
@@ -610,6 +644,7 @@ class Float32(nw.Float32, _Column, _BoundedDType):
         nw.Float32.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -654,6 +689,8 @@ class Float64(nw.Float64, _Column, _BoundedDType):
 
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         allow_nan: bool = False,
         allow_inf: bool = False,
@@ -664,6 +701,7 @@ class Float64(nw.Float64, _Column, _BoundedDType):
         nw.Float64.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -704,6 +742,8 @@ class Float64(nw.Float64, _Column, _BoundedDType):
 class Decimal(nw.Decimal, _Column, _DType):
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -712,6 +752,7 @@ class Decimal(nw.Decimal, _Column, _DType):
         nw.Decimal.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -730,6 +771,8 @@ class Decimal(nw.Decimal, _Column, _DType):
 class Binary(nw.Binary, _Column, _DType):
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -738,6 +781,7 @@ class Binary(nw.Binary, _Column, _DType):
         nw.Binary.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -756,6 +800,8 @@ class Binary(nw.Binary, _Column, _DType):
 class Boolean(nw.Boolean, _Column, _DType):
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -764,6 +810,7 @@ class Boolean(nw.Boolean, _Column, _DType):
         nw.Boolean.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -782,6 +829,8 @@ class Boolean(nw.Boolean, _Column, _DType):
 class Categorical(nw.Categorical, _Column, _DType):
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -790,6 +839,7 @@ class Categorical(nw.Categorical, _Column, _DType):
         nw.Categorical.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -808,6 +858,8 @@ class Categorical(nw.Categorical, _Column, _DType):
 class Enum(nw.Enum, _Column, _DType):
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -816,6 +868,7 @@ class Enum(nw.Enum, _Column, _DType):
         nw.Enum.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -834,6 +887,8 @@ class Enum(nw.Enum, _Column, _DType):
 class Date(nw.Date, _Column, _DType):
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -842,6 +897,7 @@ class Date(nw.Date, _Column, _DType):
         nw.Date.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -862,6 +918,8 @@ class Datetime(nw.Datetime, _Column, _DType):
         self,
         time_unit: TimeUnit = "us",
         time_zone: Union[str, timezone, None] = None,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -870,6 +928,7 @@ class Datetime(nw.Datetime, _Column, _DType):
         nw.Datetime.__init__(self, time_unit=time_unit, time_zone=time_zone)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -901,6 +960,8 @@ class Duration(nw.Duration, _Column, _DType):
     def __init__(
         self,
         time_unit: TimeUnit = "us",
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -909,6 +970,7 @@ class Duration(nw.Duration, _Column, _DType):
         nw.Duration.__init__(self, time_unit=time_unit)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -939,6 +1001,8 @@ class Duration(nw.Duration, _Column, _DType):
 class String(nw.String, _Column, _DType):
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -947,6 +1011,7 @@ class String(nw.String, _Column, _DType):
         nw.String.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -965,6 +1030,8 @@ class String(nw.String, _Column, _DType):
 class Object(nw.Object, _Column, _DType):
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -973,6 +1040,7 @@ class Object(nw.Object, _Column, _DType):
         nw.Object.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -991,6 +1059,8 @@ class Object(nw.Object, _Column, _DType):
 class Unknown(nw.Unknown, _Column, _DType):
     def __init__(
         self,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -999,6 +1069,7 @@ class Unknown(nw.Unknown, _Column, _DType):
         nw.Unknown.__init__(self)
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -1019,6 +1090,8 @@ class Array(nw.Array, _Column, _DType):
         self,
         inner: _DType,
         shape: int | tuple[int, ...],
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -1027,6 +1100,7 @@ class Array(nw.Array, _Column, _DType):
         nw.Array.__init__(self, inner=inner, shape=shape)  # type: ignore
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -1051,6 +1125,8 @@ class List(nw.List, _Column, _DType):
     def __init__(
         self,
         inner: _DType,
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -1059,6 +1135,7 @@ class List(nw.List, _Column, _DType):
         nw.List.__init__(self, inner=inner)  # type: ignore
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
@@ -1092,6 +1169,8 @@ class Struct(nw.Struct, _Column, _DType):
     def __init__(
         self,
         fields: Mapping[str, _DType],
+        *,
+        name: Optional[str] = None,
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
@@ -1100,6 +1179,7 @@ class Struct(nw.Struct, _Column, _DType):
         nw.Struct.__init__(self, fields=fields)  # type: ignore
         _Column.__init__(
             self,
+            name=name,
             nullable=nullable,
             required=required,
             cast=cast,
