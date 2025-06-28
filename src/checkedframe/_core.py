@@ -346,9 +346,11 @@ class Schema(metaclass=_SchemaCacheMeta):
                 # We may modify checks, which is a list, so we need to copy it
                 new_val.checks = list(val.checks)
 
+                col_name = attr if new_val.name is None else new_val.name
+
                 # TODO: A TypedColumn is a Column and a DType, but the isinstance check
                 # above does not work on TypedColumn, only Column.
-                schema_dict[attr] = new_val  # type: ignore[assignment]
+                schema_dict[col_name] = new_val  # type: ignore[assignment]
 
         for attr, val in attr_list:
             if isinstance(val, Check):
