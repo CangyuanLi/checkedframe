@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, TypedDict, Union
 
 import narwhals.stable.v1 as nw
 from narwhals.stable.v1.dtypes import DType as NarwhalsDType
@@ -28,6 +28,14 @@ class _DType:
 class _BoundedDType(_DType):
     _min: int | float
     _max: int | float
+
+
+class _ColumnKwargs(TypedDict):
+    name: Optional[str]
+    nullable: bool
+    required: bool
+    cast: bool
+    checks: Optional[list[Check]]
 
 
 class _Column:
@@ -945,11 +953,15 @@ class Datetime(nw.Datetime, _Column, _DType):
         return nw.Datetime(time_unit=self.time_unit, time_zone=self.time_zone)
 
     @staticmethod
-    def from_narwhals(nw_dtype: nw.Datetime) -> Datetime:
+    def from_narwhals(nw_dtype: nw.Datetime, **column_kwargs) -> Datetime:
         if hasattr(nw_dtype, "time_unit"):
-            return Datetime(time_unit=nw_dtype.time_unit, time_zone=nw_dtype.time_zone)
+            return Datetime(
+                time_unit=nw_dtype.time_unit,
+                time_zone=nw_dtype.time_zone,
+                **column_kwargs,
+            )
 
-        return Datetime()
+        return Datetime(**column_kwargs)
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
@@ -987,11 +999,11 @@ class Duration(nw.Duration, _Column, _DType):
         return nw.Duration(time_unit=self.time_unit)
 
     @staticmethod
-    def from_narwhals(nw_dtype: nw.Duration) -> Duration:
+    def from_narwhals(nw_dtype: nw.Duration, **column_kwargs) -> Duration:
         if hasattr(nw_dtype, "time_unit"):
-            return Duration(nw_dtype.time_unit)
+            return Duration(nw_dtype.time_unit, **column_kwargs)
 
-        return Duration()
+        return Duration(**column_kwargs)
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
@@ -1113,8 +1125,10 @@ class Array(nw.Array, _Column, _DType):
         return nw.Array(self.inner.to_narwhals(), self.shape)
 
     @staticmethod
-    def from_narwhals(nw_dtype: nw.Array) -> Array:
-        return Array(_nw_type_to_cf_type(nw_dtype.inner), shape=nw_dtype.shape)
+    def from_narwhals(nw_dtype: nw.Array, **column_kwargs) -> Array:
+        return Array(
+            _nw_type_to_cf_type(nw_dtype.inner), shape=nw_dtype.shape, **column_kwargs
+        )
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
@@ -1148,8 +1162,8 @@ class List(nw.List, _Column, _DType):
         return nw.List(self.inner.to_narwhals())
 
     @staticmethod
-    def from_narwhals(nw_dtype: nw.List) -> List:
-        return List(_nw_type_to_cf_type(nw_dtype.inner))
+    def from_narwhals(nw_dtype: nw.List, **column_kwargs) -> List:
+        return List(_nw_type_to_cf_type(nw_dtype.inner), **column_kwargs)
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
@@ -1196,56 +1210,58 @@ class Struct(nw.Struct, _Column, _DType):
         return nw.Struct(dct)
 
     @staticmethod
-    def from_narwhals(nw_dtype: nw.Struct) -> Struct:
+    def from_narwhals(nw_dtype: nw.Struct, **column_kwargs) -> Struct:
         dct = {}
         for field in nw_dtype.fields:
             dct[field.name] = _nw_type_to_cf_type(field.dtype)
 
-        return Struct(dct)
+        return Struct(dct, **column_kwargs)
 
     @staticmethod
     def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
         return _checked_cast(s, to_dtype)
 
 
-_NARWHALS_DTYPE_TO_CHECKEDFRAME_DTYPE_MAPPER: dict[type[NarwhalsDType], _DType] = {
-    nw.Binary: Binary(),
-    nw.Boolean: Boolean(),
-    nw.Categorical: Categorical(),
-    nw.Date: Date(),
-    nw.Datetime: Datetime(),
-    nw.Decimal: Decimal(),
-    nw.Enum: Enum(),
-    nw.Float32: Float32(),
-    nw.Float64: Float64(),
-    nw.Int8: Int8(),
-    nw.Int16: Int16(),
-    nw.Int32: Int32(),
-    nw.Int64: Int64(),
-    nw.Int128: Int128(),
-    nw.Object: Object(),
-    nw.String: String(),
-    nw.UInt8: UInt8(),
-    nw.UInt16: UInt16(),
-    nw.UInt32: UInt32(),
-    nw.UInt64: UInt64(),
-    nw.UInt128: UInt128(),
-    nw.Unknown: Unknown(),
+_NARWHALS_DTYPE_TO_CHECKEDFRAME_DTYPE_MAPPER: dict[
+    type[NarwhalsDType], type[_DType]
+] = {
+    nw.Binary: Binary,
+    nw.Boolean: Boolean,
+    nw.Categorical: Categorical,
+    nw.Date: Date,
+    nw.Datetime: Datetime,
+    nw.Decimal: Decimal,
+    nw.Enum: Enum,
+    nw.Float32: Float32,
+    nw.Float64: Float64,
+    nw.Int8: Int8,
+    nw.Int16: Int16,
+    nw.Int32: Int32,
+    nw.Int64: Int64,
+    nw.Int128: Int128,
+    nw.Object: Object,
+    nw.String: String,
+    nw.UInt8: UInt8,
+    nw.UInt16: UInt16,
+    nw.UInt32: UInt32,
+    nw.UInt64: UInt64,
+    nw.UInt128: UInt128,
+    nw.Unknown: Unknown,
 }
 
 
 def _nw_type_to_cf_type(
-    nw_dtype: Union[NarwhalsDType, type[NarwhalsDType]],
+    nw_dtype: Union[NarwhalsDType, type[NarwhalsDType]], **column_kwargs
 ) -> _DType:
     if isinstance(nw_dtype, nw.Array):
-        return Array.from_narwhals(nw_dtype)
+        return Array.from_narwhals(nw_dtype, **column_kwargs)
     elif isinstance(nw_dtype, nw.List):
-        return List.from_narwhals(nw_dtype)
+        return List.from_narwhals(nw_dtype, **column_kwargs)
     elif isinstance(nw_dtype, nw.Struct):
-        return Struct.from_narwhals(nw_dtype)
+        return Struct.from_narwhals(nw_dtype, **column_kwargs)
     elif isinstance(nw_dtype, nw.Datetime):
-        return Datetime.from_narwhals(nw_dtype)
+        return Datetime.from_narwhals(nw_dtype, **column_kwargs)
     elif isinstance(nw_dtype, nw.Duration):
-        return Duration.from_narwhals(nw_dtype)
+        return Duration.from_narwhals(nw_dtype, **column_kwargs)
 
-    return _NARWHALS_DTYPE_TO_CHECKEDFRAME_DTYPE_MAPPER[nw_dtype]  # type: ignore
+    return _NARWHALS_DTYPE_TO_CHECKEDFRAME_DTYPE_MAPPER[nw_dtype](**column_kwargs)  # type: ignore
