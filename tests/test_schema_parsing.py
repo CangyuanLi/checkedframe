@@ -1,7 +1,7 @@
 import checkedframe as cf
 
 
-def test_inheritance():
+def test_schema_caching():
     class A(cf.Schema):
         a = cf.String()
 
@@ -21,3 +21,15 @@ def test_inheritance():
     assert set(b_schema.expected_schema.keys()) == set(["a", "b"])
 
     assert set(a_schema.expected_schema.keys()) == set(["a"])
+
+
+def test_ordered_parsing():
+    class A(cf.Schema):
+        x = cf.String()
+        b = cf.String()
+
+    class B(A):
+        a = cf.String()
+
+    assert A.columns() == ["x", "b"]
+    assert B.columns() == ["x", "b", "a"]
