@@ -18,6 +18,9 @@ class SchemaRepr:
     def __init__(self, schema_repr: str):
         self.schema_repr = schema_repr
 
+    def __repr__(self) -> str:
+        return self.schema_repr
+
     def write_clipboard(self):
         import pyperclip  # type: ignore
 
@@ -28,24 +31,30 @@ class SchemaRepr:
 
 
 def generate_schema_repr(
-    df: nwt.IntoDataFrame,
+    df: nwt.IntoFrame,
+    lazy: bool = False,
     class_name: str = "MySchema",
     header: Optional[str] = "import checkedframe as cf",
     import_alias: str = "cf.",
 ) -> SchemaRepr:
-    nw_df = nw.from_native(df, eager_only=True)
+    nw_df = nw.from_native(df)
 
-    null_df = nw_df.select(nws.all().is_null().any())
+    if isinstance(nw_df, nw.LazyFrame):
+        lazy = True
 
-    float_selector = nws.by_dtype(nw.Float32, nw.Float64)
-    nan_df = nw_df.select(float_selector.is_nan().any())
-    inf_df = nw_df.select(float_selector.is_in((INF, NEG_INF)).any())
-    float_cols = set(nan_df.columns)
+    if not lazy:
+        null_df = nw_df.select(nws.all().is_null().any())
+
+        float_selector = nws.by_dtype(nw.Float32, nw.Float64)
+        nan_df = nw_df.select(float_selector.is_nan().any())
+        inf_df = nw_df.select(float_selector.is_in((INF, NEG_INF)).any())
+
+        float_cols = set(nan_df.columns)
 
     # Build string representation of schema
     columns = []
     i = 0
-    for col, nw_dtype in nw_df.schema.items():
+    for col, nw_dtype in nw_df.collect_schema().items():
         column_kwargs: dict[str, bool | str] = {}
         if not col.isidentifier() or keyword.iskeyword(col):
             column_kwargs["name"] = f'"{col}"'
@@ -55,15 +64,16 @@ def generate_schema_repr(
         else:
             sanitized_col = col
 
-        if null_df[col].item():
-            column_kwargs["nullable"] = True
+        if not lazy:
+            if null_df[col].item():
+                column_kwargs["nullable"] = True
 
-        if col in float_cols:
-            if nan_df[col].item():
-                column_kwargs["allow_nan"] = True
+            if col in float_cols:
+                if nan_df[col].item():
+                    column_kwargs["allow_nan"] = True
 
-            if inf_df[col].item():
-                column_kwargs["allow_inf"] = True
+                if inf_df[col].item():
+                    column_kwargs["allow_inf"] = True
 
         cf_dtype = _nw_type_to_cf_type(nw_dtype, **column_kwargs)
 
