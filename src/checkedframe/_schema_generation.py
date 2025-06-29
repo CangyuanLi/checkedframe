@@ -19,6 +19,8 @@ class SchemaRepr:
         self.schema_repr = schema_repr
 
     def __repr__(self) -> str:
+        # This is useful for usage in notebooks, where the user may want to just copy
+        # the output from the notebook cell.
         return self.schema_repr
 
     def write_clipboard(self):
