@@ -1,3 +1,4 @@
+import polars as pl
 import pytest
 
 import checkedframe as cf
@@ -91,3 +92,26 @@ def test_name_override(dtype):
     assert name in schema_dict
 
     assert len(schema_dict[name].checks) == 1
+
+
+def test_schema_generation():
+    correct_repr = """import checkedframe as cf
+    
+    class AASchema(cf.Schema):
+        column_0 = cf.Float64(name="reason code", nullable=True, allow_nan=True)
+        y = cf.List(cf.Int64, nullable=True)
+        z = cf.List(cf.List(cf.Int64), nullable=True)
+    """
+
+    schema_repr = cf.generate_schema_repr(
+        pl.DataFrame(
+            {
+                "reason code": [1.0, float("nan"), None],
+                "y": [[1], [2], None],
+                "z": [[[1]], None, [[3]]],
+            }
+        ),
+        class_name="AASchema",
+    )
+
+    assert schema_repr.schema_repr == correct_repr
