@@ -11,6 +11,10 @@ classifiers = [
 ]
 dependencies = ["narwhals>=1.0.0"]
 
+[project.optional-dependencies]
+clipboard = ["pyperclip>=1.0.0"]
+
+
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import keyword
+from pathlib import Path
 from typing import Optional
 
 import narwhals.stable.v1 as nw
@@ -13,12 +14,25 @@ INF = float("inf")
 NEG_INF = float("-inf")
 
 
+class SchemaRepr:
+    def __init__(self, schema_repr: str):
+        self.schema_repr = schema_repr
+
+    def write_clipboard(self):
+        import pyperclip  # type: ignore
+
+        pyperclip.copy(self.schema_repr)
+
+    def write_text(self, file: str | Path):
+        Path(file).write_text(self.schema_repr)
+
+
 def generate_schema_repr(
     df: nwt.IntoDataFrame,
     class_name: str = "MySchema",
     header: Optional[str] = "import checkedframe as cf",
     import_alias: str = "cf.",
-) -> str:
+) -> SchemaRepr:
     nw_df = nw.from_native(df, eager_only=True)
 
     null_df = nw_df.select(nws.all().is_null().any())
@@ -73,4 +87,6 @@ def generate_schema_repr(
 
     col_repr = "\n".join(columns)
 
-    return f"{header}class {class_name}({import_alias}Schema):\n{col_repr}"
+    schema_repr = f"{header}class {class_name}({import_alias}Schema):\n{col_repr}"
+
+    return SchemaRepr(schema_repr)
