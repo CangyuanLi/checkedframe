@@ -31,3 +31,4 @@ from ._dtypes import (
     UInt128,
     Unknown,
 )
+from ._schema_generation import generate_schema_repr
