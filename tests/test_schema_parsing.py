@@ -1,3 +1,5 @@
+import tempfile
+
 import polars as pl
 import pytest
 
@@ -95,13 +97,14 @@ def test_name_override(dtype):
 
 
 def test_schema_generation():
-    correct_repr = """import checkedframe as cf
-    
-    class AASchema(cf.Schema):
-        column_0 = cf.Float64(name="reason code", nullable=True, allow_nan=True)
-        y = cf.List(cf.Int64, nullable=True)
-        z = cf.List(cf.List(cf.Int64), nullable=True)
-    """
+    correct_repr = (
+        "import checkedframe as cf\n"
+        "\n"
+        "class AASchema(cf.Schema):\n"
+        '    column_0 = cf.Float64(name="reason code", nullable=True, allow_nan=True)\n'
+        "    y = cf.List(cf.Int64, nullable=True)\n"
+        "    z = cf.List(cf.List(cf.Int64), nullable=True)"
+    )
 
     schema_repr = cf.generate_schema_repr(
         pl.DataFrame(
@@ -113,5 +116,36 @@ def test_schema_generation():
         ),
         class_name="AASchema",
     )
+
+    assert schema_repr.schema_repr == correct_repr
+
+
+def test_schema_generation_lazy():
+    correct_repr = (
+        "import checkedframe as cf\n"
+        "\n"
+        "class AASchema(cf.Schema):\n"
+        '    column_0 = cf.Float64(name="reason code")\n'
+        "    y = cf.List(cf.Int64)\n"
+        "    z = cf.List(cf.List(cf.Int64))"
+    )
+
+    df = pl.DataFrame(
+        {
+            "reason code": [1.0, float("nan"), None],
+            "y": [[1], [2], None],
+            "z": [[[1]], None, [[3]]],
+        }
+    )
+
+    schema_repr = cf.generate_schema_repr(
+        df,
+        lazy=True,
+        class_name="AASchema",
+    )
+
+    assert schema_repr.schema_repr == correct_repr
+
+    schema_repr = cf.generate_schema_repr(df.lazy(), class_name="AASchema")
 
     assert schema_repr.schema_repr == correct_repr
