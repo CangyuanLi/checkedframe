@@ -17,17 +17,18 @@
 
 The key advantages of **checkedframe** are DataFrame agnosticism (validate Pandas, Polars, Modin, etc. with a single unified API), separation from the **pydantic** ecosystem (which is fantastic but not suited for columnar data and relies too heavily on brittle type annotation magic), and a flexible, intuitive API for user-defined functions. Below is a (subjective) comparison of **checkedframe** and several other popular DataFrame validation libraries. If there are any errors / you want your library to be added, please send a PR!
 
-|                                    | [checkedframe](https://github.com/cangyuanli/checkedframe) | [pandera](https://pandera.readthedocs.io/) | [patito](https://patito.readthedocs.io/) | [dataframely](https://github.com/...) | [great-expectations](https://github.com/...) | [pointblank](https://github.com/...) |
-| ---------------------------------- | ---------------------------------------------------------- | ------------------------------------------ | ---------------------------------------- | ------------------------------------- | -------------------------------------------- | ------------------------------------ |
-| **DataFrame agnostic**             | ✅                                                          | 🟡 (1.)                                     | ❌ (polars-only)                          | ❌ (polars-only)                       | ❌ (pandas-only)                              | ✅                                    |
-| **Lightweight**                    | ✅                                                          | ❌ (pydantic)                               | ❌ (pydantic)                             | ✅                                     | ❌                                            | 🟡                                    |
-| **Custom checks**                  | ✅                                                          | 🟡 (2.)                                     | ❌                                        | 🟡 (3.)                                | ❌                                            | 🟡                                    |
-| **Static typing**                  | ✅                                                          | ✅                                          | ✅                                        | ✅                                     | ❌                                            | ❌                                    |
-| **Nested types**                   | ✅                                                          | ✅                                          | ✅                                        | ✅                                     | ❌                                            | ✅                                    |
-| **Safe casting**                   | ✅                                                          | ✅                                          | ❌                                        | 🟡 (4.)                                | ❌                                            | ❌                                    |
-| **Filtering**                      | ❌                                                          | ❌                                          | ❌                                        | ✅                                     | ❌                                            | ❌                                    |
-| **Supports older Python versions** | ✅ (3.9+)                                                   | ✅                                          | ✅                                        | ❌ (3.11+)                             | ✅                                            | 🟡  (3.10+)                           |
-| **Battle-tested**                  | ❌ (You can help!)                                          | ✅                                          | 🟡                                        | 🟡                                     | ✅                                            | 🟡                                    |
+|                            | [checkedframe](https://github.com/cangyuanli/checkedframe) | [pandera](https://pandera.readthedocs.io/) | [patito](https://patito.readthedocs.io/) | [dataframely](https://dataframely.readthedocs.io/en/latest/index.html) | [great-expectations](https://docs.greatexpectations.io) | [pointblank](https://posit-dev.github.io/pointblank/) |
+| -------------------------- | ---------------------------------------------------------- | ------------------------------------------ | ---------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------- |
+| **DataFrame agnostic**     | ✅                                                          | 🟡 (1.)                                     | ❌ (polars-only)                          | ❌ (polars-only)                                                        | ❌ (pandas < 2.2-only)                                   | ✅                                                     |
+| **Lightweight**            | ✅                                                          | ❌ (pydantic)                               | ❌ (pydantic)                             | ✅                                                                      | ❌                                                       | 🟡                                                     |
+| **Custom checks**          | ✅                                                          | 🟡 (2.)                                     | ❌                                        | 🟡 (3.)                                                                 | ❌                                                       | 🟡                                                     |
+| **Static typing**          | ✅                                                          | ✅                                          | ✅                                        | ✅                                                                      | ❌                                                       | ❌                                                     |
+| **Nested types**           | ✅                                                          | ✅                                          | ✅                                        | ✅                                                                      | ❌                                                       | ✅                                                     |
+| **Safe casting**           | ✅                                                          | ✅                                          | ❌                                        | 🟡 (4.)                                                                 | ❌                                                       | ❌                                                     |
+| **Filtering**              | ❌                                                          | ❌                                          | ❌                                        | ✅                                                                      | ❌                                                       | ❌                                                     |
+| **Schema generation**      | ✅                                                          | ❌                                          | ❌                                        | ❌                                                                      | ❌                                                       | ❌                                                     |
+| **Python version support** | ✅ (3.9+)                                                   | 🟡 (<= 3.12)                                | ✅                                        | ❌ (3.11+)                                                              | ✅                                                       | 🟡  (3.10+)                                            |
+| **Battle-tested**          | ❌ (You can help!)                                          | ✅                                          | 🟡                                        | 🟡                                                                      | ✅                                                       | 🟡                                                     |
 
 - ✅ = Fully supported  
 - 🟡 = Partial/limited support  
@@ -117,3 +118,40 @@ Next, we use checks to assert different properties about our data. For example, 
 ```
 
 Finally, when calling `AASchema.validate` on our bad data, we get a nice error message, including clear descriptions of why casting failed, why checks failed (and for what number of rows, if applicable), and so on.
+
+### Mypy Plugin
+
+The example code as-is will actually throw some type errors, as type checkers will complain that the user-defined checks do not take a "self" parameter. This is because there is currently no way to mark a function as a `staticmethod` without using the `staticmethod` decorator. You can simply add this decorator to make the errors go away. If that's annoying, **checkedframe** also provides a **mypy** plugin that marks all methods decorated with `cf.Check` as staticmethods. Just add
+
+```
+[tool.mypy]
+plugins = ["checkedframe.mypy"]
+```
+
+to your pyproject.toml. Unfortunately, no other type checker provides plugin capabilities.
+
+## Typing
+
+**checkedframe** is also meant to integrate with static typing. When validation is successful, the returned dataframe can be parametrized by the schema. For example,
+
+```python
+import checkedframe as cf
+import polars as pl
+from checkedframe.polars import DataFrame
+
+
+class MySchema(cf.Schema):
+    x = cf.String()
+
+
+df = pl.DataFrame({
+    "x": ["a", "b", "c"]
+})
+
+def func_that_requires_cleaned_data(df: DataFrame[MySchema]): ...
+
+func_that_requires_cleaned_data(df)  # type error
+
+validated_df: DataFrame[MySchema] = MySchema.validate(df)
+func_that_requires_cleaned_data(validated_df)  # passes!
+```
