@@ -287,7 +287,7 @@ class Schema(metaclass=_SchemaCacheMeta):
         class MySchema(cf.Schema):
             col1 = cf.String()
 
-            @cf.Check(column="col1")
+            @cf.Check(columns="col1")
             def check_length(s: pl.Series) -> pl.Series:
                 return s.str.len_bytes() == 3
 
