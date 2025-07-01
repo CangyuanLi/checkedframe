@@ -40,7 +40,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
@@ -340,7 +340,7 @@
 <span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
     <span class="s2">&quot;customer_id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;TYX890&quot;</span><span class="p">,</span> <span class="s2">&quot;ABC98&quot;</span><span class="p">],</span>
     <span class="s2">&quot;checking_balance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">198.28</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
-    <span class="s2">&quot;savings_balance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">]</span>
+    <span class="s2">&quot;savings_balance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
 <span class="p">})</span>
 </pre></div>
 </div>
@@ -348,38 +348,39 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MySchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
-    <span class="n">customer_id</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">)</span>
-    <span class="n">checking_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">)</span>
-    <span class="n">savings_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">)</span>
+    <span class="n">customer_id</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+    <span class="n">checking_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span>
+    <span class="n">savings_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>This schema represents a DataFrame with a single string column. Schemas are typically created by inheriting from the <code class="docutils literal notranslate"><span class="pre">Schema</span></code> class. Columns are defined by an instance of the <code class="docutils literal notranslate"><span class="pre">Column</span></code> class, instantiated with a data type. Already, we can catch some errors.</p>
+<p>This schema represents a DataFrame with a single string column and two float columns. Schemas are typically created by inheriting from the <code class="docutils literal notranslate"><span class="pre">Schema</span></code> class. Already, we can catch some errors.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">MySchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SchemaError</span><span class="p">:</span> <span class="n">Found</span> <span class="mi">2</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-<span class="n">checking_balance</span><span class="p">:</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-    <span class="o">-</span> <span class="n">Null</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">non</span><span class="o">-</span><span class="n">nullable</span> <span class="n">column</span>
-<span class="n">savings_balance</span><span class="p">:</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SchemaError</span><span class="p">:</span> <span class="n">Found</span> <span class="mi">3</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+  <span class="n">checking_balance</span><span class="p">:</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="o">-</span> <span class="n">NullValueCheck</span> <span class="n">failed</span> <span class="k">for</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="n">rows</span> <span class="p">(</span><span class="mf">50.00</span><span class="o">%</span><span class="p">):</span> <span class="n">Nulls</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">non</span><span class="o">-</span><span class="n">nullable</span> <span class="n">column</span>
+  <span class="n">savings_balance</span><span class="p">:</span> <span class="mi">2</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
     <span class="o">-</span> <span class="n">Expected</span> <span class="n">Float64</span><span class="p">,</span> <span class="n">got</span> <span class="n">Int64</span>
+    <span class="o">-</span> <span class="n">NullValueCheck</span> <span class="n">failed</span> <span class="k">for</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="n">rows</span> <span class="p">(</span><span class="mf">50.00</span><span class="o">%</span><span class="p">):</span> <span class="n">Nulls</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">non</span><span class="o">-</span><span class="n">nullable</span> <span class="n">column</span>
 </pre></div>
 </div>
-<p>By default, <strong>checkedframe</strong> assumes that all columns are non-nullable, so it tells us we have an errant null in <code class="docutils literal notranslate"><span class="pre">checking_balance</span></code>. We also declared <code class="docutils literal notranslate"><span class="pre">savings_balance</span></code> to be a Float64, so it complains that we got an Int64. Now, these behaviors may not necessarily be desireable in this case. It probably makes sense that balances can be null. In addition, we probably don’t want to be so strict in the data types we accept–any numeric should be fine. Let’s edit our schema to reflect this.</p>
+<p>By default, <strong>checkedframe</strong> assumes that all columns are non-nullable, so it tells us we have an errant null in <code class="docutils literal notranslate"><span class="pre">checking_balance</span></code>. We also declared <code class="docutils literal notranslate"><span class="pre">savings_balance</span></code> to be a Float64, so it complains that we got an Int64. Now, these behaviors may not necessarily be desireable in this case. It probably makes sense that balances can be null. In addition, we probably don’t want to be so strict in the data types we accept–as long as it is castable to float. Let’s edit our schema to reflect this.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MySchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
-    <span class="n">customer_id</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">)</span>
-    <span class="n">checking_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">savings_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">customer_id</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+    <span class="n">checking_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">savings_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Now our DataFrame passes validation! <strong>checkedframe</strong> was able to inspect <code class="docutils literal notranslate"><span class="pre">savings_column</span></code> and determine that it could be safely cast to our desired data type, Float64.</p>
-<p>Beyond these core concepts, you may also want to run arbitrary checks against your DataFrame. This is handled by the <code class="docutils literal notranslate"><span class="pre">Check</span></code> class. Checks are user-defined (or builtin) functions that assert some property of your custom Schema class. For example, let’s say <code class="docutils literal notranslate"><span class="pre">customer_id</span></code> is always 6 characters. There are actually a couple of ways to do this, but for now let’s assume you want to write your own function (perhaps your real check is much more complex).</p>
+<p>Beyond these core concepts, you may also want to run arbitrary checks against your DataFrame. This is handled by the <code class="docutils literal notranslate"><span class="pre">Check</span></code> class. Checks are user-defined (or built-in) functions that assert some property of your custom Schema class. For example, let’s say <code class="docutils literal notranslate"><span class="pre">customer_id</span></code> is always 6 characters. There are actually a couple of ways to do this, but for now let’s assume you want to write your own function (perhaps your real check is much more complex).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MySchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
-    <span class="n">customer_id</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">)</span>
-    <span class="n">checking_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">savings_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">customer_id</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+    <span class="n">checking_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">savings_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;customer_id&quot;</span><span class="p">)</span>
+    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;customer_id&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">check_id_length</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;customer_id must be of length 6&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len_bytes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">6</span>
@@ -387,11 +388,49 @@
 </div>
 <p>Output:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SchemaError</span><span class="p">:</span> <span class="n">Found</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-<span class="n">customer_id</span><span class="p">:</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+  <span class="n">customer_id</span><span class="p">:</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
     <span class="o">-</span> <span class="n">check_id_length</span> <span class="n">failed</span><span class="p">:</span> <span class="n">customer_id</span> <span class="n">must</span> <span class="n">be</span> <span class="n">of</span> <span class="n">length</span> <span class="mi">6</span>
 </pre></div>
 </div>
 <p>Here, we wrote a custom function that we identified as a check with the <code class="docutils literal notranslate"><span class="pre">Check</span></code> decorator. In addition, via the <code class="docutils literal notranslate"><span class="pre">column</span></code> argument, we attached the check to the <code class="docutils literal notranslate"><span class="pre">customer_id</span></code> column.</p>
+<p>Now, let’s re-visit our assumption that balances can be nullable. This may be true for each individual balance (savings account but no checking account or vice versa), but it may not make sense for both to be null at the same time. Let’s write a check for this.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MySchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">customer_id</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+    <span class="n">checking_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">savings_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;customer_id&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_id_length</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;customer_id must be of length 6&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len_bytes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">6</span>
+
+    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_both_balances_not_null</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;either checkings or savings must be present&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">is_not_null</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">or_</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;savings_balance&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_not_null</span><span class="p">())</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<dl>
+<dt>::</dt><dd><dl>
+<dt>SchemaError: Found 2 error(s)</dt><dd><dl class="simple">
+<dt>customer_id: 1 error(s)</dt><dd><ul class="simple">
+<li><p>check_id_length failed for 1 / 2 rows (50.00%): customer_id must be of length 6</p></li>
+</ul>
+</dd>
+</dl>
+<ul class="simple">
+<li><p>check_both_balances_not_null failed for 1 / 2 rows (50.00%): either checkings or savings must be present</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Here, we wrote a multi-column check that returned an Expr instead of a Series. In the Checks section, we will go over all the ways to write a Check.</p>
 </section>
 
 
@@ -461,7 +500,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>
