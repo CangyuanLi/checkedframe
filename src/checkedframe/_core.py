@@ -221,14 +221,6 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
     for i, check in enumerate(schema.checks):
         check_name = f"frame_check_{i}" if check.name is None else check.name
 
-        # As a last best-effort guess, if the check is running in a DataFrame context,
-        # we infer the input type to be a dataframe
-        check_input_type: CheckInputType
-        if check.input_type == "auto":
-            check_input_type = "Frame"  # type: ignore[assignment]
-        else:
-            check_input_type = check.input_type  # type: ignore[assignment]
-
         passed_check = _run_check(
             check, nw_df, check_name=check_name, check_input_type=check_input_type
         )
