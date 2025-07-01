@@ -3,14 +3,91 @@ from __future__ import annotations
 import functools
 import inspect
 from collections.abc import Collection, Sequence
-from typing import Any, Callable, Literal, Optional
+from typing import Any, Callable, Literal, Optional, get_type_hints
 
 import narwhals.stable.v1 as nw
+from narwhals.stable.v1.dependencies import (
+    get_cudf,
+    get_modin,
+    get_pandas,
+    get_polars,
+    get_pyarrow,
+)
 
 from .selectors import Selector
 
 col = nw.col
 lit = nw.lit
+
+
+def _is_polars_series(ser: Any) -> bool:
+    return (pl := get_polars()) is not None and issubclass(ser, pl.Series)
+
+
+def _is_polars_expr(expr: Any) -> bool:
+    return (pl := get_polars()) is not None and issubclass(expr, pl.Expr)
+
+
+def _is_polars_dataframe(df: Any) -> bool:
+    return (pl := get_polars()) is not None and issubclass(df, pl.DataFrame)
+
+
+def _is_pandas_series(ser: Any) -> bool:
+    return (pd := get_pandas()) is not None and issubclass(ser, pd.Series)
+
+
+def _is_pandas_dataframe(df: Any) -> bool:
+    return (pd := get_pandas()) is not None and issubclass(df, pd.DataFrame)
+
+
+def _is_modin_dataframe(df: Any) -> bool:
+    return (mpd := get_modin()) is not None and issubclass(df, mpd.DataFrame)
+
+
+def _is_modin_series(ser: Any) -> bool:
+    return (mpd := get_modin()) is not None and issubclass(ser, mpd.Series)
+
+
+def _is_cudf_dataframe(df: Any) -> bool:
+    return (cudf := get_cudf()) is not None and issubclass(df, cudf.DataFrame)
+
+
+def _is_cudf_series(ser: Any) -> bool:
+    return (cudf := get_cudf()) is not None and issubclass(ser, cudf.Series)
+
+
+def _is_pyarrow_chunked_array(ser: Any) -> bool:
+    return (pa := get_pyarrow()) is not None and issubclass(ser, pa.ChunkedArray)
+
+
+def _is_pyarrow_table(df: Any) -> bool:
+    return (pa := get_pyarrow()) is not None and issubclass(df, pa.Table)
+
+
+def _is_series(x: Any) -> bool:
+    return (
+        issubclass(x, nw.Series)
+        or _is_pandas_series(x)
+        or _is_modin_series(x)
+        or _is_cudf_series(x)
+        or _is_polars_series(x)
+        or _is_pyarrow_chunked_array(x)
+    )
+
+
+def _is_expr(x: Any) -> bool:
+    return issubclass(x, nw.Expr) or _is_polars_expr(x)
+
+
+def _is_dataframe(x: Any) -> bool:
+    return (
+        isinstance(x, nw.DataFrame)
+        or _is_polars_dataframe(x)
+        or _is_pandas_dataframe(x)
+        or _is_modin_dataframe(x)
+        or _is_cudf_dataframe(x)
+        or _is_pyarrow_table(x)
+    )
 
 
 class staticproperty:
@@ -38,21 +115,47 @@ class staticproperty:
         raise AttributeError(f"can't delete attribute '{self.__name__}'")
 
 
-def _resolve_return_type_from_annotation(func: Callable):
+def _infer_input_type(
+    type_hints: dict[str, Any], signature: inspect.Signature
+) -> CheckInputType:
+    params = signature.parameters
+    if len(params) == 0:
+        return None
+
+    first_param_name = list(params.keys())[0]
     try:
-        dtype = str(func.__annotations__["return"])
+        type_hint = type_hints[first_param_name]
     except KeyError:
         return "auto"
 
-    if dtype == "bool":
-        return "bool"
-
-    if len(inspect.signature(func).parameters) == 0:
-        return "Expr"
-
-    if "Series" in dtype:
+    if issubclass(type_hint, str):
+        return "str"
+    elif _is_dataframe(type_hint):
+        return "Frame"
+    elif _is_series(type_hint):
         return "Series"
-    elif "Expr" in dtype:
+
+    return "auto"
+
+
+def _infer_return_type(
+    type_hints: dict[str, Any], input_type: CheckInputType
+) -> CheckReturnType:
+    try:
+        # Try to get it from the type hints first
+        type_hint = type_hints["return"]
+
+        if issubclass(type_hint, bool):
+            return "bool"
+        elif _is_expr(type_hint):
+            return "Expr"
+        elif _is_series(type_hint):
+            return "Series"
+    except KeyError:
+        # If type hints don't exist, we try to infer from the input_type
+        pass
+
+    if input_type == "str" or input_type is None:
         return "Expr"
 
     return "auto"
@@ -272,7 +375,7 @@ class _BuiltinStringMethods:
         )
 
 
-CheckInputType = Optional[Literal["auto", "Frame", "Expr", "Series"]]
+CheckInputType = Optional[Literal["auto", "Frame", "str", "Series"]]
 CheckReturnType = Literal["auto", "bool", "Expr", "Series"]
 
 
@@ -324,22 +427,21 @@ class Check:
 
     def _set_params(self) -> None:
         assert self.func is not None
-        self._func_n_params = len(inspect.signature(self.func).parameters)
+        auto_input_type = self.input_type == "auto"
+        auto_return_type = self.return_type == "auto"
 
-        if self.input_type == "auto":
-            if self._func_n_params == 0:
-                self.input_type = None
+        if auto_input_type or auto_return_type:
+            signature = inspect.signature(self.func)
+            type_hints = get_type_hints(self.func)
 
-        if self.return_type == "auto" and self.func is not None:
-            if self.input_type is None:
-                self.return_type = "Expr"
-            else:
-                self.return_type = _resolve_return_type_from_annotation(
-                    self.func,
-                )
+        if auto_input_type:
+            self.input_type = _infer_input_type(type_hints, signature)
 
-        if self.return_type == "Expr":
-            self.input_type = None
+        if auto_return_type:
+            self.return_type = _infer_return_type(
+                type_hints,
+                self.input_type,
+            )
 
         if self.name is None:
             self.name = None if self.func.__name__ == "<lambda>" else self.func.__name__
