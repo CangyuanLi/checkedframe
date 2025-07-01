@@ -1,3 +1,4 @@
 pytest
 narwhals
 polars
+pandas
