@@ -3,7 +3,7 @@ name = "checkedframe"
 version = "0.0.7"
 description = "A generic dataframe validation library"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [{ name = "Cangyuan Li", email = "everest229@gmail.com" }]
 classifiers = [
     "Programming Language :: Python :: 3",
