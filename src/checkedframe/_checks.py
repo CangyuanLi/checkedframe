@@ -443,6 +443,16 @@ class Check:
                 self.input_type,
             )
 
+        if self.input_type == "auto":
+            raise ValueError(
+                f"Input type of `{self.name}` could not be automatically determined from context"
+            )
+
+        if self.return_type == "auto":
+            raise ValueError(
+                f"Return type of `{self.name}` could not be automatically determined from context"
+            )
+
         if self.name is None:
             self.name = None if self.func.__name__ == "<lambda>" else self.func.__name__
 
