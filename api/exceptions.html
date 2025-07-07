@@ -336,21 +336,14 @@
   <section id="module-checkedframe.exceptions">
 <span id="exceptions"></span><h1>Exceptions<a class="headerlink" href="#module-checkedframe.exceptions" title="Link to this heading">#</a></h1>
 <dl class="py exception">
-<dt class="sig sig-object py" id="checkedframe.exceptions.ColumnNotFoundError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe.exceptions.</span></span><span class="sig-name descname"><span class="pre">ColumnNotFoundError</span></span><a class="headerlink" href="#checkedframe.exceptions.ColumnNotFoundError" title="Link to this definition">#</a></dt>
-<dd><p>Raised when a required column is not found in the Schema.</p>
-</dd></dl>
+<dt class="sig sig-object py" id="checkedframe.exceptions.CastError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe.exceptions.</span></span><span class="sig-name descname"><span class="pre">CastError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_passes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe.exceptions.CastError" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="checkedframe.exceptions.SchemaError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe.exceptions.</span></span><span class="sig-name descname"><span class="pre">SchemaError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_ErrorStore</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failed_checks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#checkedframe.exceptions.ValidationError" title="checkedframe.exceptions.ValidationError"><span class="pre">ValidationError</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe.exceptions.SchemaError" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe.exceptions.</span></span><span class="sig-name descname"><span class="pre">SchemaError</span></span><a class="headerlink" href="#checkedframe.exceptions.SchemaError" title="Link to this definition">#</a></dt>
 <dd><p>Raised when the given DataFrame does not match the given Schema.</p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="checkedframe.exceptions.ValidationError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe.exceptions.</span></span><span class="sig-name descname"><span class="pre">ValidationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">check</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">err_msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe.exceptions.ValidationError" title="Link to this definition">#</a></dt>
-<dd><p>Raised when a check fails.</p>
 </dd></dl>
 
 </section>
@@ -393,9 +386,8 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe.exceptions.ColumnNotFoundError"><code class="docutils literal notranslate"><span class="pre">ColumnNotFoundError</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe.exceptions.CastError"><code class="docutils literal notranslate"><span class="pre">CastError</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe.exceptions.SchemaError"><code class="docutils literal notranslate"><span class="pre">SchemaError</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe.exceptions.ValidationError"><code class="docutils literal notranslate"><span class="pre">ValidationError</span></code></a></li>
 </ul>
   </nav></div>
 
