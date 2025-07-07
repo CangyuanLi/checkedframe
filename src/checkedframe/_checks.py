@@ -196,32 +196,32 @@ def _is_not_inf(name: str) -> nw.Expr:
 
 
 def _is_between(
-    s: nw.Series,
+    name: str,
     lower_bound,
     upper_bound,
     closed: ClosedInterval,
-) -> nw.Series:
-    return s.is_between(lower_bound, upper_bound, closed=closed)
+) -> nw.Expr:
+    return nw.col(name).is_between(lower_bound, upper_bound, closed=closed)
 
 
-def _lt(s: nw.Series, other) -> nw.Series:
-    return s < other
+def _lt(name: str, other) -> nw.Expr:
+    return nw.col(name) < other
 
 
-def _le(s: nw.Series, other) -> nw.Series:
-    return s <= other
+def _le(name: str, other) -> nw.Expr:
+    return nw.col(name) <= other
 
 
-def _gt(s: nw.Series, other) -> nw.Series:
-    return s > other
+def _gt(name: str, other) -> nw.Expr:
+    return nw.col(name) > other
 
 
-def _ge(s: nw.Series, other) -> nw.Series:
-    return s >= other
+def _ge(name: str, other) -> nw.Expr:
+    return nw.col(name) >= other
 
 
-def _eq(s: nw.Series, other) -> nw.Series:
-    return s == other
+def _eq(name: str, other) -> nw.Expr:
+    return nw.col(name) == other
 
 
 def _approx_eq(
@@ -254,12 +254,12 @@ def _series_lit_approx_eq(
     )[name]
 
 
-def _is_in(s: nw.Series, other: Collection) -> nw.Series:
-    return s.is_in(other)
+def _is_in(name: str, other: Collection) -> nw.Expr:
+    return nw.col(name).is_in(other)
 
 
-def _is_finite(s: nw.Series) -> nw.Series:
-    return s.is_finite()
+def _is_finite(name: str) -> nw.Expr:
+    return nw.col(name).is_finite()
 
 
 def _is_sorted(s: nw.Series, descending: bool) -> bool:
@@ -359,51 +359,16 @@ def _frame_is_sorted(
             )
 
 
-def _str_ends_with(s: nw.Series, suffix: str) -> nw.Series:
-    return s.str.ends_with(suffix)
+def _str_ends_with(name: str, suffix: str) -> nw.Expr:
+    return nw.col(name).str.ends_with(suffix)
 
 
-def _str_starts_with(s: nw.Series, prefix: str) -> nw.Series:
-    return s.str.starts_with(prefix)
+def _str_starts_with(name: str, prefix: str) -> nw.Expr:
+    return nw.col(name).str.starts_with(prefix)
 
 
-def _str_contains(s: nw.Series, pattern: str, literal: bool = False) -> nw.Series:
-    return s.str.contains(pattern, literal=literal)
-
-
-class _BuiltinStringMethods:
-    @staticmethod
-    def ends_with(suffix: str) -> Check:
-        return Check(
-            func=functools.partial(_str_ends_with, suffix=suffix),
-            input_type="Series",
-            return_type="Series",
-            native=False,
-            name="ends_with",
-            description=f"Must end with {suffix}",
-        )
-
-    @staticmethod
-    def starts_with(prefix: str) -> Check:
-        return Check(
-            func=functools.partial(_str_starts_with, prefix=prefix),
-            input_type="Series",
-            return_type="Series",
-            native=False,
-            name="starts_with",
-            description=f"Must start with {prefix}",
-        )
-
-    @staticmethod
-    def contains(pattern: str, literal: bool = False) -> Check:
-        return Check(
-            func=functools.partial(_str_contains, pattern=pattern, literal=literal),
-            input_type="Series",
-            return_type="Series",
-            native=False,
-            name="contains",
-            description=f"Must contain {pattern}",
-        )
+def _str_contains(name: str, pattern: str, literal: bool = False) -> nw.Expr:
+    return nw.col(name).str.contains(pattern, literal=literal)
 
 
 CheckInputType = Optional[Literal["auto", "Frame", "str", "Series"]]
@@ -576,8 +541,8 @@ class Check:
                 upper_bound=upper_bound,
                 closed=closed,
             ),
-            input_type="Series",
-            return_type="Series",
+            input_type="str",
+            return_type="Expr",
             native=False,
             name="is_between",
             description=f"Must be in range {l_paren}{lower_bound}, {upper_bound}{r_paren}",
@@ -597,8 +562,8 @@ class Check:
         """
         return Check(
             func=functools.partial(_lt, other=other),
-            input_type="Series",
-            return_type="Series",
+            input_type="str",
+            return_type="Expr",
             native=False,
             name="less_than",
             description=f"Must be < {other}",
@@ -619,8 +584,8 @@ class Check:
         """
         return Check(
             func=functools.partial(_le, other=other),
-            input_type="Series",
-            return_type="Series",
+            input_type="str",
+            return_type="Expr",
             native=False,
             name="less_than_or_equal_to",
             description=f"Must be <= {other}",
@@ -640,8 +605,8 @@ class Check:
         """
         return Check(
             func=functools.partial(_gt, other=other),
-            input_type="Series",
-            return_type="Series",
+            input_type="str",
+            return_type="Expr",
             native=False,
             name="greater_than",
             description=f"Must be > {other}",
@@ -662,8 +627,8 @@ class Check:
         """
         return Check(
             func=functools.partial(_ge, other=other),
-            input_type="Series",
-            return_type="Series",
+            input_type="str",
+            return_type="Expr",
             native=False,
             name="greater_than_or_equal_to",
             description=f"Must be >= {other}",
@@ -683,8 +648,8 @@ class Check:
         """
         return Check(
             func=functools.partial(_eq, other=other),
-            input_type="Series",
-            return_type="Series",
+            input_type="str",
+            return_type="Expr",
             native=False,
             name="equal_to",
             description=f"Must be = {other}",
@@ -735,8 +700,8 @@ class Check:
         """
         return Check(
             func=functools.partial(_is_in, other=other),
-            input_type="Series",
-            return_type="Series",
+            input_type="str",
+            return_type="Expr",
             native=False,
             name="is_in",
             description=f"Must be in allowed values {other}",
@@ -746,11 +711,44 @@ class Check:
     def is_finite() -> Check:
         return Check(
             func=_is_finite,
-            input_type="Series",
-            return_type="Series",
+            input_type="str",
+            return_type="Expr",
             native=False,
             name="is_finite",
             description="All values must be finite",
+        )
+
+    @staticmethod
+    def str_ends_with(suffix: str) -> Check:
+        return Check(
+            func=functools.partial(_str_ends_with, suffix=suffix),
+            input_type="str",
+            return_type="Expr",
+            native=False,
+            name="ends_with",
+            description=f"Must end with {suffix}",
+        )
+
+    @staticmethod
+    def str_starts_with(prefix: str) -> Check:
+        return Check(
+            func=functools.partial(_str_starts_with, prefix=prefix),
+            input_type="str",
+            return_type="Expr",
+            native=False,
+            name="starts_with",
+            description=f"Must start with {prefix}",
+        )
+
+    @staticmethod
+    def str_contains(pattern: str, literal: bool = False) -> Check:
+        return Check(
+            func=functools.partial(_str_contains, pattern=pattern, literal=literal),
+            input_type="str",
+            return_type="Expr",
+            native=False,
+            name="contains",
+            description=f"Must contain {pattern}",
         )
 
     @staticmethod
@@ -804,8 +802,3 @@ class Check:
             name="is_id",
             description=f"{subset} must uniquely identify the DataFrame",
         )
-
-    @staticmethod
-    @staticproperty
-    def str():
-        return _BuiltinStringMethods
