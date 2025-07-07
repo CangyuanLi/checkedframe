@@ -34,13 +34,13 @@ def test_float_to_int(from_dtype, to_dtype):
         series_only=True,
     )
 
-    with pytest.raises(TypeError):
+    with pytest.raises(cf.exceptions.CastError):
         from_dtype._safe_cast(s, to_dtype)
 
     s = s.filter(~s.is_nan())
 
     if to_dtype is cf.UInt128:
-        with pytest.raises(TypeError):
+        with pytest.raises(cf.exceptions.CastError):
             from_dtype._safe_cast(s, to_dtype)
     else:
         from_dtype._safe_cast(s, to_dtype)
@@ -65,7 +65,7 @@ def test_float_to_bool(from_dtype, to_dtype):
         series_only=True,
     )
 
-    with pytest.raises(TypeError):
+    with pytest.raises(cf.exceptions.CastError):
         from_dtype._safe_cast(s, to_dtype)
 
     s = s.filter(s.is_in([1.0, 0.0, None]))
@@ -88,7 +88,7 @@ def test_float64_to_float32():
         series_only=True,
     )
 
-    with pytest.raises(TypeError):
+    with pytest.raises(cf.exceptions.CastError):
         cf.Float64._safe_cast(s, cf.Float32)
 
     s = nw.from_native(

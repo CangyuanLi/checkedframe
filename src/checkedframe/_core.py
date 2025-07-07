@@ -1,47 +1,37 @@
 from __future__ import annotations
 
 import copy
-from collections import defaultdict
-from typing import Optional
+import dataclasses
+import string
+from typing import Any, Optional
 
 import narwhals.stable.v1 as nw
 import narwhals.stable.v1.typing as nwt
 
 from ._checks import Check, CheckInputType
-from ._dtypes import _Column, _nw_type_to_cf_type, _TypedColumn
+from ._dtypes import CastError, _Column, _nw_type_to_cf_type, _TypedColumn
 from ._utils import get_class_members
-from .exceptions import ColumnNotFoundError, SchemaError, ValidationError, _ErrorStore
+from .exceptions import SchemaError
 from .selectors import Selector
 
-INFINITY = float("inf")
-NEGATIVE_INFINITY = float("-inf")
 
-
-class _NullValueCheck:
-    def __init__(self):
-        self.name = "NullValueCheck"
-        self.description = "Nulls found in non-nullable column"
-
-
-class _NanValueCheck:
-    def __init__(self):
-        self.name = "NaNValueCheck"
-        self.description = "NaNs found but not allowed"
-
-
-class _InfValueCheck:
-    def __init__(self):
-        self.name = "InfValueCheck"
-        self.description = "-inf/inf found but not allowed"
+@dataclasses.dataclass
+class _ResultWrapper:
+    res: Any
+    msg: str
+    identifier: str
+    column: str
+    operation: str
+    native: bool = False
+    is_expr: bool = False
 
 
 def _run_check(
     check: Check,
-    nw_df: nw.DataFrame,
     check_name: str,
-    check_input_type: CheckInputType,
+    nw_df: nw.DataFrame,
     series_name: Optional[str] = None,
-) -> tuple[bool, Optional[int]]:
+):
     """_summary_
 
     Parameters
@@ -71,26 +61,44 @@ def _run_check(
         _description_
     """
     assert check.func is not None
-    if check_input_type is None or check.return_type == "Expr":
-        if check.native:
-            frame = nw_df.to_native()
+
+    new_check_name = (
+        f"__checkedframe_{'' if series_name is None else series_name}_{check_name}__"
+    )
+    column_name = "__dataframe__" if series_name is None else series_name
+
+    err_msg = string.Template(
+        "${check_name} failed for {summary} rows: ${check_description}"
+    ).safe_substitute(
+        {"check_name": check_name, "check_description": check.description}
+    )
+
+    if check.return_type == "Expr":
+        if check.input_type == "str":
+            expr = check.func(series_name).alias(new_check_name)
         else:
-            frame = nw_df
+            expr = check.func().alias(new_check_name)
 
-        n_failed = (
-            frame.select(check.func().alias(check_name))[check_name].__invert__().sum()
+        assert isinstance(check.native, bool)
+
+        return _ResultWrapper(
+            expr,
+            msg=err_msg,
+            identifier=new_check_name,
+            column=column_name,
+            operation=check_name,
+            native=check.native,
+            is_expr=True,
         )
-
-        return (n_failed == 0, n_failed)
     else:
-        if check_input_type in ("auto", "Series"):
+        if check.input_type == "Series":
             if series_name is None:
                 raise ValueError(
                     "Series cannot be automatically determined in this context"
                 )
 
             input_ = nw_df[series_name]
-        elif check_input_type == "Frame":
+        elif check.input_type == "Frame":
             # mypy complains here that the input type is Series, not DataFrame, but it
             # is only a Series if the above branch is hit, which means this branch is
             # not
@@ -102,83 +110,92 @@ def _run_check(
         if check.native:
             input_ = input_.to_native()
 
-        passed_check = check.func(input_)
+        res = check.func(input_)
 
-        if isinstance(passed_check, bool):
-            return (passed_check, None)
-        else:
-            n_failed = nw.from_native(passed_check, series_only=True).__invert__().sum()
+        if check.return_type == "Series":
+            res = nw.from_native(res, series_only=True).alias(new_check_name)
+            return _ResultWrapper(
+                res,
+                msg=err_msg,
+                identifier=new_check_name,
+                column=column_name,
+                operation=check_name,
+                native=False,
+                is_expr=False,
+            )
+        elif check.return_type == "bool":
+            res = nw.lit(res).alias(new_check_name)
+            return _ResultWrapper(
+                res,
+                msg=err_msg,
+                identifier=new_check_name,
+                column=column_name,
+                operation=check_name,
+                native=False,
+                is_expr=True,
+            )
 
-        return (n_failed == 0, n_failed)
+
+@dataclasses.dataclass
+class _PrivateInterrogationResult:
+    df: nw.DataFrame
+    mask: nw.DataFrame
+    is_good: nw.Series
+    summary: nw.DataFrame
 
 
-def _build_check_err(check: Check, n_failed: Optional[int], n_rows: int):
-    if n_failed is not None:
-        failed_pct = n_failed / n_rows
-        err_msg = f" for {n_failed} / {n_rows} rows ({failed_pct:.2%})"
-    else:
-        err_msg = ""
-
-    return ValidationError(check, err_msg)
+@dataclasses.dataclass
+class InterrogationResult:
+    df: nwt.IntoDataFrame
+    mask: nwt.IntoDataFrame
+    is_good: nwt.IntoSeries
+    summary: nwt.IntoDataFrame
 
 
-def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:
+def _private_interrogate(
+    schema: Schema, df: nwt.IntoDataFrameT, cast: bool
+) -> _PrivateInterrogationResult:
     nw_df = nw.from_native(df, eager_only=True)
     df_schema = nw_df.collect_schema()  # type: ignore[attribute]
 
-    n_rows = nw_df.shape[0]
-    errors: dict[str, _ErrorStore] = defaultdict(_ErrorStore)
-
+    results: list[_ResultWrapper] = []
     for expected_name, expected_col in schema.expected_schema.items():
-        error_store = errors[expected_name]
-
-        # check existence
-        try:
-            _ = df_schema[expected_name]
-        except KeyError:
+        # Check existence. There are three possible states:
+        # 1. The column exists
+        # 2. The column exists but is not required
+        # 3. The column exists but is required
+        #
+        # If the column exists but is not required, the check shouldn't error, but we
+        # can't perform any of the next steps like casting or checks, so we have to skip
+        # them.
+        check_name = f"__checkedframe_{expected_name}_existence__"
+        existence_message = ""
+        if expected_name in df_schema:
+            actually_exists = True
+            existence_check = nw.lit(True)
+        else:
+            actually_exists = False
             if expected_col.required:
-                error_store.missing_column = ColumnNotFoundError(
-                    "Column marked as required but not found"
-                )
+                existence_check = nw.lit(False)
+                existence_message = "Column marked as required but not found"
+            else:
+                existence_check = nw.lit(True)
+
+        results.append(
+            _ResultWrapper(
+                existence_check.alias(check_name),
+                msg=existence_message,
+                identifier=check_name,
+                column=expected_name,
+                operation="existence",
+                native=False,
+                is_expr=True,
+            )
+        )
+
+        if not actually_exists:
             continue
 
-        # check nullability
-        if not expected_col.nullable:
-            null_count = nw_df[expected_name].is_null().sum()
-            if null_count > 0:
-                null_pct = null_count / n_rows
-                error_store.invalid_nulls = ValidationError(
-                    _NullValueCheck(),
-                    f" for {null_count} / {n_rows} rows ({null_pct:.2%})",
-                )
-
-        # check nan-ability
-        if hasattr(expected_col, "allow_nan"):
-            if not expected_col.allow_nan:
-                nan_count = nw_df[expected_name].is_nan().sum()
-                if nan_count > 0:
-                    nan_pct = nan_count / n_rows
-                    error_store.failed_checks.append(
-                        ValidationError(
-                            _NanValueCheck(),
-                            f" for {nan_count} / {n_rows} rows ({nan_pct:.2%})",
-                        )
-                    )
-
-        # check inf-ability
-        if hasattr(expected_col, "allow_inf"):
-            if not expected_col.allow_inf:
-                nan_count = (
-                    nw_df[expected_name].is_in((INFINITY, NEGATIVE_INFINITY)).sum()
-                )
-                if nan_count > 0:
-                    nan_pct = nan_count / n_rows
-                    error_store.failed_checks.append(
-                        ValidationError(
-                            _InfValueCheck(),
-                            f" for {nan_count} / {n_rows} rows ({nan_pct:.2%})",
-                        )
-                    )
         # check data types
         actual_dtype = df_schema[expected_name]
         if actual_dtype == expected_col.to_narwhals():
@@ -191,57 +208,232 @@ def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDat
                             nw_df[expected_name], expected_col
                         )
                     )
-                except TypeError as e:
-                    error_store.invalid_dtype = e
+                except CastError as e:
+                    identifier = f"__checkedframe_{expected_name}_cast__"
+
+                    results.append(
+                        _ResultWrapper(
+                            e.element_passes.alias(identifier),
+                            msg=e.msg,
+                            identifier=identifier,
+                            column=expected_name,
+                            operation="cast",
+                            native=False,
+                            is_expr=isinstance(e.element_passes, nw.Expr),
+                        )
+                    )
                     continue
             else:
-                error_store.invalid_dtype = TypeError(
-                    f"Expected {expected_col}, got {actual_dtype}"
+                identifier = f"__checkedframe_{expected_name}_dtype__"
+                results.append(
+                    _ResultWrapper(
+                        nw.lit(False).alias(identifier),
+                        msg=f"Expected {expected_col}, got {actual_dtype}",
+                        identifier=identifier,
+                        column=expected_name,
+                        operation="dtype",
+                        native=False,
+                        is_expr=False,
+                    )
                 )
                 continue
+
+        # nullable / nanable checks
+        builtin_checks = []
+
+        if not expected_col.nullable:
+            builtin_checks.append(Check.is_not_null())
+
+        if hasattr(expected_col, "allow_nan") and not expected_col.allow_nan:
+            builtin_checks.append(Check.is_not_nan())
+
+        if hasattr(expected_col, "allow_inf") and not expected_col.allow_inf:
+            builtin_checks.append(Check.is_not_inf())
+
+        for check in builtin_checks:
+            assert check.name is not None
+
+            results.append(
+                _run_check(
+                    check=check,
+                    check_name=check.name,
+                    nw_df=nw_df,
+                    series_name=expected_name,
+                )
+            )
 
         # user checks
         for i, check in enumerate(expected_col.checks):
             check_name = f"check_{i}" if check.name is None else check.name
 
-            passed_check = _run_check(
+            result = _run_check(
                 check,
+                check_name,
                 nw_df,
-                check_name=check_name,
-                check_input_type=check.input_type,  # type: ignore[assignment]
                 series_name=expected_name,
             )
 
-            if not passed_check[0]:
-                error_store.failed_checks.append(
-                    _build_check_err(check, passed_check[1], n_rows)
-                )
+            results.append(result)
 
-    failed_checks: list[ValidationError] = []
     for i, check in enumerate(schema.checks):
         check_name = f"frame_check_{i}" if check.name is None else check.name
 
-        # As a last best-effort guess, if the check is running in a DataFrame context,
-        # we infer the input type to be a dataframe
-        check_input_type: CheckInputType
-        if check.input_type == "auto":
-            check_input_type = "Frame"  # type: ignore[assignment]
-        else:
-            check_input_type = check.input_type  # type: ignore[assignment]
+        result = _run_check(check, check_name, nw_df)
+        results.append(result)
 
-        passed_check = _run_check(
-            check, nw_df, check_name=check_name, check_input_type=check_input_type
+    native_exprs = []
+    exprs = []
+    series_store = []
+    id_col_mapper = {}
+    id_op_mapper = {}
+    id_msg_mapper = {}
+    for result in results:
+        id_op_mapper[result.identifier] = result.operation
+        id_col_mapper[result.identifier] = result.column
+        id_msg_mapper[result.identifier] = result.msg
+
+        res = result.res
+        if result.is_expr:
+            if result.native:
+                native_exprs.append(res)
+            else:
+                exprs.append(res)
+        else:
+            series_store.append(res)
+
+    temp_index_col = "__checkedframe_temporary_index_s;dlfjks;dflkj__"
+    check_df = (
+        nw_df.lazy()
+        .with_row_index(temp_index_col)
+        .select(temp_index_col, *exprs)
+        .drop(temp_index_col)
+        .collect()
+    )
+    check_df_native = nw.from_native(nw_df.to_native().lazy().select(*native_exprs).collect())  # type: ignore
+
+    check_df_all = nw.concat(
+        [check_df, check_df_native], how="horizontal"
+    ).with_columns(*series_store)
+
+    n_rows = nw_df.shape[0]
+
+    is_good = check_df_all.select(nw.all_horizontal(nw.all()).alias("is_good"))[
+        "is_good"
+    ]
+
+    summary_df = (
+        check_df_all.lazy()
+        .select(nw.all().__invert__().sum())
+        .unpivot(variable_name="id", value_name="n_failed")
+        .with_columns(
+            nw.col("n_failed").__truediv__(n_rows).alias("pct_failed"),
+            nw.col("id").replace_strict(id_col_mapper).alias("column"),
+            nw.col("id").replace_strict(id_op_mapper).alias("operation"),
+            nw.col("id").replace_strict(id_msg_mapper).alias("message"),
+        )
+        .drop("id")
+        .collect()
+    )
+
+    return _PrivateInterrogationResult(
+        df=nw_df,
+        mask=check_df_all,  # type: ignore
+        is_good=is_good,  # type: ignore
+        summary=summary_df,  # type: ignore
+    )
+
+
+def _interrogate(
+    schema: Schema, df: nwt.IntoDataFrameT, cast: bool
+) -> InterrogationResult:
+    res = _private_interrogate(schema=schema, df=df, cast=cast)
+
+    return InterrogationResult(
+        df=res.df.to_native(),
+        mask=res.mask.to_native(),
+        is_good=res.is_good.to_native(),
+        summary=res.summary.select(
+            "column", "operation", "n_failed", "pct_failed"
+        ).to_native(),
+    )
+
+
+def _filter(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:
+    res = _private_interrogate(schema=schema, df=df, cast=cast)
+
+    return res.df.filter(res.is_good).to_native()
+
+
+def _generate_error_message(
+    summary_df: nwt.IntoDataFrame, columns: list[str], n_rows: int
+) -> str:
+    failures = (
+        nw.from_native(summary_df, eager_only=True)
+        .filter(nw.col("n_failed").__gt__(0))
+        .with_columns(
+            nw.len().over("column").alias("error_count"),
+            nw.col("column").__ne__("__dataframe__").alias("is_column_check"),
+        )
+    )
+
+    column_failures = failures.filter(nw.col("is_column_check"))
+    frame_failures = failures.filter(nw.col("is_column_check").__invert__())
+    total_error_count = failures.shape[0]
+
+    n_rows_str = f"{n_rows:,}"
+
+    def _wrap_err(e: str) -> str:
+        return f"    - {e}"
+
+    relevant_info = ["message", "n_failed", "pct_failed", "error_count"]
+    output = []
+    for column in columns:
+        bullets: list[str] = []
+
+        tmp = column_failures.filter(nw.col("column") == column)
+
+        if tmp.is_empty():
+            continue
+
+        for (
+            message,
+            n_failed,
+            pct_failed,
+            error_count,
+        ) in tmp.select(
+            relevant_info
+        ).iter_rows(named=False):
+
+            summary = f"{n_failed:,} / {n_rows_str} ({pct_failed:.2%})"
+            message = message.format(summary=summary)
+            bullets.append(_wrap_err(message))
+
+        output.append(f"  {column}: {error_count} error(s)")
+        output.extend(bullets)
+
+    for message, n_failed, pct_failed, error_count in frame_failures.select(
+        relevant_info
+    ).iter_rows(named=False):
+        summary = f"{n_failed:,} / {n_rows_str} ({pct_failed:.2%})"
+        message = message.format(summary=summary)
+        output.append(f"  * {message}")
+
+    error_summary = [f"Found {total_error_count} error(s)"]
+
+    return "\n".join(error_summary + output)
+
+
+def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:
+    res = _private_interrogate(schema, df, cast)
+
+    if not res.is_good.all():
+        raise SchemaError(
+            _generate_error_message(
+                summary_df=res.summary, columns=schema.columns(), n_rows=res.df.shape[0]
+            )
         )
 
-        if not passed_check[0]:
-            failed_checks.append(_build_check_err(check, passed_check[1], n_rows))
-
-    schema_error = SchemaError(errors, failed_checks)
-
-    if not schema_error.is_empty():
-        raise schema_error
-
-    return nw_df.to_native()
+    return res.df.to_native()
 
 
 class _SchemaCacheMeta(type):
@@ -319,7 +511,9 @@ class Schema(metaclass=_SchemaCacheMeta):
     ):
         self.expected_schema = expected_schema
         self.checks = [] if checks is None else checks
+        self.interrogate = self.__interrogate  # type: ignore
         self.validate = self.__validate  # type: ignore
+        self.filter = self.__filter  # type: ignore
         self.columns = self.__columns  # type: ignore
 
     @classmethod
@@ -358,7 +552,7 @@ class Schema(metaclass=_SchemaCacheMeta):
             if isinstance(val, Check):
                 if (cols_or_selector := val.columns) is not None:
                     if isinstance(cols_or_selector, Selector):
-                        cols = cols_or_selector(schema_dict)
+                        cols = cols_or_selector(schema_dict)  # type: ignore
                     else:
                         cols = cols_or_selector
 
@@ -372,6 +566,17 @@ class Schema(metaclass=_SchemaCacheMeta):
         cls._schema = res
 
         return res
+
+    @classmethod
+    def interrogate(
+        cls, df: nwt.IntoDataFrameT, cast: bool = False
+    ) -> InterrogationResult:
+        return _interrogate(cls._parse_into_schema(), df, cast)
+
+    def __interrogate(
+        self, df: nwt.IntoDataFrameT, cast: bool = False
+    ) -> InterrogationResult:
+        return _interrogate(self, df, cast)
 
     @classmethod
     def validate(cls, df: nwt.IntoDataFrameT, cast: bool = False) -> nwt.IntoDataFrameT:
@@ -401,3 +606,12 @@ class Schema(metaclass=_SchemaCacheMeta):
         self, df: nwt.IntoDataFrameT, cast: bool = False
     ) -> nwt.IntoDataFrameT:
         return _validate(self, df, cast)
+
+    @classmethod
+    def filter(cls, df: nwt.IntoDataFrameT, cast: bool = False) -> nwt.IntoDataFrameT:
+        return _filter(cls._parse_into_schema(), df, cast)
+
+    def __filter(
+        self, df: nwt.IntoDataFrameT, cast: bool = False
+    ) -> nwt.IntoDataFrameT:
+        return _filter(self, df, cast)
