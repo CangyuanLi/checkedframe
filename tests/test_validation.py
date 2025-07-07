@@ -46,42 +46,16 @@ def test_readme_example():
     with pytest.raises(cf.exceptions.SchemaError):
         x: DataFrame[AASchema] = AASchema.validate(df)
 
-    try:
-        AASchema.validate(df)
-    except cf.exceptions.SchemaError as e:
-        errors = e.errors
+    res = AASchema.interrogate(df)
 
-        assert len(e.failed_checks) == 2
+    errors = res.summary.filter(pl.col("n_failed").gt(0))
 
-        reason_code_errors = errors["reason_code"]
-        assert reason_code_errors.missing_column is None
-        assert reason_code_errors.invalid_dtype is None
-        assert reason_code_errors.invalid_nulls is None
-        assert len(reason_code_errors.failed_checks) == 1
-
-        reason_code_description_errors = errors["reason_code_description"]
-        assert reason_code_description_errors.missing_column is None
-        assert reason_code_description_errors.invalid_dtype is None
-        assert reason_code_description_errors.invalid_nulls is None
-        assert len(reason_code_description_errors.failed_checks) == 0
-
-        features_errors = errors["features"]
-        assert features_errors.missing_column is not None
-        assert features_errors.invalid_dtype is None
-        assert features_errors.invalid_nulls is None
-        assert len(features_errors.failed_checks) == 0
-
-        shap_errors = errors["shap"]
-        assert shap_errors.missing_column is None
-        assert shap_errors.invalid_dtype is None
-        assert shap_errors.invalid_nulls is None
-        assert len(shap_errors.failed_checks) == 0
-
-        rank_errors = errors["rank"]
-        assert rank_errors.missing_column is None
-        assert rank_errors.invalid_dtype is not None
-        assert rank_errors.invalid_nulls is None
-        assert len(rank_errors.failed_checks) == 0
+    assert errors.filter(pl.col("column").eq("__dataframe__")).height == 2
+    assert errors.filter(pl.col("column").eq("reason_code")).height == 1
+    assert "reason_code_description" not in errors["column"]
+    assert errors.filter(pl.col("column").eq("features")).height == 1
+    assert "shap" not in errors["column"]
+    assert errors.filter(pl.col("column").eq("rank")).height == 1
 
 
 def test_mutation():
