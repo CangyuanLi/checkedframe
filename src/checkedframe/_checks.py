@@ -19,6 +19,9 @@ from .selectors import Selector
 col = nw.col
 lit = nw.lit
 
+INF = float("inf")
+NEG_INF = float("-inf")
+
 
 def _is_polars_series(ser: Any) -> bool:
     return (pl := get_polars()) is not None and issubclass(ser, pl.Series)
@@ -54,6 +57,10 @@ def _is_cudf_dataframe(df: Any) -> bool:
 
 def _is_cudf_series(ser: Any) -> bool:
     return (cudf := get_cudf()) is not None and issubclass(ser, cudf.Series)
+
+
+def _is_pyarrow_expr(expr: Any) -> bool:
+    return (pa := get_pyarrow()) is not None and issubclass(expr, pa.compute.Expression)
 
 
 def _is_pyarrow_chunked_array(ser: Any) -> bool:
@@ -161,7 +168,31 @@ def _infer_return_type(
     return "auto"
 
 
+def _infer_narwhals(type_hints: dict[str, Any]) -> bool | Literal["auto"]:
+    if len(type_hints) == 0:
+        return "auto"
+
+    return any(
+        issubclass(v, nw.Expr)
+        or issubclass(v, nw.Series)
+        or issubclass(v, nw.DataFrame)
+        for v in type_hints.values()
+    )
+
+
 ClosedInterval = Literal["left", "right", "none", "both"]
+
+
+def _is_not_null(name: str) -> nw.Expr:
+    return nw.col(name).is_null().__invert__()
+
+
+def _is_not_nan(name: str) -> nw.Expr:
+    return nw.col(name).is_nan().__invert__()
+
+
+def _is_not_inf(name: str) -> nw.Expr:
+    return nw.col(name).is_in((INF, NEG_INF)).__invert__()
 
 
 def _is_between(
@@ -410,7 +441,7 @@ class Check:
         columns: Optional[str | list[str] | Selector] = None,
         input_type: CheckInputType = "auto",
         return_type: CheckReturnType = "auto",
-        native: bool = True,
+        native: bool | Literal["auto"] = "auto",
         name: Optional[str] = None,
         description: Optional[str] = None,
     ):
@@ -429,10 +460,14 @@ class Check:
         assert self.func is not None
         auto_input_type = self.input_type == "auto"
         auto_return_type = self.return_type == "auto"
+        auto_native = self.native == "auto"
 
-        if auto_input_type or auto_return_type:
+        if auto_input_type or auto_return_type or auto_native:
             signature = inspect.signature(self.func)
             type_hints = get_type_hints(self.func)
+
+        if auto_native:
+            self.native = not _infer_narwhals(type_hints)
 
         if auto_input_type:
             self.input_type = _infer_input_type(type_hints, signature)
@@ -441,6 +476,11 @@ class Check:
             self.return_type = _infer_return_type(
                 type_hints,
                 self.input_type,
+            )
+
+        if self.native == "auto":
+            raise ValueError(
+                f"Whether `{self.name}` expects to be run natively or via narwhals could not be automatically determined from context"
             )
 
         if self.input_type == "auto":
@@ -468,6 +508,39 @@ class Check:
             native=self.native,
             name=self.name,
             description=self.description,
+        )
+
+    @staticmethod
+    def is_not_null() -> Check:
+        return Check(
+            func=_is_not_null,
+            input_type="str",
+            return_type="Expr",
+            native=False,
+            name="is_not_null",
+            description="Must not be null",
+        )
+
+    @staticmethod
+    def is_not_nan() -> Check:
+        return Check(
+            func=_is_not_nan,
+            input_type="str",
+            return_type="Expr",
+            native=False,
+            name="is_not_nan",
+            description="Must not be NaN",
+        )
+
+    @staticmethod
+    def is_not_inf() -> Check:
+        return Check(
+            func=_is_not_inf,
+            input_type="str",
+            return_type="Expr",
+            native=False,
+            name="is_not_inf",
+            description="Must not be inf/-inf",
         )
 
     @staticmethod
