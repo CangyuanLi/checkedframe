@@ -139,6 +139,7 @@ def _run_check(
 @dataclasses.dataclass
 class _PrivateInterrogationResult:
     df: nw.DataFrame
+    mask: nw.DataFrame
     is_good: nw.Series
     summary: nw.DataFrame
 
@@ -146,6 +147,7 @@ class _PrivateInterrogationResult:
 @dataclasses.dataclass
 class InterrogationResult:
     df: nwt.IntoDataFrame
+    mask: nwt.IntoDataFrame
     is_good: nwt.IntoSeries
     summary: nwt.IntoDataFrame
 
@@ -335,6 +337,7 @@ def _private_interrogate(
 
     return _PrivateInterrogationResult(
         df=nw_df,
+        mask=check_df_all,  # type: ignore
         is_good=is_good,  # type: ignore
         summary=summary_df,  # type: ignore
     )
@@ -347,6 +350,7 @@ def _interrogate(
 
     return InterrogationResult(
         df=res.df.to_native(),
+        mask=res.mask.to_native(),
         is_good=res.is_good.to_native(),
         summary=res.summary.select(
             "column", "operation", "n_failed", "pct_failed"
