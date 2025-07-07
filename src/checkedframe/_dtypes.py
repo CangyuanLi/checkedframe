@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import dataclasses
+import string
 from abc import abstractmethod
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Literal, Optional, TypedDict, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict, Union
 
 import narwhals.stable.v1 as nw
 from narwhals.stable.v1.dtypes import DType as NarwhalsDType
+
+from .exceptions import CastError
 
 if TYPE_CHECKING:
     from datetime import timezone
@@ -74,6 +78,30 @@ class _Column:
 class _TypedColumn(_Column, _DType, NarwhalsDType): ...
 
 
+@dataclasses.dataclass
+class _Failures:
+    n_failed: int
+    n_rows: int
+    pct_failed: float
+
+    def to_summary(self) -> str:
+        return f"{self.n_failed:,} / {self.n_rows:,} ({self.pct_failed:.2%})"
+
+
+def _analyze_passes(s: nw.Series) -> _Failures:
+    s = s.__invert__()
+
+    n_failed = s.sum()
+    n_rows = s.shape[0]
+    pct_failed = n_failed / n_rows
+
+    return _Failures(
+        n_failed=int(n_failed),
+        n_rows=n_rows,
+        pct_failed=pct_failed,
+    )
+
+
 def _checked_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
     # We need this because narwhals will just silently not cast if the datatype isn't
     # supported by the physical backend. E.g., casting a float to UInt128 with Polars
@@ -82,70 +110,112 @@ def _checked_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
 
     to_nw_dtype = to_dtype.to_narwhals()
     try:
-        s_cast = s.cast(to_nw_dtype)
+        s_cast = s.cast(to_nw_dtype)  # type: ignore
     except Exception:
-        raise TypeError(f"Cannot cast {s.dtype} to {to_dtype}")
+        raise CastError(
+            string.Template("Cannot cast ${from_dtype} to ${to_dtype}").safe_substitute(
+                {"from_dtype": s.dtype, "to_dtype": to_dtype}
+            ),
+            nw.lit(False),
+        )
 
     if s_cast.dtype != to_nw_dtype:
-        raise TypeError(
-            f"Cannot cast {s.dtype} to {to_dtype}; {to_dtype} not supported by your DataFrame library"
+        raise CastError(
+            string.Template(
+                "Cannot cast ${from_dtype} to ${to_dtype}; failed for {summary} rows ${to_dtype} not supported by your DataFrame library"
+            ).safe_substitute({"from_dtype": s.dtype, "to_dtype": to_dtype}),
+            element_passes=nw.lit(False),
         )
 
     return s_cast
 
 
 def _int_to_uint_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
-    s_min = s.min()
-    if s_min >= 0:
+    passes = s >= 0
+
+    if passes.all():
         return _checked_cast(s, to_dtype)
 
-    raise TypeError(
-        f"Cannot safely cast {s.dtype} to {to_dtype}; actual min {s_min} < allowed min 0"
+    raise CastError(
+        string.Template(
+            "Cannot safely cast ${from_dtype} to ${to_dtype}; {summary} rows < allowed min 0"
+        ).safe_substitute({"from_dtype": s.dtype, "to_dtype": to_dtype}),
+        element_passes=passes,
     )
 
 
 def _allowed_max_cast(s: nw.Series, to_dtype: _BoundedDType) -> nw.Series:
     allowed_max = to_dtype._max
-    s_max = s.max()
-    if s_max <= allowed_max:
+    passes = s <= allowed_max
+
+    if passes.all():
         return _checked_cast(s, to_dtype)
 
-    raise TypeError(
-        f"Cannot safely cast {s.dtype} to {to_dtype}; actual max {s_max} > allowed max {allowed_max}"
+    raise CastError(
+        string.Template(
+            "Cannot safely cast ${from_dtype} to ${to_dtype}; {summary} rows > allowed max ${allowed_max}"
+        ).safe_substitute(
+            {
+                "from_dtype": s.dtype,
+                "to_dtype": to_dtype,
+                "allowed_max": f"{allowed_max:,}",
+            }
+        ),
+        passes,
     )
 
 
 def _allowed_range_cast(s: nw.Series, to_dtype: _BoundedDType) -> nw.Series:
     allowed_min = to_dtype._min
     allowed_max = to_dtype._max
-    s_min = s.min()
-    s_max = s.max()
+    passes = s.is_between(
+        lower_bound=allowed_min, upper_bound=allowed_max, closed="both"
+    )
 
-    if s_min >= allowed_min and s_max <= allowed_max:
+    if passes.all():
         return _checked_cast(s, to_dtype)
 
-    raise TypeError(
-        f"Cannot safely cast {s.dtype} to {to_dtype}; invalid range [{s_min}, {s_max}], expected range [{allowed_min:,}, {allowed_max:,}]"
+    raise CastError(
+        string.Template(
+            "Cannot safely cast ${from_dtype} to ${to_dtype}; {summary} rows outside of expected range [${allowed_min}, ${allowed_max}]"
+        ).safe_substitute(
+            {
+                "from_dtype": s.dtype,
+                "to_dtype": to_dtype,
+                "allowed_min": f"{allowed_min:,}",
+                "allowed_max": f"{allowed_max:,}",
+            }
+        ),
+        passes,
     )
 
 
 def _numeric_to_boolean_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
-    if s.__eq__(1).__or__(s.__eq__(0)).all():
+    passes = (s == 1) | (s == 0)
+
+    if passes.all():
         return _checked_cast(s, to_dtype)
 
-    raise TypeError(
-        f"Cannot safely cast {s.dtype} to {to_dtype}; all values must be either 1 or 0"
+    raise CastError(
+        string.Template(
+            "Cannot safely cast ${from_dtype} to ${to_dtype}; {summary} rows are not either 1 or 0"
+        ).safe_substitute({"from_dtype": s.dtype, "to_dtype": to_dtype}),
+        passes,
     )
 
 
 def _fallback_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
     s_cast = _checked_cast(s, to_dtype)
+    passes = s_cast == s
 
-    if s_cast.__eq__(s).all():
+    if passes.all():
         return s_cast
 
-    raise TypeError(
-        f"Cannot safely cast {s.dtype} to {to_dtype}; casting resulted in different series"
+    raise CastError(
+        string.Template(
+            "Cannot safely cast ${from_dtype} to ${to_dtype}; different results for {summary} rows"
+        ).safe_substitute({"from_dtype": s.dtype, "to_dtype": to_dtype}),
+        passes,
     )
 
 
@@ -1207,7 +1277,7 @@ class Struct(nw.Struct, _Column, _DType):
         for field in self.fields:
             dct[field.name] = field.dtype.to_narwhals()
 
-        return nw.Struct(dct)
+        return nw.Struct(dct)  # type: ignore
 
     @staticmethod
     def from_narwhals(nw_dtype: nw.Struct, **column_kwargs) -> Struct:
