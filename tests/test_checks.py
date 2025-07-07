@@ -1,8 +1,11 @@
+import narwhals.stable.v1 as nw
 import pandas as pd
 import polars as pl
 import pytest
 
 import checkedframe as cf
+
+ENGINES = [pd.DataFrame, pl.DataFrame]
 
 
 def test_type_inference_polars():
@@ -87,8 +90,9 @@ def test_type_inference_pandas():
     assert col_checks["a_check3"].return_type == "bool"
 
 
-def test_is_between():
-    df = pl.DataFrame({"a": [1, 2, 3]})
+@pytest.mark.parametrize("engine", ENGINES)
+def test_is_between(engine):
+    df = engine({"a": [1, 2, 3]})
 
     class S(cf.Schema):
         a = cf.Int64(checks=[cf.Check.is_between(1, 3)])
@@ -96,17 +100,114 @@ def test_is_between():
     S.validate(df)
 
 
-def test_lt():
-    df = pl.DataFrame({"a": [1, None, 4, 5, 6]})
+@pytest.mark.parametrize("engine", ENGINES)
+def test_lt(engine):
+    df = engine({"a": [1, 4, 5, 6]})
 
     class S(cf.Schema):
-        a = cf.Int64(nullable=True, checks=[cf.Check.lt(7)])
+        a = cf.Int64(checks=[cf.Check.lt(7)])
 
     S.validate(df)
 
 
-def test_is_sorted_by():
-    df = pl.DataFrame({"a": [1, 3, 2], "b": [1, 1, 2]})
+@pytest.mark.parametrize("engine", ENGINES)
+def test_gt(engine):
+    df = engine({"a": [4, 5, 6]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.gt(1)])
+
+    S.validate(df)
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.gt(5)])
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+def test_is_not_nan(engine):
+    df = engine({"a": [1.0, float("nan")]})
+
+    class S(cf.Schema):
+        a = cf.Float64(checks=[cf.Check.is_not_nan()])
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+def test_str_starts_with(engine):
+    df = engine({"a": ["x", "xx", "xy"]})
+
+    class S(cf.Schema):
+        a = cf.String(checks=[cf.Check.str_starts_with("x")])
+
+    S.validate(df)
+
+    df = engine({"a": ["yx", "x_a"]})
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+def test_str_ends_with(engine):
+    df = engine({"a": ["x", "xx", "yx"]})
+
+    class S(cf.Schema):
+        a = cf.String(checks=[cf.Check.str_ends_with("x")])
+
+    S.validate(df)
+
+    df = engine({"a": ["yx", "x_a"]})
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+def test_str_contains(engine):
+    df = engine({"a": ["x", "xx", "xy"]})
+
+    class S(cf.Schema):
+        a = cf.String(checks=[cf.Check.str_contains("x")])
+
+    S.validate(df)
+
+    df = engine({"a": ["yx", "a_a"]})
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+def test_is_sorted(engine):
+    df = engine({"a": [1, 2, 3]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.is_sorted()])
+
+    S.validate(df)
+
+    df = engine({"a": [3, 2, 1]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.is_sorted()])
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.is_sorted(descending=True)])
+
+    S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+def test_is_sorted_by(engine):
+    df = engine({"a": [1, 3, 2], "b": [1, 1, 2]})
 
     class S(cf.Schema):
         _c = cf.Check.is_sorted_by(["a", "b"])
@@ -114,4 +215,14 @@ def test_is_sorted_by():
     with pytest.raises(cf.exceptions.SchemaError):
         S.validate(df)
 
-    S.validate(df.sort(["a", "b"]))
+    S.validate(nw.from_native(df).sort(["a", "b"]).to_native())
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+def test_is_id(engine):
+    df = engine({"a": [1, 1, 2], "b": [1, 2, 1]})
+
+    class S(cf.Schema):
+        _c = cf.Check.is_id(["a", "b"])
+
+    S.validate(df)
