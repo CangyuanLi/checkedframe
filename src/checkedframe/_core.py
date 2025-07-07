@@ -242,12 +242,18 @@ def _private_interrogate(
         builtin_checks = []
 
         if not expected_col.nullable:
-            builtin_checks.append(Check.is_not_null())
+            check = Check.is_not_null()
+            check.name = "__builtin_is_not_null"
+            builtin_checks.append(check)
 
         if hasattr(expected_col, "allow_nan") and not expected_col.allow_nan:
-            builtin_checks.append(Check.is_not_nan())
+            check = Check.is_not_nan()
+            check.name = "__builtin_is_not_nan"
+            builtin_checks.append(check)
 
         if hasattr(expected_col, "allow_inf") and not expected_col.allow_inf:
+            check = Check.is_not_inf()
+            check.name = "__builtin_is_not_inf"
             builtin_checks.append(Check.is_not_inf())
 
         for check in builtin_checks:
@@ -301,7 +307,7 @@ def _private_interrogate(
         else:
             series_store.append(res)
 
-    temp_index_col = "__checkedframe_temporary_index_s;dlfjks;dflkj__"
+    temp_index_col = "__checkedframe_temporary_index_sdlfjksnwoiedflkj__"
     check_df = (
         nw_df.lazy()
         .with_row_index(temp_index_col)
@@ -309,11 +315,12 @@ def _private_interrogate(
         .drop(temp_index_col)
         .collect()
     )
-    check_df_native = nw.from_native(nw_df.to_native().lazy().select(*native_exprs).collect())  # type: ignore
 
-    check_df_all = nw.concat(
-        [check_df, check_df_native], how="horizontal"
-    ).with_columns(*series_store)
+    if len(native_exprs) > 0:
+        check_df_native = nw.from_native(nw_df.to_native().lazy().select(*native_exprs).collect())  # type: ignore
+        check_df = nw.concat([check_df, check_df_native], how="horizontal")  # type: ignore
+
+    check_df_all = check_df.with_columns(*series_store)
 
     n_rows = nw_df.shape[0]
 
