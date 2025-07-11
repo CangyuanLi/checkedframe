@@ -34,14 +34,6 @@ class _BoundedDType(_DType):
     _max: int | float
 
 
-class _ColumnKwargs(TypedDict):
-    name: Optional[str]
-    nullable: bool
-    required: bool
-    cast: bool
-    checks: Optional[list[Check]]
-
-
 class _Column:
     """Represents a column in a DataFrame.
 

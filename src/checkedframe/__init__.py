@@ -2,6 +2,7 @@
 from checkedframe import exceptions, selectors
 
 from ._checks import Check, col, lit
+from ._config import Config, apply_configs
 from ._core import Schema
 from ._dtypes import (
     Array,

@@ -8,7 +8,8 @@ from typing import Any, Optional
 import narwhals.stable.v1 as nw
 import narwhals.stable.v1.typing as nwt
 
-from ._checks import Check, CheckInputType
+from ._checks import Check
+from ._config import ConfigList
 from ._dtypes import CastError, _Column, _nw_type_to_cf_type, _TypedColumn
 from ._utils import get_class_members
 from .exceptions import SchemaError
@@ -153,7 +154,7 @@ class InterrogationResult:
 
 
 def _private_interrogate(
-    schema: Schema, df: nwt.IntoDataFrameT, cast: bool
+    schema: Schema, df: nwt.IntoDataFrameT
 ) -> _PrivateInterrogationResult:
     nw_df = nw.from_native(df, eager_only=True)
     df_schema = nw_df.collect_schema()  # type: ignore[attribute]
@@ -201,7 +202,7 @@ def _private_interrogate(
         if actual_dtype == expected_col.to_narwhals():
             pass
         else:
-            if expected_col.cast or cast:
+            if expected_col.cast:
                 try:
                     nw_df = nw_df.with_columns(
                         _nw_type_to_cf_type(actual_dtype)._safe_cast(
@@ -351,9 +352,10 @@ def _private_interrogate(
 
 
 def _interrogate(
-    schema: Schema, df: nwt.IntoDataFrameT, cast: bool
+    schema: Schema,
+    df: nwt.IntoDataFrameT,
 ) -> InterrogationResult:
-    res = _private_interrogate(schema=schema, df=df, cast=cast)
+    res = _private_interrogate(schema=schema, df=df)
 
     return InterrogationResult(
         df=res.df.to_native(),
@@ -365,8 +367,8 @@ def _interrogate(
     )
 
 
-def _filter(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:
-    res = _private_interrogate(schema=schema, df=df, cast=cast)
+def _filter(schema: Schema, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
+    res = _private_interrogate(schema=schema, df=df)
 
     return res.df.filter(res.is_good).to_native()
 
@@ -430,8 +432,8 @@ def _generate_error_message(
     return "\n".join(error_summary + output)
 
 
-def _validate(schema: Schema, df: nwt.IntoDataFrameT, cast: bool) -> nwt.IntoDataFrameT:
-    res = _private_interrogate(schema, df, cast)
+def _validate(schema: Schema, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
+    res = _private_interrogate(schema, df)
 
     if not res.is_good.all():
         raise SchemaError(
@@ -569,24 +571,26 @@ class Schema(metaclass=_SchemaCacheMeta):
                 else:
                     checks.append(val)
 
+            if isinstance(val, ConfigList):
+                for config in val.args:
+                    for c in config.selector(schema_dict):
+                        for k, v in config.dct.items():
+                            setattr(schema_dict[c], k, v)
+
         res = Schema(expected_schema=schema_dict, checks=checks)
         cls._schema = res
 
         return res
 
     @classmethod
-    def interrogate(
-        cls, df: nwt.IntoDataFrameT, cast: bool = False
-    ) -> InterrogationResult:
-        return _interrogate(cls._parse_into_schema(), df, cast)
+    def interrogate(cls, df: nwt.IntoDataFrameT) -> InterrogationResult:
+        return _interrogate(cls._parse_into_schema(), df)
 
-    def __interrogate(
-        self, df: nwt.IntoDataFrameT, cast: bool = False
-    ) -> InterrogationResult:
-        return _interrogate(self, df, cast)
+    def __interrogate(self, df: nwt.IntoDataFrameT) -> InterrogationResult:
+        return _interrogate(self, df)
 
     @classmethod
-    def validate(cls, df: nwt.IntoDataFrameT, cast: bool = False) -> nwt.IntoDataFrameT:
+    def validate(cls, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
         """Validate the given DataFrame
 
         Parameters
@@ -594,8 +598,6 @@ class Schema(metaclass=_SchemaCacheMeta):
         df : nwt.IntoDataFrameT
             Any Narwhals-compatible DataFrame, see https://narwhals-dev.github.io/narwhals/
             for more information
-        cast : bool, optional
-            Whether to cast columns, by default False
 
         Returns
         -------
@@ -607,18 +609,14 @@ class Schema(metaclass=_SchemaCacheMeta):
         SchemaError
             If validation fails
         """
-        return _validate(cls._parse_into_schema(), df, cast)
+        return _validate(cls._parse_into_schema(), df)
 
-    def __validate(
-        self, df: nwt.IntoDataFrameT, cast: bool = False
-    ) -> nwt.IntoDataFrameT:
-        return _validate(self, df, cast)
+    def __validate(self, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
+        return _validate(self, df)
 
     @classmethod
-    def filter(cls, df: nwt.IntoDataFrameT, cast: bool = False) -> nwt.IntoDataFrameT:
-        return _filter(cls._parse_into_schema(), df, cast)
+    def filter(cls, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
+        return _filter(cls._parse_into_schema(), df)
 
-    def __filter(
-        self, df: nwt.IntoDataFrameT, cast: bool = False
-    ) -> nwt.IntoDataFrameT:
-        return _filter(self, df, cast)
+    def __filter(self, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
+        return _filter(self, df)
