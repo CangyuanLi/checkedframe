@@ -41,6 +41,14 @@ class Selector:
             lambda col, dtype: self.condition(col, dtype) != other.condition(col, dtype)
         )
 
+    def exclude(self, other: str | Iterable[str] | Selector) -> Selector:
+        if not isinstance(other, Selector):
+            selector_other = by_name(other)
+        else:
+            selector_other = other
+
+        return self.__sub__(selector_other)
+
 
 def _flatten_str_iterable(lst: Iterable[str | Iterable[str]]) -> list[str]:
     res = []

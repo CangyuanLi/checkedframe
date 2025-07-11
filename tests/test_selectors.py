@@ -72,3 +72,9 @@ def test_boolean():
 
 def test_numeric():
     assert set(cfs.numeric()(SCHEMA)) == set(["int8", "float32"])
+
+
+def test_exclude():
+    assert cfs.numeric().exclude("int8")(SCHEMA) == ["float32"]
+    assert cfs.numeric().exclude(cfs.by_name("int8"))(SCHEMA) == ["float32"]
+    assert cfs.numeric().exclude(["int8"])(SCHEMA) == ["float32"]
