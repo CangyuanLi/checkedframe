@@ -1,4 +1,7 @@
+import datetime
+
 import polars as pl
+import pytest
 
 import checkedframe as cf
 import checkedframe.selectors as cfs
@@ -78,3 +81,26 @@ def test_exclude():
     assert cfs.numeric().exclude("int8")(SCHEMA) == ["float32"]
     assert cfs.numeric().exclude(cfs.by_name("int8"))(SCHEMA) == ["float32"]
     assert cfs.numeric().exclude(["int8"])(SCHEMA) == ["float32"]
+
+
+def test_temporal_example():
+    class S(cf.Schema):
+        join_time = cf.Datetime()
+        birth_date = cf.Date()
+
+        @cf.Check(columns=cfs.temporal())
+        def check_no_invalid_dates(name: str) -> pl.Expr:
+            return pl.col(name).dt.date() >= pl.date(1900, 1, 1)
+
+    df = pl.DataFrame(
+        {
+            "join_time": [
+                datetime.datetime(1899, 1, 1, 1, 1),
+                datetime.datetime(2010, 2, 20, 6, 3, 9),
+            ],
+            "birth_date": [datetime.date(1899, 1, 1), datetime.date(2000, 5, 19)],
+        },
+    )
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
