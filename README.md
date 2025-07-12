@@ -11,7 +11,7 @@
 
 ## What is it?
 
-**checkedframe** is a lightweight and flexible library for DataFrame validation built on top of **narwhals**. This means it has first-class support for both **narhwals** itself and all the engines that **narwhals** supports (primarily Pandas, Polars, cuDF, Modin, and PyArrow). 
+**checkedframe** is a lightweight and flexible library for DataFrame validation built on top of **narwhals**. This means it has first-class support for both **narwhals** itself and all the engines that **narwhals** supports (primarily Pandas, Polars, cuDF, Modin, and PyArrow). 
 
 ## Why use checkedframe?
 
@@ -96,14 +96,14 @@ df: DataFrame[AASchema] = AASchema.validate(df)
 
 ```
 checkedframe.exceptions.SchemaError: Found 5 error(s)
+  reason_code: 1 error(s)
+    - check_reason_code_length failed for 1 / 3 (33.33%) rows: Reason codes must be exactly 3 chars
   features: 1 error(s)
     - Column marked as required but not found
   rank: 1 error(s)
-    - Cannot safely cast Int64 to UInt8; invalid range [-1, 2], expected range [0, 255]
-  reason_code: 1 error(s)
-    - check_reason_code_length failed for 1 / 3 rows (33.33%): Reason codes must be exactly 3 chars
-  * is_id failed: reason_code must uniquely identify the DataFrame
-  * check_row_height failed: DataFrame must have 2 rows
+    - Cannot safely cast Int64 to UInt8; 1 / 3 (33.33%) rows outside of expected range [0, 255]
+  * check_row_height failed for 3 / 3 (100.00%) rows: DataFrame must have 2 rows
+  * is_id failed for 3 / 3 (100.00%) rows: reason_code must uniquely identify the DataFrame
 ```
 
 Let's walk through the code step by step. We declare a schema (note that we inherit from `cf.Schema`) that represents a dataframe with 5 columns called `reason_code`, `reason_code_description`, `features`, `shap`, and `rank`. We declare the data type of each column, e.g. `String`, `Float64`, and so on. In addition, we declare certain properties about the columns. For example, we are OK with nulls in `reason_code_description` (by default, columns are not assumed to be nullable), so we set `nullable=True`. For `shap` and `rank`, we expect the specified data type but don't error if the column is not exactly that data type. Instead, since `cast=True`, we try to (safely) cast the column to the specified data type if possible. 
@@ -118,6 +118,8 @@ Next, we use checks to assert different properties about our data. For example, 
 ```
 
 Finally, when calling `AASchema.validate` on our bad data, we get a nice error message, including clear descriptions of why casting failed, why checks failed (and for what number of rows, if applicable), and so on.
+
+For more advanced usage, please see the [documentation]("https://cangyuanli.github.io/checkedframe/").
 
 ### Mypy Plugin
 
