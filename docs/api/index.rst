@@ -8,3 +8,4 @@ API
     checks
     dtypes
     exceptions
+    selectors
