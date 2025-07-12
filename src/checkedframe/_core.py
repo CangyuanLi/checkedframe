@@ -147,6 +147,30 @@ class _PrivateInterrogationResult:
 
 @dataclasses.dataclass
 class InterrogationResult:
+    """
+    All DataFrames and Series are of the same type as the original input DataFrame, e.g.
+    pandas in, pandas out.
+
+    Attributes
+    ----------
+
+    df: nwt.IntoDataFrame
+        The input DataFrame with sucessful transforms (casting) applied
+    mask: nwt.IntoDataFrame
+        A boolean DataFrame in the same row order as the input DataFrame where each
+        column is whether the specified check passed or not
+    is_good: nwt.IntoSeries
+        A boolean Series in the same row order as the input DataFrame that indicates
+        whether the row passed all checks or not
+    summary: nwt.IntoDataFrame
+        A DataFrame of `column`, `operation`, `n_failed`, and `pct_failed` identified by
+        `column` and `operation`. `column` describes what column the check was attached
+        to (and is set to "__dataframe__") for frame-level checks. `operation` describes
+        the check done to the column, e.g. "cast" or "check_length_lt_3". `n_failed` and
+        `pct_failed` are the number / percent of rows that fail the `operation` for that
+        `column`.
+    """
+
     df: nwt.IntoDataFrame
     mask: nwt.IntoDataFrame
     is_good: nwt.IntoSeries
@@ -244,17 +268,17 @@ def _private_interrogate(
 
         if not expected_col.nullable:
             check = Check.is_not_null()
-            check.name = "__builtin_is_not_null"
+            check.name = "`nullable=False`"
             builtin_checks.append(check)
 
         if hasattr(expected_col, "allow_nan") and not expected_col.allow_nan:
             check = Check.is_not_nan()
-            check.name = "__builtin_is_not_nan"
+            check.name = "`allow_nan=False`"
             builtin_checks.append(check)
 
         if hasattr(expected_col, "allow_inf") and not expected_col.allow_inf:
             check = Check.is_not_inf()
-            check.name = "__builtin_is_not_inf"
+            check.name = "`allow_inf=False`"
             builtin_checks.append(Check.is_not_inf())
 
         for check in builtin_checks:
@@ -461,7 +485,7 @@ class Schema(metaclass=_SchemaCacheMeta):
     PyArrow, cuDF) is valid.
 
     A Schema can be used in two ways. It can either be initialized directly from a
-    dictionary or inherited from in a class.
+    dictionary or inherited from in a class. The class-based method should be preferred.
 
     Parameters
     ----------
@@ -527,6 +551,12 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     @classmethod
     def columns(cls) -> list[str]:
+        """Returns the column names of the schema.
+
+        Returns
+        -------
+        list[str]
+        """
         if cls._schema is None:
             cls._schema = cls._parse_into_schema()
 
@@ -584,6 +614,19 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     @classmethod
     def interrogate(cls, df: nwt.IntoDataFrameT) -> InterrogationResult:
+        """Interrogate the DataFrame, returning the input DataFrame, a validation mask,
+        a boolean Series indicating which rows pass, and a summary of passes / failures.
+
+        Parameters
+        ----------
+        df : nwt.IntoDataFrameT
+            Any Narwhals-compatible DataFrame, see https://narwhals-dev.github.io/narwhals/
+            for more information
+
+        Returns
+        -------
+        InterrogationResult
+        """
         return _interrogate(cls._parse_into_schema(), df)
 
     def __interrogate(self, df: nwt.IntoDataFrameT) -> InterrogationResult:
@@ -591,7 +634,7 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     @classmethod
     def validate(cls, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
-        """Validate the given DataFrame
+        """Validate the given DataFrame.
 
         Parameters
         ----------
@@ -616,6 +659,19 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     @classmethod
     def filter(cls, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
+        """Filter the given DataFrame to passing rows.
+
+        Parameters
+        ----------
+        df : nwt.IntoDataFrameT
+            Any Narwhals-compatible DataFrame, see https://narwhals-dev.github.io/narwhals/
+            for more information
+
+        Returns
+        -------
+        nwt.IntoDataFrameT
+            The input DataFrame filtered to passing rows
+        """
         return _filter(cls._parse_into_schema(), df)
 
     def __filter(self, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
