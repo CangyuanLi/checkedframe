@@ -37,11 +37,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 def linkcode_resolve(domain, info):
-    commit = "master"
+    commit = "main"
     code_url = f"https://github.com/CangyuanLi/checkedframe/blob/{commit}"
-    # Non-linkable objects from the starter kit in the tutorial.
-    if domain == "js" or info["module"] == "connect4":
-        return
 
     assert domain == "py", "expected only Python objects"
 
