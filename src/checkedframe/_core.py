@@ -279,7 +279,7 @@ def _private_interrogate(
         if hasattr(expected_col, "allow_inf") and not expected_col.allow_inf:
             check = Check.is_not_inf()
             check.name = "`allow_inf=False`"
-            builtin_checks.append(Check.is_not_inf())
+            builtin_checks.append(check)
 
         for check in builtin_checks:
             assert check.name is not None
