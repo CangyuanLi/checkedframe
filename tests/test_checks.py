@@ -102,10 +102,10 @@ def test_is_between(engine):
 
 @pytest.mark.parametrize("engine", ENGINES)
 def test_lt(engine):
-    df = engine({"a": [1, 4, 5, 6]})
+    df = engine({"a": [1, 4, 5, 6], "b": [7, 7, 7, 7]})
 
     class S(cf.Schema):
-        a = cf.Int64(checks=[cf.Check.lt(7)])
+        a = cf.Int64(checks=[cf.Check.lt(8), cf.Check.lt("b")])
 
     S.validate(df)
 

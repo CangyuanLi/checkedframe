@@ -76,9 +76,9 @@ def _run_check(
 
     if check.return_type == "Expr":
         if check.input_type == "str":
-            expr = check.func(series_name).alias(new_check_name)
+            expr = check.func(series_name)
         else:
-            expr = check.func().alias(new_check_name)
+            expr = check.func()
 
         assert isinstance(check.native, bool)
 
@@ -114,7 +114,7 @@ def _run_check(
         res = check.func(input_)
 
         if check.return_type == "Series":
-            res = nw.from_native(res, series_only=True).alias(new_check_name)
+            res = nw.from_native(res, series_only=True)
             return _ResultWrapper(
                 res,
                 msg=err_msg,
@@ -125,7 +125,7 @@ def _run_check(
                 is_expr=False,
             )
         elif check.return_type == "bool":
-            res = nw.lit(res).alias(new_check_name)
+            res = nw.lit(res)
             return _ResultWrapper(
                 res,
                 msg=err_msg,
@@ -163,12 +163,13 @@ class InterrogationResult:
         A boolean Series in the same row order as the input DataFrame that indicates
         whether the row passed all checks or not
     summary: nwt.IntoDataFrame
-        A DataFrame of `column`, `operation`, `n_failed`, and `pct_failed` identified by
-        `column` and `operation`. `column` describes what column the check was attached
-        to (and is set to "__dataframe__") for frame-level checks. `operation` describes
-        the check done to the column, e.g. "cast" or "check_length_lt_3". `n_failed` and
-        `pct_failed` are the number / percent of rows that fail the `operation` for that
-        `column`.
+        A DataFrame of `id`, `column`, `operation`, `n_failed`, and `pct_failed`
+        identified by `id`. Usually, `column` and `operation` are enough, but it is
+        possible that the same operation is applied multiple times to the same column.
+        `column` describes what column the check was attached to (and is set to
+        "__dataframe__") for frame-level checks. `operation` describes the check done to
+        the column, e.g. "cast" or "check_length_lt_3". `n_failed` and `pct_failed` are
+        the number / percent of rows that fail the `operation` for that `column`.
     """
 
     df: nwt.IntoDataFrame
@@ -208,7 +209,7 @@ def _private_interrogate(
 
         results.append(
             _ResultWrapper(
-                existence_check.alias(check_name),
+                existence_check,
                 msg=existence_message,
                 identifier=check_name,
                 column=expected_name,
@@ -238,7 +239,7 @@ def _private_interrogate(
 
                     results.append(
                         _ResultWrapper(
-                            e.element_passes.alias(identifier),
+                            e.element_passes,
                             msg=e.msg,
                             identifier=identifier,
                             column=expected_name,
@@ -252,7 +253,7 @@ def _private_interrogate(
                 identifier = f"__checkedframe_{expected_name}_dtype__"
                 results.append(
                     _ResultWrapper(
-                        nw.lit(False).alias(identifier),
+                        nw.lit(False),
                         msg=f"Expected {expected_col}, got {actual_dtype}",
                         identifier=identifier,
                         column=expected_name,
@@ -312,6 +313,18 @@ def _private_interrogate(
         result = _run_check(check, check_name, nw_df)
         results.append(result)
 
+    # The identifier is constructed as the column and the check name, but it is possible
+    # that two of the "same" check are attached to the same column, e.g. cf.Check.lt(7)
+    # and cf.Check.lt("other").
+    seen = set()
+    i = 0
+    for result in results:
+        if result.identifier in seen:
+            result.identifier = f"{result.identifier}_{i}"
+            i += 1
+
+        seen.add(result.identifier)
+
     native_exprs = []
     exprs = []
     series_store = []
@@ -323,7 +336,7 @@ def _private_interrogate(
         id_col_mapper[result.identifier] = result.column
         id_msg_mapper[result.identifier] = result.msg
 
-        res = result.res
+        res = result.res.alias(result.identifier)
         if result.is_expr:
             if result.native:
                 native_exprs.append(res)
@@ -363,7 +376,6 @@ def _private_interrogate(
             nw.col("id").replace_strict(id_op_mapper).alias("operation"),
             nw.col("id").replace_strict(id_msg_mapper).alias("message"),
         )
-        .drop("id")
         .collect()
     )
 
