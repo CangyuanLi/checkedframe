@@ -33,6 +33,9 @@ from ._dtypes import (
     Unknown,
 )
 from ._narwhals_reexport import (
+    DataFrame,
+    Expr,
+    Series,
     all_horizontal,
     any_horizontal,
     col,
