@@ -76,6 +76,7 @@ def linkcode_resolve(domain, info):
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "show_nav_level": 2,
+    "show_toc_level": 3,
     "collapse_navigation": False,
     # "switcher": {
     #     "json_url": "https://github.com/CangyuanLi/checkedframe/_static/switcher.json",
