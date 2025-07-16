@@ -216,6 +216,29 @@ def test_eq_raises(engine, val):
 
 
 @pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [0.01, "b", cf.lit(0.01), cf.col("b")])
+def test_approx_eq(engine, val):
+    df = engine({"a": [0.010000000001], "b": [0.01]})
+
+    class S(cf.Schema):
+        a = cf.Float64(checks=[cf.Check.approx_eq(val)])
+
+    S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [0.01, "b", cf.lit(0.01), cf.col("b")])
+def test_approx_eq_raises(engine, val):
+    df = engine({"a": [0.011], "b": [0.01]})
+
+    class S(cf.Schema):
+        a = cf.Float64(checks=[cf.Check.approx_eq(val)])
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
 def test_is_not_nan(engine):
     df = engine({"a": [1.0, float("nan")]})
 

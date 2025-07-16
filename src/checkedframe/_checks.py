@@ -152,11 +152,13 @@ def _infer_narwhals(type_hints: dict[str, Any]) -> bool | Literal["auto"]:
     )
 
 
-def _numeric_to_expr(expr: str | float | nw.Expr) -> float | nw.Expr:
+def _numeric_to_expr(expr: str | float | nw.Expr) -> nw.Expr:
     if isinstance(expr, str):
         return nw.col(expr)
-
-    return expr
+    elif isinstance(expr, nw.Expr):
+        return expr
+    else:
+        return nw.lit(expr)
 
 
 def _get_repr(x: Any) -> str:
@@ -389,10 +391,6 @@ class Check:
     description : Optional[str], optional
         The description of the check. If None, attempts to read from the __doc__
         attribute, by default None
-
-    Examples
-    --------
-    Using a built-in check
     """
 
     def __init__(
@@ -1005,16 +1003,16 @@ class Check:
         return Check(
             func=functools.partial(
                 _approx_eq,
-                other=other,
+                other=_numeric_to_expr(other),
                 rtol=rtol,
                 atol=atol,
                 nan_equal=nan_equal,
             ),
-            input_type="Series",
-            return_type="Series",
+            input_type="str",
+            return_type="Expr",
             native=False,
             name="approximately_equal_to",
-            description=f"Must be approximately equal to {other} ({rtol=}, {atol=}, {nan_equal=})",
+            description=f"Must be approximately equal to {_get_repr(other)} ({rtol=}, {atol=}, {nan_equal=})",
         )
 
     @staticmethod
