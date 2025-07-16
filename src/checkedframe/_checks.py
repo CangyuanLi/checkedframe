@@ -1322,9 +1322,10 @@ class Check:
 
 
             class MySchema(cf.Schema):
-                __dataframe_checks__ = [cf.Check.is_sorted_by("timestamps")]
                 timestamps = cf.Int64()
                 values = cf.Int64()
+
+                _sorted_check = cf.Check.is_sorted_by("timestamps")
 
 
             df = pl.DataFrame({"timestamps": [1, 2, 1], "values": [1, 2, 3]})
@@ -1335,8 +1336,7 @@ class Check:
         .. code-block:: text
 
             SchemaError: Found 1 error(s)
-              __dataframe__: 1 error(s)
-                - is_sorted_by failed: Must be sorted by timestamps, where descending is False
+              * is_sorted_by failed for 3 / 3 (100.00%) rows: Must be sorted by timestamps, where descending is False
 
         """
         return Check(
