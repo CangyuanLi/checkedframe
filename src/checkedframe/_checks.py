@@ -16,9 +16,6 @@ from narwhals.stable.v1.dependencies import (
 
 from .selectors import Selector
 
-col = nw.col
-lit = nw.lit
-
 INF = float("inf")
 NEG_INF = float("-inf")
 
@@ -97,31 +94,6 @@ def _is_dataframe(x: Any) -> bool:
     )
 
 
-class staticproperty:
-    """
-    A decorator that allows defining a read-only, class-level attribute
-    that is computed by a function which takes no arguments (like a static method).
-    """
-
-    def __init__(self, func):
-        if not callable(func):
-            raise TypeError("staticproperty can only decorate callables")
-        self.func = func
-        self.__doc__ = getattr(func, "__doc__")
-        self.__name__ = getattr(func, "__name__")
-
-    def __get__(self, obj, objtype=None):
-        # The decorated function (self.func) is called directly with NO arguments.
-        # It MUST be defined to accept zero arguments.
-        return self.func()
-
-    def __set__(self, obj, value):
-        raise AttributeError(f"can't set attribute '{self.__name__}'")
-
-    def __delete__(self, obj):
-        raise AttributeError(f"can't delete attribute '{self.__name__}'")
-
-
 def _infer_input_type(
     type_hints: dict[str, Any], signature: inspect.Signature
 ) -> CheckInputType:
@@ -180,6 +152,21 @@ def _infer_narwhals(type_hints: dict[str, Any]) -> bool | Literal["auto"]:
     )
 
 
+def _numeric_to_expr(expr: str | float | nw.Expr) -> float | nw.Expr:
+    if isinstance(expr, str):
+        return nw.col(expr)
+
+    return expr
+
+
+def _get_repr(x: Any) -> str:
+    # Unfortunately the representation of an expression is not very good
+    if isinstance(x, nw.Expr):
+        return "Expr"
+
+    return f"{x}"
+
+
 ClosedInterval = Literal["left", "right", "none", "both"]
 
 
@@ -224,7 +211,7 @@ def _eq(name: str, other) -> nw.Expr:
     return nw.col(name) == other
 
 
-def _approx_eq(
+def _private_approx_eq(
     left: nw.Expr,
     right: nw.Expr,
     rtol: float,
@@ -243,12 +230,16 @@ def _approx_eq(
     return res
 
 
+def _approx_eq(name: str, other, rtol, atol, nan_equal) -> nw.Expr:
+    return _private_approx_eq(nw.col(name), other, rtol, atol, nan_equal)
+
+
 def _series_lit_approx_eq(
     left: nw.Series, right: float, rtol: float, atol: float, nan_equal: bool
 ) -> nw.Series:
     name = "__checkedframe_approx_eq__"
     return left.to_frame().select(
-        _approx_eq(
+        _private_approx_eq(
             nw.col(left.name), nw.lit(right), rtol=rtol, atol=atol, nan_equal=nan_equal
         ).alias(name)
     )[name]
@@ -290,7 +281,7 @@ def _series_equals(
             left.to_frame()
             .with_columns(right)
             .select(
-                _approx_eq(
+                _private_approx_eq(
                     nw.col(left.name),
                     nw.col(right.name),
                     rtol=rtol,
@@ -382,22 +373,26 @@ class Check:
     ----------
     func : Optional[Callable], optional
         The check to run, by default None
-    columns : Optional[str | list[str]], optional
+    columns : Optional[str | list[str] | Selector], optional
         The columns associated with the check, by default None
-    input_type : Optional[Literal["auto", "Frame", "Series"]], optional
+    input_type : Optional[Literal["auto", "Frame", "str", "Series"]], optional
         The input to the check function. If "auto", attempts to determine via the
         context, by default "auto"
     return_type : Literal["auto", "bool", "Expr", "Series"], optional
         The return type of the check function. If "auto", attempts to determine via the
-        return type annotation and number of arguments, by default "auto"
-    native : bool, optional
-        Whether to run the check on the native DataFrame or the Narwhals DataFrame, by
-        default True
+        context, by default "auto"
+    native : bool | Literal["auto"], optional
+        Whether to run the check on the native DataFrame or the Narwhals DataFrame. If
+        "auto", attempts to determine via the context, by default "auto"
     name : Optional[str], optional
         The name of the check, by default None
     description : Optional[str], optional
         The description of the check. If None, attempts to read from the __doc__
         attribute, by default None
+
+    Examples
+    --------
+    Using a built-in check
     """
 
     def __init__(
@@ -477,6 +472,41 @@ class Check:
 
     @staticmethod
     def is_not_null() -> Check:
+        """Tests whether values are not null.
+
+        .. note::
+            This method is mainly here for completeness. Columns are by default not
+            nullable.
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                customer_id = cf.String(checks=[cf.Check.is_not_null()])
+
+
+            df = pl.DataFrame({"customer_id": ["a23", None]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 2 error(s)
+              customer_id: 2 error(s)
+                - `nullable=False` failed for 1 / 2 (50.00%) rows: Must not be null
+                - is_not_null failed for 1 / 2 (50.00%) rows: Must not be null
+
+        """
         return Check(
             func=_is_not_null,
             input_type="str",
@@ -488,6 +518,36 @@ class Check:
 
     @staticmethod
     def is_not_nan() -> Check:
+        """Tests whether values are not NaN.
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                balances = cf.Float64(checks=[cf.Check.is_not_nan()])
+
+
+            df = pl.DataFrame({"balances": [1, 2, float("nan")]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              balances: 1 error(s)
+                - is_not_nan failed for 1 / 3 (33.33%) rows: Must not be NaN
+
+        """
         return Check(
             func=_is_not_nan,
             input_type="str",
@@ -499,6 +559,36 @@ class Check:
 
     @staticmethod
     def is_not_inf() -> Check:
+        """Tests whether values are not infinite.
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                balances = cf.Float64(checks=[cf.Check.is_not_inf()])
+
+
+            df = pl.DataFrame({"balances": [1, 2, float("inf")]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              balances: 1 error(s)
+                - is_not_inf failed for 1 / 3 (33.33%) rows: Must not be inf/-inf
+
+        """
         return Check(
             func=_is_not_inf,
             input_type="str",
@@ -509,8 +599,11 @@ class Check:
         )
 
     @staticmethod
-    def is_between(lower_bound, upper_bound, closed: ClosedInterval = "both") -> Check:
-        """Tests whether all values of the Series are in the given range.
+    def is_between(
+        lower_bound: Any, upper_bound: Any, closed: ClosedInterval = "both"
+    ) -> Check:
+        """Tests whether values are between `lower_bound` and `upper_bound`. Strings are
+        interpreted as column names.
 
         Parameters
         ----------
@@ -524,6 +617,42 @@ class Check:
         Returns
         -------
         Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                age = cf.Int64(checks=[cf.Check.is_between(0, 128)])
+                min_balance = cf.Int64()
+                med_balance = cf.Int64(checks=[cf.Check.is_between("min_balance", "max_balance")])
+                max_balance = cf.Int64()
+
+
+            df = pl.DataFrame(
+                {
+                    "age": [5, 10, 150],
+                    "min_balance": [1, 100, 500],
+                    "med_balance": [0, 83, 525],
+                    "max_balance": [788, 82, 550],
+                }
+            )
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 2 error(s)
+              age: 1 error(s)
+                - is_between failed for 1 / 3 (33.33%) rows: Must be in range [0, 128]
+              med_balance: 1 error(s)
+                - is_between failed for 2 / 3 (66.67%) rows: Must be in range [min_balance, max_balance]
+
         """
         if closed == "both":
             l_paren, r_paren = ("[", "]")
@@ -550,7 +679,8 @@ class Check:
 
     @staticmethod
     def lt(other: Any) -> Check:
-        """Tests whether all values in the Series are less than the given value.
+        """Tests whether values are less than `other`. Strings are interpreted as
+        column names.
 
         Parameters
         ----------
@@ -559,20 +689,56 @@ class Check:
         Returns
         -------
         Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                age = cf.Int64(
+                    checks=[
+                        cf.Check.lt(10),
+                        cf.Check.lt("max_age"),
+                        cf.Check.lt(cf.col("max_age") - 10),
+                    ]
+                )
+
+
+            df = pl.DataFrame(
+                {
+                    "age": [5, 10, 11],
+                    "max_age": [10, 5, 8],
+                }
+            )
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 2 error(s)
+              age: 2 error(s)
+                - less_than failed for 2 / 3 (66.67%) rows: Must be < 10
+                - less_than failed for 1 / 3 (33.33%) rows: Must be < max_age
+
         """
         return Check(
-            func=functools.partial(_lt, other=other),
+            func=functools.partial(_lt, other=_numeric_to_expr(other)),
             input_type="str",
             return_type="Expr",
             native=False,
             name="less_than",
-            description=f"Must be < {other}",
+            description=f"Must be < {_get_repr(other)}",
         )
 
     @staticmethod
     def le(other: Any) -> Check:
-        """Tests whether all values in the Series are less than or equal to the given
-        value.
+        """Tests whether values are less than or equal to `other`. Strings are
+        interpreted as column names.
 
         Parameters
         ----------
@@ -581,19 +747,55 @@ class Check:
         Returns
         -------
         Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                age = cf.Int64(
+                    checks=[
+                        cf.Check.le(10),
+                        cf.Check.le("max_age"),
+                        cf.Check.le(cf.col("max_age") - 10),
+                    ]
+                )
+
+
+            df = pl.DataFrame(
+                {
+                    "age": [5, 10, 11],
+                    "max_age": [10, 5, 8],
+                }
+            )
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              age: 1 error(s)
+                - less_than_or_equal_to failed for 1 / 3 (33.33%) rows: Must be <= 10
+
         """
         return Check(
-            func=functools.partial(_le, other=other),
+            func=functools.partial(_le, other=_numeric_to_expr(other)),
             input_type="str",
             return_type="Expr",
             native=False,
             name="less_than_or_equal_to",
-            description=f"Must be <= {other}",
+            description=f"Must be <= {_get_repr(other)}",
         )
 
     @staticmethod
     def gt(other: Any) -> Check:
-        """Tests whether all values in the Series are greater than the given value.
+        """Tests whether values are greater than `other`. Strings are interpreted as
+        column names.
 
         Parameters
         ----------
@@ -602,20 +804,56 @@ class Check:
         Returns
         -------
         Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                age = cf.Int64(
+                    checks=[
+                        cf.Check.gt(10),
+                        cf.Check.gt("min_age"),
+                        cf.Check.gt(cf.col("min_age") - 100),
+                    ]
+                )
+
+
+            df = pl.DataFrame(
+                {
+                    "age": [5, 10, 11],
+                    "min_age": [10, 5, 8],
+                }
+            )
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 2 error(s)
+              age: 2 error(s)
+                - greater_than failed for 2 / 3 (66.67%) rows: Must be > 10
+                - greater_than failed for 1 / 3 (33.33%) rows: Must be > min_age
+
         """
         return Check(
-            func=functools.partial(_gt, other=other),
+            func=functools.partial(_gt, other=_numeric_to_expr(other)),
             input_type="str",
             return_type="Expr",
             native=False,
             name="greater_than",
-            description=f"Must be > {other}",
+            description=f"Must be > {_get_repr(other)}",
         )
 
     @staticmethod
     def ge(other: Any) -> Check:
-        """Tests whether all values in the Series are greater than or equal to the given
-        value.
+        """Tests whether values are greater than or equal to `other`. Strings are
+        interpreted as column names.
 
         Parameters
         ----------
@@ -624,19 +862,56 @@ class Check:
         Returns
         -------
         Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                age = cf.Int64(
+                    checks=[
+                        cf.Check.ge(10),
+                        cf.Check.ge("min_age"),
+                        cf.Check.ge(cf.col("min_age") - 10),
+                    ]
+                )
+
+
+            df = pl.DataFrame(
+                {
+                    "age": [5, 10, 11],
+                    "min_age": [10, 5, 8],
+                }
+            )
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 2 error(s)
+              age: 2 error(s)
+                - greater_than_or_equal_to failed for 1 / 3 (33.33%) rows: Must be >= 10
+                - greater_than_or_equal_to failed for 1 / 3 (33.33%) rows: Must be >= min_age
+
         """
         return Check(
-            func=functools.partial(_ge, other=other),
+            func=functools.partial(_ge, other=_numeric_to_expr(other)),
             input_type="str",
             return_type="Expr",
             native=False,
             name="greater_than_or_equal_to",
-            description=f"Must be >= {other}",
+            description=f"Must be >= {_get_repr(other)}",
         )
 
     @staticmethod
     def eq(other: Any) -> Check:
-        """Tests whether all values in the Series are equal to the given value.
+        """Tests whether values are equal to `other`. Strings are interpreted as column
+        names.
 
         Parameters
         ----------
@@ -645,35 +920,92 @@ class Check:
         Returns
         -------
         Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                group = cf.String(checks=[cf.Check.eq("A")])
+
+
+            df = pl.DataFrame({"group": ["A", "B", "A"]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              group: 1 error(s)
+                - equal_to failed for 1 / 3 (33.33%) rows: Must be = A
+
         """
         return Check(
-            func=functools.partial(_eq, other=other),
+            func=functools.partial(_eq, other=_numeric_to_expr(other)),
             input_type="str",
             return_type="Expr",
             native=False,
             name="equal_to",
-            description=f"Must be = {other}",
+            description=f"Must be = {_get_repr(other)}",
         )
 
     @staticmethod
     def approx_eq(
-        other: Any, rtol: float = 1e-5, atol: float = 1e-8, nan_equal: bool = False
+        other: Any,
+        rtol: float = 1e-5,
+        atol: float = 1e-8,
+        nan_equal: bool = False,
     ) -> Check:
-        """Tests whether all values in the Series are approximately equal to the given
-        value.
+        """Tests whether values are approximately equal to `other`. Strings are
+        interpreted as column names.
 
         Parameters
         ----------
         other : Any
+        rtol : float, optional
+            Relative tolerance, by default 1e-5
+        atol : float, optional
+            Absolute tolerance, by default 1e-8
+        nan_equal : bool, optional
+            Whether to consider NaN values equal, by default False
 
         Returns
         -------
         Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                prob = cf.Float64(checks=[cf.Check.approx_eq(0.5)])
+
+
+            df = pl.DataFrame({"prob": [0.5, 0.50000001, 0.6]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              prob: 1 error(s)
+                - approximately_equal_to failed for 1 / 3 (33.33%) rows: Must be approximately equal to 0.5 (rtol=1e-05, atol=1e-08, nan_equal=False)
+
         """
         return Check(
             func=functools.partial(
-                _series_lit_approx_eq,
-                right=other,
+                _approx_eq,
+                other=other,
                 rtol=rtol,
                 atol=atol,
                 nan_equal=nan_equal,
@@ -697,6 +1029,30 @@ class Check:
         Returns
         -------
         Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                business_type = cf.String(checks=[cf.Check.is_in(["tech", "finance"])])
+
+
+            df = pl.DataFrame({"business_type": ["x", "tech", "finance"]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              business_type: 1 error(s)
+                - is_in failed for 1 / 3 (33.33%) rows: Must be in allowed values ['tech', 'finance']
+
         """
         return Check(
             func=functools.partial(_is_in, other=other),
@@ -709,6 +1065,36 @@ class Check:
 
     @staticmethod
     def is_finite() -> Check:
+        """Tests whether values are finite.
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                balances = cf.Float64(checks=[cf.Check.is_finite()])
+
+
+            df = pl.DataFrame({"balances": [1, 2, float("inf")]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              balances: 1 error(s)
+                - is_finite failed for 1 / 3 (33.33%) rows: All values must be finite
+
+        """
         return Check(
             func=_is_finite,
             input_type="str",
@@ -720,6 +1106,41 @@ class Check:
 
     @staticmethod
     def str_ends_with(suffix: str) -> Check:
+        """Tests whether string values end with the given suffix.
+
+        Parameters
+        ----------
+        suffix : str
+            The suffix to check for
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                emails = cf.String(checks=[cf.Check.str_ends_with("@gmail.com")])
+
+
+            df = pl.DataFrame({"emails": ["a@gmail.com", "b@yahoo.com"]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              emails: 1 error(s)
+                - ends_with failed for 1 / 2 (50.00%) rows: Must end with @gmail.com
+
+        """
         return Check(
             func=functools.partial(_str_ends_with, suffix=suffix),
             input_type="str",
@@ -731,6 +1152,41 @@ class Check:
 
     @staticmethod
     def str_starts_with(prefix: str) -> Check:
+        """Tests whether string values start with the given prefix.
+
+        Parameters
+        ----------
+        prefix : str
+            The prefix to check for
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                ids = cf.String(checks=[cf.Check.str_starts_with("user_")])
+
+
+            df = pl.DataFrame({"ids": ["user_a", "admin_b"]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              ids: 1 error(s)
+                - starts_with failed for 1 / 2 (50.00%) rows: Must start with user_
+
+        """
         return Check(
             func=functools.partial(_str_starts_with, prefix=prefix),
             input_type="str",
@@ -742,6 +1198,43 @@ class Check:
 
     @staticmethod
     def str_contains(pattern: str, literal: bool = False) -> Check:
+        """Tests whether string values contain the given pattern.
+
+        Parameters
+        ----------
+        pattern : str
+            The pattern to check for
+        literal : bool, optional
+            Whether to interpret the pattern as a literal string or a regex, by default False
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                domains = cf.String(checks=[cf.Check.str_contains(r"\.com$", literal=False)])
+
+
+            df = pl.DataFrame({"domains": ["a.com", "b.org"]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              domains: 1 error(s)
+                - contains failed for 1 / 2 (50.00%) rows: Must contain \.com$
+
+        """
         return Check(
             func=functools.partial(_str_contains, pattern=pattern, literal=literal),
             input_type="str",
@@ -753,6 +1246,41 @@ class Check:
 
     @staticmethod
     def is_sorted(descending: bool = False) -> Check:
+        """Tests whether a Series is sorted.
+
+        Parameters
+        ----------
+        descending : bool, optional
+            Whether to check for descending order, by default False
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class S(cf.Schema):
+                timestamps = cf.Int64(checks=[cf.Check.is_sorted()])
+
+
+            df = pl.DataFrame({"timestamps": [1, 2, 1]})
+            S.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              timestamps: 1 error(s)
+                - is_sorted failed: Must be sorted in ascending order
+
+        """
         order = "descending" if descending else "ascending"
 
         return Check(
@@ -770,6 +1298,47 @@ class Check:
         descending: bool | Sequence[bool] = False,
         compare_all: bool = True,
     ) -> Check:
+        """Tests whether a DataFrame is sorted by the given columns.
+
+        Parameters
+        ----------
+        by : str | Sequence[str]
+            The column(s) to sort by
+        descending : bool | Sequence[bool], optional
+            Whether to sort in descending order, by default False
+        compare_all : bool, optional
+            Whether to compare all columns or just the sorting columns, by default True
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class MySchema(cf.Schema):
+                __dataframe_checks__ = [cf.Check.is_sorted_by("timestamps")]
+                timestamps = cf.Int64()
+                values = cf.Int64()
+
+
+            df = pl.DataFrame({"timestamps": [1, 2, 1], "values": [1, 2, 3]})
+            MySchema.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              __dataframe__: 1 error(s)
+                - is_sorted_by failed: Must be sorted by timestamps, where descending is False
+
+        """
         return Check(
             func=functools.partial(
                 _frame_is_sorted, by=by, descending=descending, compare_all=compare_all
@@ -793,6 +1362,31 @@ class Check:
         Returns
         -------
         Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class MySchema(cf.Schema):
+                __dataframe_checks__ = [cf.Check.is_id("group")]
+                group = cf.String()
+
+
+            df = pl.DataFrame({"group": ["A", "B", "A"]})
+            MySchema.validate(df)
+
+        Output:
+
+        .. code-block:: text
+
+            SchemaError: Found 1 error(s)
+              __dataframe__: 1 error(s)
+                - is_id failed: 'group' must uniquely identify the DataFrame
+
         """
         return Check(
             func=functools.partial(_is_id, subset=subset),
