@@ -9,3 +9,4 @@ API
     dtypes
     exceptions
     selectors
+    config
