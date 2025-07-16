@@ -10,3 +10,4 @@ API
     exceptions
     selectors
     config
+    schema_generation
