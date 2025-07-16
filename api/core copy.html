@@ -44,11 +44,9 @@
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/core';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/core copy';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Checks" href="checks.html" />
-    <link rel="prev" title="API" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -134,7 +132,7 @@
 </li>
 
 
-<li class="nav-item current active">
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="index.html">
     API
   </a>
@@ -197,6 +195,8 @@
       
       
       
+        
+      
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
@@ -220,7 +220,7 @@
 </li>
 
 
-<li class="nav-item current active">
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="index.html">
     API
   </a>
@@ -265,21 +265,6 @@
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
-        <div class="sidebar-primary-item">
-<nav class="bd-docs-nav bd-links"
-     aria-label="Section Navigation">
-  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Core</a></li>
-<li class="toctree-l1"><a class="reference internal" href="checks.html">Checks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dtypes.html">Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="schema_generation.html">Schema Generation</a></li>
-</ul>
-</div>
-</nav></div>
     </div>
   
   
@@ -317,9 +302,6 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    
-    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API</a></li>
-    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Core</span></li>
   </ul>
 </nav>
@@ -416,6 +398,39 @@ dictionary or inherited from in a class. The class-based method should be prefer
 </ul>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<p>Let’s say we have a Polars DataFrame we want to validate. We have one column, a
+string, that should be 3 characters.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;abc&quot;</span><span class="p">,</span> <span class="s2">&quot;ef&quot;</span><span class="p">]})</span>
+</pre></div>
+</div>
+<p>Via inheritance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MySchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">col1</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+
+    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;col1&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_length</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len_bytes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span>
+
+<span class="n">MySchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Via explicit construction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+
+<span class="n">MySchema</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">({</span>
+    <span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span>
+        <span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len_bytes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)]</span>
+    <span class="p">)</span>
+<span class="p">})</span>
+
+<span class="n">MySchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._core.Schema.columns">
 <em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">columns</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#checkedframe._core.Schema.columns" title="Link to this definition">#</a></dt>
@@ -480,39 +495,6 @@ for more information</p>
 <dd class="field-even"><p><a class="reference internal" href="exceptions.html#checkedframe.exceptions.SchemaError" title="checkedframe.exceptions.SchemaError"><strong>SchemaError</strong></a> – If validation fails</p>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
-<p>Let’s say we have a Polars DataFrame we want to validate. We have one column, a
-string, that should be 3 characters.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
-
-<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;abc&quot;</span><span class="p">,</span> <span class="s2">&quot;ef&quot;</span><span class="p">]})</span>
-</pre></div>
-</div>
-<p>Via inheritance:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">MySchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
-    <span class="n">col1</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
-
-    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;col1&quot;</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">check_length</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len_bytes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span>
-
-<span class="n">MySchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Via explicit construction:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
-
-<span class="n">MySchema</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">({</span>
-    <span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span>
-        <span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len_bytes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)]</span>
-    <span class="p">)</span>
-<span class="p">})</span>
-
-<span class="n">MySchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</pre></div>
-</div>
 </dd></dl>
 
 </dd></dl>
@@ -529,24 +511,6 @@ string, that should be 3 characters.</p>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="index.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">API</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="checks.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Checks</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               

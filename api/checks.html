@@ -40,7 +40,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
@@ -274,6 +274,9 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Checks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dtypes.html">Data Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_generation.html">Schema Generation</a></li>
 </ul>
 </div>
 </nav></div>
@@ -338,44 +341,70 @@
 <span id="checks"></span><h1>Checks<a class="headerlink" href="#module-checkedframe._checks" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="checkedframe._checks.Check">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe._checks.</span></span><span class="sig-name descname"><span class="pre">Check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Selector</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CheckInputType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">CheckReturnType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._checks.Check" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe._checks.</span></span><span class="sig-name descname"><span class="pre">Check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Selector</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Frame'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'str'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Series'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'bool'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Expr'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Series'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._checks.Check" title="Link to this definition">#</a></dt>
 <dd><p>Represents a check to run.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>func</strong> (<em>Optional</em><em>[</em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – The check to run, by default None</p></li>
-<li><p><strong>columns</strong> (<em>Optional</em><em>[</em><em>str</em><em> | </em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – The columns associated with the check, by default None</p></li>
-<li><p><strong>input_type</strong> (<em>Optional</em><em>[</em><em>Literal</em><em>[</em><em>&quot;auto&quot;</em><em>, </em><em>&quot;Frame&quot;</em><em>, </em><em>&quot;Series&quot;</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – The input to the check function. If “auto”, attempts to determine via the
+<li><p><strong>columns</strong> (<em>Optional</em><em>[</em><em>str</em><em> | </em><em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>Selector</em><em>]</em><em>, </em><em>optional</em>) – The columns associated with the check, by default None</p></li>
+<li><p><strong>input_type</strong> (<em>Optional</em><em>[</em><em>Literal</em><em>[</em><em>&quot;auto&quot;</em><em>, </em><em>&quot;Frame&quot;</em><em>, </em><em>&quot;str&quot;</em><em>, </em><em>&quot;Series&quot;</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – The input to the check function. If “auto”, attempts to determine via the
 context, by default “auto”</p></li>
 <li><p><strong>return_type</strong> (<em>Literal</em><em>[</em><em>&quot;auto&quot;</em><em>, </em><em>&quot;bool&quot;</em><em>, </em><em>&quot;Expr&quot;</em><em>, </em><em>&quot;Series&quot;</em><em>]</em><em>, </em><em>optional</em>) – The return type of the check function. If “auto”, attempts to determine via the
-return type annotation and number of arguments, by default “auto”</p></li>
-<li><p><strong>native</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to run the check on the native DataFrame or the Narwhals DataFrame, by
-default True</p></li>
+context, by default “auto”</p></li>
+<li><p><strong>native</strong> (<em>bool</em><em> | </em><em>Literal</em><em>[</em><em>&quot;auto&quot;</em><em>]</em><em>, </em><em>optional</em>) – Whether to run the check on the native DataFrame or the Narwhals DataFrame. If
+“auto”, attempts to determine via the context, by default “auto”</p></li>
 <li><p><strong>name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – The name of the check, by default None</p></li>
 <li><p><strong>description</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – The description of the check. If None, attempts to read from the __doc__
 attribute, by default None</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<p>Using a built-in check</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.approx_eq">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">approx_eq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nan_equal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.approx_eq" title="Link to this definition">#</a></dt>
-<dd><p>Tests whether all values in the Series are approximately equal to the given
-value.</p>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">approx_eq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nan_equal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.approx_eq" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are approximately equal to <cite>other</cite>. Strings are
+interpreted as column names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>other</strong> (<em>Any</em>)</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other</strong> (<em>Any</em>)</p></li>
+<li><p><strong>rtol</strong> (<em>float</em><em>, </em><em>optional</em>) – Relative tolerance, by default 1e-5</p></li>
+<li><p><strong>atol</strong> (<em>float</em><em>, </em><em>optional</em>) – Absolute tolerance, by default 1e-8</p></li>
+<li><p><strong>nan_equal</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to consider NaN values equal, by default False</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">approx_eq</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;prob&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.50000001</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  prob: 1 error(s)
+    - approximately_equal_to failed for 1 / 3 (33.33%) rows: Must be approximately equal to 0.5 (rtol=1e-05, atol=1e-08, nan_equal=False)
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.eq">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.eq" title="Link to this definition">#</a></dt>
-<dd><p>Tests whether all values in the Series are equal to the given value.</p>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.eq" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are equal to <cite>other</cite>. Strings are interpreted as column
+names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> (<em>Any</em>)</p>
@@ -384,13 +413,31 @@ value.</p>
 <dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  group: 1 error(s)
+    - equal_to failed for 1 / 3 (33.33%) rows: Must be = A
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.ge">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.ge" title="Link to this definition">#</a></dt>
-<dd><p>Tests whether all values in the Series are greater than or equal to the given
-value.</p>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.ge" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are greater than or equal to <cite>other</cite>. Strings are
+interpreted as column names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> (<em>Any</em>)</p>
@@ -399,12 +446,43 @@ value.</p>
 <dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">(</span>
+        <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="s2">&quot;min_age&quot;</span><span class="p">),</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;min_age&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">10</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>
+        <span class="s2">&quot;min_age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 2 error(s)
+  age: 2 error(s)
+    - greater_than_or_equal_to failed for 1 / 3 (33.33%) rows: Must be &gt;= 10
+    - greater_than_or_equal_to failed for 1 / 3 (33.33%) rows: Must be &gt;= min_age
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.gt">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.gt" title="Link to this definition">#</a></dt>
-<dd><p>Tests whether all values in the Series are greater than the given value.</p>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.gt" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are greater than <cite>other</cite>. Strings are interpreted as
+column names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> (<em>Any</em>)</p>
@@ -413,12 +491,43 @@ value.</p>
 <dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">(</span>
+        <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">gt</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">gt</span><span class="p">(</span><span class="s2">&quot;min_age&quot;</span><span class="p">),</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">gt</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;min_age&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">100</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>
+        <span class="s2">&quot;min_age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 2 error(s)
+  age: 2 error(s)
+    - greater_than failed for 2 / 3 (66.67%) rows: Must be &gt; 10
+    - greater_than failed for 1 / 3 (33.33%) rows: Must be &gt; min_age
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.is_between">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">closed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'left'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'right'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'none'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'both'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'both'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_between" title="Link to this definition">#</a></dt>
-<dd><p>Tests whether all values of the Series are in the given range.</p>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">closed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'left'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'right'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'none'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'both'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'both'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_between" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are between <cite>lower_bound</cite> and <cite>upper_bound</cite>. Strings are
+interpreted as column names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -431,11 +540,70 @@ value.</p>
 <dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_between</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">)])</span>
+    <span class="n">min_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">()</span>
+    <span class="n">med_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_between</span><span class="p">(</span><span class="s2">&quot;min_balance&quot;</span><span class="p">,</span> <span class="s2">&quot;max_balance&quot;</span><span class="p">)])</span>
+    <span class="n">max_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">()</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">150</span><span class="p">],</span>
+        <span class="s2">&quot;min_balance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">500</span><span class="p">],</span>
+        <span class="s2">&quot;med_balance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">83</span><span class="p">,</span> <span class="mi">525</span><span class="p">],</span>
+        <span class="s2">&quot;max_balance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">788</span><span class="p">,</span> <span class="mi">82</span><span class="p">,</span> <span class="mi">550</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 2 error(s)
+  age: 1 error(s)
+    - is_between failed for 1 / 3 (33.33%) rows: Must be in range [0, 128]
+  med_balance: 1 error(s)
+    - is_between failed for 2 / 3 (66.67%) rows: Must be in range [min_balance, max_balance]
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.is_finite">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_finite</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_finite" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are finite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">balances</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_finite</span><span class="p">()])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;balances&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  balances: 1 error(s)
+    - is_finite failed for 1 / 3 (33.33%) rows: All values must be finite
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.is_id">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_id" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_id" title="Link to this definition">#</a></dt>
 <dd><p>Tests whether the given column(s) identify the DataFrame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -445,11 +613,30 @@ value.</p>
 <dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MySchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">__dataframe_checks__</span> <span class="o">=</span> <span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_id</span><span class="p">(</span><span class="s2">&quot;group&quot;</span><span class="p">)]</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">]})</span>
+<span class="n">MySchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  __dataframe__: 1 error(s)
+    - is_id failed: &#39;group&#39; must uniquely identify the DataFrame
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.is_in">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Collection</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_in" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Collection</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_in" title="Link to this definition">#</a></dt>
 <dd><p>Tests whether all values of the Series are in the given collection.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -459,13 +646,194 @@ value.</p>
 <dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">business_type</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_in</span><span class="p">([</span><span class="s2">&quot;tech&quot;</span><span class="p">,</span> <span class="s2">&quot;finance&quot;</span><span class="p">])])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;business_type&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;tech&quot;</span><span class="p">,</span> <span class="s2">&quot;finance&quot;</span><span class="p">]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  business_type: 1 error(s)
+    - is_in failed for 1 / 3 (33.33%) rows: Must be in allowed values [&#39;tech&#39;, &#39;finance&#39;]
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.is_not_inf">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_not_inf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_not_inf" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are not infinite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">balances</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_not_inf</span><span class="p">()])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;balances&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  balances: 1 error(s)
+    - is_not_inf failed for 1 / 3 (33.33%) rows: Must not be inf/-inf
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.is_not_nan">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_not_nan</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_not_nan" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are not NaN.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">balances</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_not_nan</span><span class="p">()])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;balances&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  balances: 1 error(s)
+    - is_not_nan failed for 1 / 3 (33.33%) rows: Must not be NaN
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.is_not_null">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_not_null</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_not_null" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are not null.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is mainly here for completeness. Columns are by default not
+nullable.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">customer_id</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_not_null</span><span class="p">()])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;customer_id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;a23&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 2 error(s)
+  customer_id: 2 error(s)
+    - `nullable=False` failed for 1 / 2 (50.00%) rows: Must not be null
+    - is_not_null failed for 1 / 2 (50.00%) rows: Must not be null
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.is_sorted">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_sorted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_sorted" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether a Series is sorted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>descending</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to check for descending order, by default False</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">timestamps</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_sorted</span><span class="p">()])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;timestamps&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  timestamps: 1 error(s)
+    - is_sorted failed: Must be sorted in ascending order
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.is_sorted_by">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_sorted_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compare_all</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.is_sorted_by" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether a DataFrame is sorted by the given columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>by</strong> (<em>str</em><em> | </em><em>Sequence</em><em>[</em><em>str</em><em>]</em>) – The column(s) to sort by</p></li>
+<li><p><strong>descending</strong> (<em>bool</em><em> | </em><em>Sequence</em><em>[</em><em>bool</em><em>]</em><em>, </em><em>optional</em>) – Whether to sort in descending order, by default False</p></li>
+<li><p><strong>compare_all</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to compare all columns or just the sorting columns, by default True</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MySchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">__dataframe_checks__</span> <span class="o">=</span> <span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">is_sorted_by</span><span class="p">(</span><span class="s2">&quot;timestamps&quot;</span><span class="p">)]</span>
+    <span class="n">timestamps</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">()</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">()</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;timestamps&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})</span>
+<span class="n">MySchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  __dataframe__: 1 error(s)
+    - is_sorted_by failed: Must be sorted by timestamps, where descending is False
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.le">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">le</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.le" title="Link to this definition">#</a></dt>
-<dd><p>Tests whether all values in the Series are less than or equal to the given
-value.</p>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">le</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.le" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are less than or equal to <cite>other</cite>. Strings are
+interpreted as column names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> (<em>Any</em>)</p>
@@ -474,12 +842,42 @@ value.</p>
 <dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">(</span>
+        <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="s2">&quot;max_age&quot;</span><span class="p">),</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;max_age&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">10</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>
+        <span class="s2">&quot;max_age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  age: 1 error(s)
+    - less_than_or_equal_to failed for 1 / 3 (33.33%) rows: Must be &lt;= 10
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="checkedframe._checks.Check.lt">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.lt" title="Link to this definition">#</a></dt>
-<dd><p>Tests whether all values in the Series are less than the given value.</p>
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.lt" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether values are less than <cite>other</cite>. Strings are interpreted as
+column names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>other</strong> (<em>Any</em>)</p>
@@ -488,15 +886,137 @@ value.</p>
 <dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Int64</span><span class="p">(</span>
+        <span class="n">checks</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">lt</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">lt</span><span class="p">(</span><span class="s2">&quot;max_age&quot;</span><span class="p">),</span>
+            <span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">lt</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;max_age&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">10</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>
+        <span class="s2">&quot;max_age&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 2 error(s)
+  age: 2 error(s)
+    - less_than failed for 2 / 3 (66.67%) rows: Must be &lt; 10
+    - less_than failed for 1 / 3 (33.33%) rows: Must be &lt; max_age
+</pre></div>
+</div>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.str_contains">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">str_contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">literal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.str_contains" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether string values contain the given pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pattern</strong> (<em>str</em>) – The pattern to check for</p></li>
+<li><p><strong>literal</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to interpret the pattern as a literal string or a regex, by default False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">domains</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">str_contains</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\.com$&quot;</span><span class="p">,</span> <span class="n">literal</span><span class="o">=</span><span class="kc">False</span><span class="p">)])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;domains&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;a.com&quot;</span><span class="p">,</span> <span class="s2">&quot;b.org&quot;</span><span class="p">]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  domains: 1 error(s)
+    - contains failed for 1 / 2 (50.00%) rows: Must contain \.com$
+</pre></div>
+</div>
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="checkedframe._checks.staticproperty">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe._checks.</span></span><span class="sig-name descname"><span class="pre">staticproperty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._checks.staticproperty" title="Link to this definition">#</a></dt>
-<dd><p>A decorator that allows defining a read-only, class-level attribute
-that is computed by a function which takes no arguments (like a static method).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.str_ends_with">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">str_ends_with</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.str_ends_with" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether string values end with the given suffix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>suffix</strong> (<em>str</em>) – The suffix to check for</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">emails</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">str_ends_with</span><span class="p">(</span><span class="s2">&quot;@gmail.com&quot;</span><span class="p">)])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;emails&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;a@gmail.com&quot;</span><span class="p">,</span> <span class="s2">&quot;b@yahoo.com&quot;</span><span class="p">]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  emails: 1 error(s)
+    - ends_with failed for 1 / 2 (50.00%) rows: Must end with @gmail.com
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._checks.Check.str_starts_with">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">str_starts_with</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a></span></span><a class="headerlink" href="#checkedframe._checks.Check.str_starts_with" title="Link to this definition">#</a></dt>
+<dd><p>Tests whether string values start with the given prefix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<em>str</em>) – The prefix to check for</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#checkedframe._checks.Check" title="checkedframe._checks.Check">Check</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">str_starts_with</span><span class="p">(</span><span class="s2">&quot;user_&quot;</span><span class="p">)])</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;user_a&quot;</span><span class="p">,</span> <span class="s2">&quot;admin_b&quot;</span><span class="p">]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SchemaError: Found 1 error(s)
+  ids: 1 error(s)
+    - starts_with failed for 1 / 2 (50.00%) rows: Must start with user_
+</pre></div>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -548,19 +1068,27 @@ that is computed by a function which takes no arguments (like a static method).<
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check"><code class="docutils literal notranslate"><span class="pre">Check</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check"><code class="docutils literal notranslate"><span class="pre">Check</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.approx_eq"><code class="docutils literal notranslate"><span class="pre">Check.approx_eq()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.eq"><code class="docutils literal notranslate"><span class="pre">Check.eq()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.ge"><code class="docutils literal notranslate"><span class="pre">Check.ge()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.gt"><code class="docutils literal notranslate"><span class="pre">Check.gt()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_between"><code class="docutils literal notranslate"><span class="pre">Check.is_between()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_finite"><code class="docutils literal notranslate"><span class="pre">Check.is_finite()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_id"><code class="docutils literal notranslate"><span class="pre">Check.is_id()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_in"><code class="docutils literal notranslate"><span class="pre">Check.is_in()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_not_inf"><code class="docutils literal notranslate"><span class="pre">Check.is_not_inf()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_not_nan"><code class="docutils literal notranslate"><span class="pre">Check.is_not_nan()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_not_null"><code class="docutils literal notranslate"><span class="pre">Check.is_not_null()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_sorted"><code class="docutils literal notranslate"><span class="pre">Check.is_sorted()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.is_sorted_by"><code class="docutils literal notranslate"><span class="pre">Check.is_sorted_by()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.le"><code class="docutils literal notranslate"><span class="pre">Check.le()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.lt"><code class="docutils literal notranslate"><span class="pre">Check.lt()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.str_contains"><code class="docutils literal notranslate"><span class="pre">Check.str_contains()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.str_ends_with"><code class="docutils literal notranslate"><span class="pre">Check.str_ends_with()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.str_starts_with"><code class="docutils literal notranslate"><span class="pre">Check.str_starts_with()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.staticproperty"><code class="docutils literal notranslate"><span class="pre">staticproperty</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -598,7 +1126,7 @@ that is computed by a function which takes no arguments (like a static method).<
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

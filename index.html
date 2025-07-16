@@ -40,7 +40,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
@@ -310,7 +310,7 @@
 </p>
 <section id="what-is-it">
 <h2>What is it?<a class="headerlink" href="#what-is-it" title="Link to this heading">#</a></h2>
-<p><strong>checkedframe</strong> is a lightweight and flexible library for DataFrame validation built on top of <strong>narwhals</strong>. This means it has first-class support for both <strong>narhwals</strong> itself and all the engines that <strong>narwhals</strong> supports (primarily Pandas, Polars, cuDF, Modin, and PyArrow).</p>
+<p><strong>checkedframe</strong> is a lightweight and flexible library for DataFrame validation built on top of <strong>narwhals</strong>. This means it has first-class support for both <strong>narwhals</strong> itself and all the engines that <strong>narwhals</strong> supports (primarily Pandas, Polars, cuDF, Modin, and PyArrow).</p>
 </section>
 <section id="why-use-checkedframe">
 <h2>Why use checkedframe?<a class="headerlink" href="#why-use-checkedframe" title="Link to this heading">#</a></h2>
@@ -376,7 +376,7 @@
 <td><p>❌</p></td>
 </tr>
 <tr class="row-even"><td><p><strong>Filtering</strong></p></td>
-<td><p>❌</p></td>
+<td><p>✅</p></td>
 <td><p>❌</p></td>
 <td><p>❌</p></td>
 <td><p>✅</p></td>
@@ -476,14 +476,14 @@
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">checkedframe</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">SchemaError</span><span class="p">:</span> <span class="n">Found</span> <span class="mi">5</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+  <span class="n">reason_code</span><span class="p">:</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="o">-</span> <span class="n">check_reason_code_length</span> <span class="n">failed</span> <span class="k">for</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span> <span class="p">(</span><span class="mf">33.33</span><span class="o">%</span><span class="p">)</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Reason</span> <span class="n">codes</span> <span class="n">must</span> <span class="n">be</span> <span class="n">exactly</span> <span class="mi">3</span> <span class="n">chars</span>
   <span class="n">features</span><span class="p">:</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
     <span class="o">-</span> <span class="n">Column</span> <span class="n">marked</span> <span class="k">as</span> <span class="n">required</span> <span class="n">but</span> <span class="ow">not</span> <span class="n">found</span>
   <span class="n">rank</span><span class="p">:</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-    <span class="o">-</span> <span class="n">Cannot</span> <span class="n">safely</span> <span class="n">cast</span> <span class="n">Int64</span> <span class="n">to</span> <span class="n">UInt8</span><span class="p">;</span> <span class="n">invalid</span> <span class="nb">range</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">expected</span> <span class="nb">range</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">]</span>
-  <span class="n">reason_code</span><span class="p">:</span> <span class="mi">1</span> <span class="n">error</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-    <span class="o">-</span> <span class="n">check_reason_code_length</span> <span class="n">failed</span> <span class="k">for</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span> <span class="n">rows</span> <span class="p">(</span><span class="mf">33.33</span><span class="o">%</span><span class="p">):</span> <span class="n">Reason</span> <span class="n">codes</span> <span class="n">must</span> <span class="n">be</span> <span class="n">exactly</span> <span class="mi">3</span> <span class="n">chars</span>
-  <span class="o">*</span> <span class="n">is_id</span> <span class="n">failed</span><span class="p">:</span> <span class="n">reason_code</span> <span class="n">must</span> <span class="n">uniquely</span> <span class="n">identify</span> <span class="n">the</span> <span class="n">DataFrame</span>
-  <span class="o">*</span> <span class="n">check_row_height</span> <span class="n">failed</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="n">must</span> <span class="n">have</span> <span class="mi">2</span> <span class="n">rows</span>
+    <span class="o">-</span> <span class="n">Cannot</span> <span class="n">safely</span> <span class="n">cast</span> <span class="n">Int64</span> <span class="n">to</span> <span class="n">UInt8</span><span class="p">;</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span> <span class="p">(</span><span class="mf">33.33</span><span class="o">%</span><span class="p">)</span> <span class="n">rows</span> <span class="n">outside</span> <span class="n">of</span> <span class="n">expected</span> <span class="nb">range</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">]</span>
+  <span class="o">*</span> <span class="n">check_row_height</span> <span class="n">failed</span> <span class="k">for</span> <span class="mi">3</span> <span class="o">/</span> <span class="mi">3</span> <span class="p">(</span><span class="mf">100.00</span><span class="o">%</span><span class="p">)</span> <span class="n">rows</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="n">must</span> <span class="n">have</span> <span class="mi">2</span> <span class="n">rows</span>
+  <span class="o">*</span> <span class="n">is_id</span> <span class="n">failed</span> <span class="k">for</span> <span class="mi">3</span> <span class="o">/</span> <span class="mi">3</span> <span class="p">(</span><span class="mf">100.00</span><span class="o">%</span><span class="p">)</span> <span class="n">rows</span><span class="p">:</span> <span class="n">reason_code</span> <span class="n">must</span> <span class="n">uniquely</span> <span class="n">identify</span> <span class="n">the</span> <span class="n">DataFrame</span>
 </pre></div>
 </div>
 <p>Let’s walk through the code step by step. We declare a schema (note that we inherit from <code class="docutils literal notranslate"><span class="pre">cf.Schema</span></code>) that represents a dataframe with 5 columns called <code class="docutils literal notranslate"><span class="pre">reason_code</span></code>, <code class="docutils literal notranslate"><span class="pre">reason_code_description</span></code>, <code class="docutils literal notranslate"><span class="pre">features</span></code>, <code class="docutils literal notranslate"><span class="pre">shap</span></code>, and <code class="docutils literal notranslate"><span class="pre">rank</span></code>. We declare the data type of each column, e.g. <code class="docutils literal notranslate"><span class="pre">String</span></code>, <code class="docutils literal notranslate"><span class="pre">Float64</span></code>, and so on. In addition, we declare certain properties about the columns. For example, we are OK with nulls in <code class="docutils literal notranslate"><span class="pre">reason_code_description</span></code> (by default, columns are not assumed to be nullable), so we set <code class="docutils literal notranslate"><span class="pre">nullable=True</span></code>. For <code class="docutils literal notranslate"><span class="pre">shap</span></code> and <code class="docutils literal notranslate"><span class="pre">rank</span></code>, we expect the specified data type but don’t error if the column is not exactly that data type. Instead, since <code class="docutils literal notranslate"><span class="pre">cast=True</span></code>, we try to (safely) cast the column to the specified data type if possible.</p>
@@ -495,6 +495,7 @@
 </pre></div>
 </div>
 <p>Finally, when calling <code class="docutils literal notranslate"><span class="pre">AASchema.validate</span></code> on our bad data, we get a nice error message, including clear descriptions of why casting failed, why checks failed (and for what number of rows, if applicable), and so on.</p>
+<p>For more advanced usage, please see the <a class="reference internal" href="#%22https://cangyuanli.github.io/checkedframe/%22"><span class="xref myst">documentation</span></a>.</p>
 <section id="mypy-plugin">
 <h3>Mypy Plugin<a class="headerlink" href="#mypy-plugin" title="Link to this heading">#</a></h3>
 <p>The example code as-is will actually throw some type errors, as type checkers will complain that the user-defined checks do not take a “self” parameter. This is because there is currently no way to mark a function as a <code class="docutils literal notranslate"><span class="pre">staticmethod</span></code> without using the <code class="docutils literal notranslate"><span class="pre">staticmethod</span></code> decorator. You can simply add this decorator to make the errors go away. If that’s annoying, <strong>checkedframe</strong> also provides a <strong>mypy</strong> plugin that marks all methods decorated with <code class="docutils literal notranslate"><span class="pre">cf.Check</span></code> as staticmethods. Just add</p>
@@ -577,7 +578,7 @@
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage:</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing">Installing</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mypy-plugin">Mypy Plugin</a></li>
 </ul>
 </li>
@@ -622,7 +623,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>
