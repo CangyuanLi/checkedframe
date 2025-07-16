@@ -505,46 +505,6 @@ class Schema(metaclass=_SchemaCacheMeta):
         A dictionary of column names and data types
     checks : Optional[Sequence[Check]], optional
         A list of checks to run, by default None
-
-    Examples
-    --------
-    Let's say we have a Polars DataFrame we want to validate. We have one column, a
-    string, that should be 3 characters.
-
-    .. code-block:: python
-
-        import polars as pl
-
-        df = pl.DataFrame({"col1": ["abc", "ef"]})
-
-    Via inheritance:
-
-    .. code-block:: python
-
-        import checkedframe as cf
-
-        class MySchema(cf.Schema):
-            col1 = cf.String()
-
-            @cf.Check(columns="col1")
-            def check_length(s: pl.Series) -> pl.Series:
-                return s.str.len_bytes() == 3
-
-        MySchema.validate(df)
-
-    Via explicit construction:
-
-    .. code-block:: python
-
-        import checkedframe as cf
-
-        MySchema = cf.Schema({
-            "col1": cf.String(
-                checks=[cf.Check(lambda s: s.str.len_bytes() == 3)]
-            )
-        })
-
-        MySchema.validate(df)
     """
 
     _schema: Optional[Schema]
@@ -663,6 +623,46 @@ class Schema(metaclass=_SchemaCacheMeta):
         ------
         SchemaError
             If validation fails
+
+        Examples
+        --------
+        Let's say we have a Polars DataFrame we want to validate. We have one column, a
+        string, that should be 3 characters.
+
+        .. code-block:: python
+
+            import polars as pl
+
+            df = pl.DataFrame({"col1": ["abc", "ef"]})
+
+        Via inheritance:
+
+        .. code-block:: python
+
+            import checkedframe as cf
+
+            class MySchema(cf.Schema):
+                col1 = cf.String()
+
+                @cf.Check(columns="col1")
+                def check_length(s: pl.Series) -> pl.Series:
+                    return s.str.len_bytes() == 3
+
+            MySchema.validate(df)
+
+        Via explicit construction:
+
+        .. code-block:: python
+
+            import checkedframe as cf
+
+            MySchema = cf.Schema({
+                "col1": cf.String(
+                    checks=[cf.Check(lambda s: s.str.len_bytes() == 3)]
+                )
+            })
+
+            MySchema.validate(df)
         """
         return _validate(cls._parse_into_schema(), df)
 
