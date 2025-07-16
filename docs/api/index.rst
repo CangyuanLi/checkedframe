@@ -8,3 +8,6 @@ API
     checks
     dtypes
     exceptions
+    selectors
+    config
+    schema_generation

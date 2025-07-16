@@ -76,9 +76,9 @@ def _run_check(
 
     if check.return_type == "Expr":
         if check.input_type == "str":
-            expr = check.func(series_name).alias(new_check_name)
+            expr = check.func(series_name)
         else:
-            expr = check.func().alias(new_check_name)
+            expr = check.func()
 
         assert isinstance(check.native, bool)
 
@@ -114,7 +114,7 @@ def _run_check(
         res = check.func(input_)
 
         if check.return_type == "Series":
-            res = nw.from_native(res, series_only=True).alias(new_check_name)
+            res = nw.from_native(res, series_only=True)
             return _ResultWrapper(
                 res,
                 msg=err_msg,
@@ -125,7 +125,7 @@ def _run_check(
                 is_expr=False,
             )
         elif check.return_type == "bool":
-            res = nw.lit(res).alias(new_check_name)
+            res = nw.lit(res)
             return _ResultWrapper(
                 res,
                 msg=err_msg,
@@ -147,6 +147,31 @@ class _PrivateInterrogationResult:
 
 @dataclasses.dataclass
 class InterrogationResult:
+    """
+    All DataFrames and Series are of the same type as the original input DataFrame, e.g.
+    pandas in, pandas out.
+
+    Attributes
+    ----------
+
+    df: nwt.IntoDataFrame
+        The input DataFrame with sucessful transforms (casting) applied
+    mask: nwt.IntoDataFrame
+        A boolean DataFrame in the same row order as the input DataFrame where each
+        column is whether the specified check passed or not
+    is_good: nwt.IntoSeries
+        A boolean Series in the same row order as the input DataFrame that indicates
+        whether the row passed all checks or not
+    summary: nwt.IntoDataFrame
+        A DataFrame of `id`, `column`, `operation`, `n_failed`, and `pct_failed`
+        identified by `id`. Usually, `column` and `operation` are enough, but it is
+        possible that the same operation is applied multiple times to the same column.
+        `column` describes what column the check was attached to (and is set to
+        "__dataframe__") for frame-level checks. `operation` describes the check done to
+        the column, e.g. "cast" or "check_length_lt_3". `n_failed` and `pct_failed` are
+        the number / percent of rows that fail the `operation` for that `column`.
+    """
+
     df: nwt.IntoDataFrame
     mask: nwt.IntoDataFrame
     is_good: nwt.IntoSeries
@@ -184,7 +209,7 @@ def _private_interrogate(
 
         results.append(
             _ResultWrapper(
-                existence_check.alias(check_name),
+                existence_check,
                 msg=existence_message,
                 identifier=check_name,
                 column=expected_name,
@@ -214,7 +239,7 @@ def _private_interrogate(
 
                     results.append(
                         _ResultWrapper(
-                            e.element_passes.alias(identifier),
+                            e.element_passes,
                             msg=e.msg,
                             identifier=identifier,
                             column=expected_name,
@@ -228,7 +253,7 @@ def _private_interrogate(
                 identifier = f"__checkedframe_{expected_name}_dtype__"
                 results.append(
                     _ResultWrapper(
-                        nw.lit(False).alias(identifier),
+                        nw.lit(False),
                         msg=f"Expected {expected_col}, got {actual_dtype}",
                         identifier=identifier,
                         column=expected_name,
@@ -244,18 +269,18 @@ def _private_interrogate(
 
         if not expected_col.nullable:
             check = Check.is_not_null()
-            check.name = "__builtin_is_not_null"
+            check.name = "`nullable=False`"
             builtin_checks.append(check)
 
         if hasattr(expected_col, "allow_nan") and not expected_col.allow_nan:
             check = Check.is_not_nan()
-            check.name = "__builtin_is_not_nan"
+            check.name = "`allow_nan=False`"
             builtin_checks.append(check)
 
         if hasattr(expected_col, "allow_inf") and not expected_col.allow_inf:
             check = Check.is_not_inf()
-            check.name = "__builtin_is_not_inf"
-            builtin_checks.append(Check.is_not_inf())
+            check.name = "`allow_inf=False`"
+            builtin_checks.append(check)
 
         for check in builtin_checks:
             assert check.name is not None
@@ -288,6 +313,18 @@ def _private_interrogate(
         result = _run_check(check, check_name, nw_df)
         results.append(result)
 
+    # The identifier is constructed as the column and the check name, but it is possible
+    # that two of the "same" check are attached to the same column, e.g. cf.Check.lt(7)
+    # and cf.Check.lt("other").
+    seen = set()
+    i = 0
+    for result in results:
+        if result.identifier in seen:
+            result.identifier = f"{result.identifier}_{i}"
+            i += 1
+
+        seen.add(result.identifier)
+
     native_exprs = []
     exprs = []
     series_store = []
@@ -299,7 +336,7 @@ def _private_interrogate(
         id_col_mapper[result.identifier] = result.column
         id_msg_mapper[result.identifier] = result.msg
 
-        res = result.res
+        res = result.res.alias(result.identifier)
         if result.is_expr:
             if result.native:
                 native_exprs.append(res)
@@ -339,7 +376,6 @@ def _private_interrogate(
             nw.col("id").replace_strict(id_op_mapper).alias("operation"),
             nw.col("id").replace_strict(id_msg_mapper).alias("message"),
         )
-        .drop("id")
         .collect()
     )
 
@@ -461,7 +497,7 @@ class Schema(metaclass=_SchemaCacheMeta):
     PyArrow, cuDF) is valid.
 
     A Schema can be used in two ways. It can either be initialized directly from a
-    dictionary or inherited from in a class.
+    dictionary or inherited from in a class. The class-based method should be preferred.
 
     Parameters
     ----------
@@ -469,46 +505,6 @@ class Schema(metaclass=_SchemaCacheMeta):
         A dictionary of column names and data types
     checks : Optional[Sequence[Check]], optional
         A list of checks to run, by default None
-
-    Examples
-    --------
-    Let's say we have a Polars DataFrame we want to validate. We have one column, a
-    string, that should be 3 characters.
-
-    .. code-block:: python
-
-        import polars as pl
-
-        df = pl.DataFrame({"col1": ["abc", "ef"]})
-
-    Via inheritance:
-
-    .. code-block:: python
-
-        import checkedframe as cf
-
-        class MySchema(cf.Schema):
-            col1 = cf.String()
-
-            @cf.Check(columns="col1")
-            def check_length(s: pl.Series) -> pl.Series:
-                return s.str.len_bytes() == 3
-
-        MySchema.validate(df)
-
-    Via explicit construction:
-
-    .. code-block:: python
-
-        import checkedframe as cf
-
-        MySchema = cf.Schema({
-            "col1": cf.String(
-                checks=[cf.Check(lambda s: s.str.len_bytes() == 3)]
-            )
-        })
-
-        MySchema.validate(df)
     """
 
     _schema: Optional[Schema]
@@ -527,6 +523,12 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     @classmethod
     def columns(cls) -> list[str]:
+        """Returns the column names of the schema.
+
+        Returns
+        -------
+        list[str]
+        """
         if cls._schema is None:
             cls._schema = cls._parse_into_schema()
 
@@ -584,6 +586,19 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     @classmethod
     def interrogate(cls, df: nwt.IntoDataFrameT) -> InterrogationResult:
+        """Interrogate the DataFrame, returning the input DataFrame, a validation mask,
+        a boolean Series indicating which rows pass, and a summary of passes / failures.
+
+        Parameters
+        ----------
+        df : nwt.IntoDataFrameT
+            Any Narwhals-compatible DataFrame, see https://narwhals-dev.github.io/narwhals/
+            for more information
+
+        Returns
+        -------
+        InterrogationResult
+        """
         return _interrogate(cls._parse_into_schema(), df)
 
     def __interrogate(self, df: nwt.IntoDataFrameT) -> InterrogationResult:
@@ -591,7 +606,7 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     @classmethod
     def validate(cls, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
-        """Validate the given DataFrame
+        """Validate the given DataFrame.
 
         Parameters
         ----------
@@ -608,6 +623,46 @@ class Schema(metaclass=_SchemaCacheMeta):
         ------
         SchemaError
             If validation fails
+
+        Examples
+        --------
+        Let's say we have a Polars DataFrame we want to validate. We have one column, a
+        string, that should be 3 characters.
+
+        .. code-block:: python
+
+            import polars as pl
+
+            df = pl.DataFrame({"col1": ["abc", "ef"]})
+
+        Via inheritance:
+
+        .. code-block:: python
+
+            import checkedframe as cf
+
+            class MySchema(cf.Schema):
+                col1 = cf.String()
+
+                @cf.Check(columns="col1")
+                def check_length(s: pl.Series) -> pl.Series:
+                    return s.str.len_bytes() == 3
+
+            MySchema.validate(df)
+
+        Via explicit construction:
+
+        .. code-block:: python
+
+            import checkedframe as cf
+
+            MySchema = cf.Schema({
+                "col1": cf.String(
+                    checks=[cf.Check(lambda s: s.str.len_bytes() == 3)]
+                )
+            })
+
+            MySchema.validate(df)
         """
         return _validate(cls._parse_into_schema(), df)
 
@@ -616,6 +671,19 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     @classmethod
     def filter(cls, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:
+        """Filter the given DataFrame to passing rows.
+
+        Parameters
+        ----------
+        df : nwt.IntoDataFrameT
+            Any Narwhals-compatible DataFrame, see https://narwhals-dev.github.io/narwhals/
+            for more information
+
+        Returns
+        -------
+        nwt.IntoDataFrameT
+            The input DataFrame filtered to passing rows
+        """
         return _filter(cls._parse_into_schema(), df)
 
     def __filter(self, df: nwt.IntoDataFrameT) -> nwt.IntoDataFrameT:

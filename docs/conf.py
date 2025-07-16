@@ -27,6 +27,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx_copybutton",
     "sphinx_multiversion",
+    "sphinx_tabs.tabs",
     "myst_parser",
 ]
 
@@ -37,11 +38,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 def linkcode_resolve(domain, info):
-    commit = "master"
+    commit = "main"
     code_url = f"https://github.com/CangyuanLi/checkedframe/blob/{commit}"
-    # Non-linkable objects from the starter kit in the tutorial.
-    if domain == "js" or info["module"] == "connect4":
-        return
 
     assert domain == "py", "expected only Python objects"
 
@@ -79,6 +77,7 @@ def linkcode_resolve(domain, info):
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "show_nav_level": 2,
+    "show_toc_level": 3,
     "collapse_navigation": False,
     # "switcher": {
     #     "json_url": "https://github.com/CangyuanLi/checkedframe/_static/switcher.json",

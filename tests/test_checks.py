@@ -101,26 +101,115 @@ def test_is_between(engine):
 
 
 @pytest.mark.parametrize("engine", ENGINES)
-def test_lt(engine):
-    df = engine({"a": [1, 4, 5, 6]})
+@pytest.mark.parametrize("val", [7, "b", cf.lit(7), cf.col("b")])
+def test_lt(engine, val):
+    df = engine({"a": [1, 4, 5, 6], "b": [7, 7, 7, 7]})
 
     class S(cf.Schema):
-        a = cf.Int64(checks=[cf.Check.lt(7)])
+        a = cf.Int64(checks=[cf.Check.lt(val)])
 
     S.validate(df)
 
 
 @pytest.mark.parametrize("engine", ENGINES)
-def test_gt(engine):
-    df = engine({"a": [4, 5, 6]})
+@pytest.mark.parametrize("val", [0, "b", cf.lit(0), cf.col("b")])
+def test_lt_raises(engine, val):
+    df = engine({"a": [1, 4, 5, 6], "b": [0, 0, 0, 0]})
 
     class S(cf.Schema):
-        a = cf.Int64(checks=[cf.Check.gt(1)])
+        a = cf.Int64(checks=[cf.Check.lt(val)])
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [1, "b", cf.lit(1), cf.col("b")])
+def test_gt(engine, val):
+    df = engine({"a": [4, 5, 6], "b": [1, 1, 1]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.gt(val)])
 
     S.validate(df)
 
+
+@pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [5, "b", cf.lit(5), cf.col("b")])
+def test_gt_raises(engine, val):
+    df = engine({"a": [4, 5, 6], "b": [5, 5, 5]})
+
     class S(cf.Schema):
-        a = cf.Int64(checks=[cf.Check.gt(5)])
+        a = cf.Int64(checks=[cf.Check.gt(val)])
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [7, "b", cf.lit(7), cf.col("b")])
+def test_le(engine, val):
+    df = engine({"a": [1, 4, 5, 6], "b": [7, 7, 7, 7]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.le(val)])
+
+    S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [0, "b", cf.lit(0), cf.col("b")])
+def test_le_raises(engine, val):
+    df = engine({"a": [1, 4, 5, 6], "b": [0, 0, 0, 0]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.le(val)])
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [1, "b", cf.lit(1), cf.col("b")])
+def test_ge(engine, val):
+    df = engine({"a": [4, 5, 6], "b": [1, 1, 1]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.ge(val)])
+
+    S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [5, "b", cf.lit(5), cf.col("b")])
+def test_ge_raises(engine, val):
+    df = engine({"a": [4, 5, 6], "b": [5, 5, 5]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.ge(val)])
+
+    with pytest.raises(cf.exceptions.SchemaError):
+        S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [4, "b", cf.lit(4), cf.col("b")])
+def test_eq(engine, val):
+    df = engine({"a": [4, 4, 4], "b": [4, 4, 4]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.eq(val)])
+
+    S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+@pytest.mark.parametrize("val", [5, "b", cf.lit(5), cf.col("b")])
+def test_eq_raises(engine, val):
+    df = engine({"a": [4, 5, 6], "b": [5, 5, 5]})
+
+    class S(cf.Schema):
+        a = cf.Int64(checks=[cf.Check.eq(val)])
 
     with pytest.raises(cf.exceptions.SchemaError):
         S.validate(df)

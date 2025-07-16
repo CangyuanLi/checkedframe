@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import dataclasses
 import string
 from abc import abstractmethod
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
 
 import narwhals.stable.v1 as nw
 from narwhals.stable.v1.dtypes import DType as NarwhalsDType
@@ -68,30 +67,6 @@ class _Column:
 
 
 class _TypedColumn(_Column, _DType, NarwhalsDType): ...
-
-
-@dataclasses.dataclass
-class _Failures:
-    n_failed: int
-    n_rows: int
-    pct_failed: float
-
-    def to_summary(self) -> str:
-        return f"{self.n_failed:,} / {self.n_rows:,} ({self.pct_failed:.2%})"
-
-
-def _analyze_passes(s: nw.Series) -> _Failures:
-    s = s.__invert__()
-
-    n_failed = s.sum()
-    n_rows = s.shape[0]
-    pct_failed = n_failed / n_rows
-
-    return _Failures(
-        n_failed=int(n_failed),
-        n_rows=n_rows,
-        pct_failed=pct_failed,
-    )
 
 
 def _checked_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:

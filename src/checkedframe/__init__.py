@@ -1,7 +1,7 @@
 # ruff: noqa: F401
 from checkedframe import exceptions, selectors
 
-from ._checks import Check, col, lit
+from ._checks import Check
 from ._config import Config, apply_configs
 from ._core import Schema
 from ._dtypes import (
@@ -31,5 +31,22 @@ from ._dtypes import (
     UInt64,
     UInt128,
     Unknown,
+)
+from ._narwhals_reexport import (
+    DataFrame,
+    Expr,
+    Series,
+    all_horizontal,
+    any_horizontal,
+    col,
+    concat,
+    concat_str,
+    len,
+    lit,
+    max_horizontal,
+    mean_horizontal,
+    min_horizontal,
+    sum_horizontal,
+    when,
 )
 from ._schema_generation import generate_schema_repr
