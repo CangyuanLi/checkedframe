@@ -18,6 +18,7 @@ pyperclip = ["pyperclip>=1.0.0"]
 typing = ["typing_extensions"]
 docs = [
     "checkedframe",
+    "ghp-import==2.1.0",
     "pydata-sphinx-theme==0.16.1",
     "sphinx==8.2.3",
     "sphinx-autobuild==2024.10.3",
