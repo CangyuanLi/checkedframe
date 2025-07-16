@@ -27,6 +27,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx_copybutton",
     "sphinx_multiversion",
+    "sphinx_tabs.tabs",
     "myst_parser",
 ]
 
