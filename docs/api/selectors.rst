@@ -4,8 +4,7 @@ Selectors
 Inspired (or rather directly lifted from) Polars, selectors are a convenient way to interact with the schema.
 
 Importing
-=========
-=========
+---------
 
 Selectors are available from the top-level namespace
 
@@ -25,8 +24,7 @@ For a shorter name, you can use, by convention
 
 
 Usage
-=====
-=====
+-----
 
 Selectors support set operations and resolve to a list of column names. For example, given the below schema,
 
@@ -59,6 +57,8 @@ Selectors support set operations and resolve to a list of column names. For exam
 .. note::
    Selectors operate on the *schema*, not the DataFrame.
 
+Functions
+---------
 
 .. automodule:: checkedframe.selectors
    :members:
