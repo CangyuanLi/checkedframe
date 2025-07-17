@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Callable, Union
 
-from ._dtypes import Boolean, Categorical, Date, Datetime, NarwhalsDType, String
+from ._dtypes import Boolean, Categorical, CfUnion, Date, Datetime, String, TypedColumn
 
-TypeOrInstance = Union[NarwhalsDType, type[NarwhalsDType]]
+TypeOrInstance = Union[TypedColumn, type[TypedColumn], CfUnion]
 
 
 class Selector:
     def __init__(self, condition: Callable[[str, TypeOrInstance], bool]):
         self.condition = condition
 
-    def __call__(self, schema: dict[str, TypeOrInstance]) -> list[str]:
+    def __call__(self, schema: Mapping[str, TypeOrInstance]) -> list[str]:
         return [col for col, dtype in schema.items() if self.condition(col, dtype)]
 
     def __invert__(self) -> Selector:

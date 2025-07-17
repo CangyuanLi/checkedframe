@@ -4,11 +4,9 @@ from checkedframe import exceptions, selectors
 from ._checks import Check
 from ._config import Config, apply_configs
 from ._core import Schema
+from ._dtypes import Array, Binary, Boolean, Categorical
+from ._dtypes import CfUnion as Union
 from ._dtypes import (
-    Array,
-    Binary,
-    Boolean,
-    Categorical,
     Date,
     Datetime,
     Decimal,

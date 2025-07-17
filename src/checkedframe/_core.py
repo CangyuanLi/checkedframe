@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import dataclasses
 import string
+from collections.abc import Iterable, Mapping
 from typing import Any, Optional
 
 import narwhals.stable.v1 as nw
@@ -10,7 +11,7 @@ import narwhals.stable.v1.typing as nwt
 
 from ._checks import Check
 from ._config import ConfigList
-from ._dtypes import CastError, _Column, _nw_type_to_cf_type, _TypedColumn
+from ._dtypes import CastError, CfUnion, TypedColumn, _nw_type_to_cf_type
 from ._utils import get_class_members
 from .exceptions import SchemaError
 from .selectors import Selector
@@ -224,15 +225,55 @@ def _private_interrogate(
 
         # check data types
         actual_dtype = df_schema[expected_name]
+        actual_cf_type = _nw_type_to_cf_type(actual_dtype)
+
+        if isinstance(expected_col, CfUnion):
+            try:
+                expected_col, s_cast = expected_col._resolve(
+                    nw_df[expected_name], actual_cf_type
+                )
+
+                if s_cast is not None:
+                    nw_df = nw_df.with_columns(s_cast)
+                else:  # this means no casting is needed but we passed sucessfully
+                    pass
+            except CastError as e:
+                identifier = f"__checkedframe_{expected_name}_cast__"
+
+                results.append(
+                    _ResultWrapper(
+                        e.element_passes,
+                        msg=e.msg,
+                        identifier=identifier,
+                        column=expected_name,
+                        operation="cast",
+                        native=False,
+                        is_expr=isinstance(e.element_passes, nw.Expr),
+                    )
+                )
+                continue
+            except TypeError:
+                identifier = f"__checkedframe_{expected_name}_dtype__"
+                results.append(
+                    _ResultWrapper(
+                        nw.lit(False),
+                        msg=f"Expected one of {expected_col.columns}, got {actual_dtype}",
+                        identifier=identifier,
+                        column=expected_name,
+                        operation="dtype",
+                        native=False,
+                        is_expr=False,
+                    )
+                )
+                continue
+
         if actual_dtype == expected_col.to_narwhals():
             pass
         else:
             if expected_col.cast:
                 try:
                     nw_df = nw_df.with_columns(
-                        _nw_type_to_cf_type(actual_dtype)._safe_cast(
-                            nw_df[expected_name], expected_col
-                        )
+                        actual_cf_type._safe_cast(nw_df[expected_name], expected_col)
                     )
                 except CastError as e:
                     identifier = f"__checkedframe_{expected_name}_cast__"
@@ -501,7 +542,7 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     Parameters
     ----------
-    expected_schema : dict[str, Column]
+    expected_schema : dict[str, TypedColumn]
         A dictionary of column names and data types
     checks : Optional[Sequence[Check]], optional
         A list of checks to run, by default None
@@ -511,8 +552,8 @@ class Schema(metaclass=_SchemaCacheMeta):
 
     def __init__(
         self,
-        expected_schema: dict[str, _TypedColumn],
-        checks: Optional[list[Check]] = None,
+        expected_schema: Mapping[str, TypedColumn | CfUnion],
+        checks: Optional[Iterable[Check]] = None,
     ):
         self.expected_schema = expected_schema
         self.checks = [] if checks is None else checks
@@ -542,34 +583,49 @@ class Schema(metaclass=_SchemaCacheMeta):
         if cls._schema is not None:
             return cls._schema
 
-        schema_dict: dict[str, _TypedColumn] = {}
+        schema_dict: dict[str, TypedColumn | CfUnion] = {}
         checks = []
 
         attr_list = get_class_members(cls)
 
         for attr, val in attr_list:
-            if isinstance(val, _Column):
+            if isinstance(val, TypedColumn):
                 new_val = copy.copy(val)
                 # We may modify checks, which is a list, so we need to copy it
                 new_val.checks = list(val.checks)
 
                 col_name = attr if new_val.name is None else new_val.name
 
-                # TODO: A TypedColumn is a Column and a DType, but the isinstance check
-                # above does not work on TypedColumn, only Column.
-                schema_dict[col_name] = new_val  # type: ignore[assignment]
+                schema_dict[col_name] = new_val
+
+            if isinstance(val, CfUnion):
+                new_vals = []
+                for x in val.columns:
+                    new_val = copy.copy(x)
+                    new_val.checks = list(x.checks)
+
+                    col_name = attr if new_val.name is None else new_val.name
+
+                    new_vals.append(new_val)
+
+                schema_dict[col_name] = CfUnion(*new_vals)
 
         for attr, val in attr_list:
             if isinstance(val, Check):
                 if (cols_or_selector := val.columns) is not None:
                     if isinstance(cols_or_selector, Selector):
-                        cols = cols_or_selector(schema_dict)  # type: ignore
+                        cols = cols_or_selector(schema_dict)
                     else:
                         cols = cols_or_selector
 
                     for c in cols:
                         if c in schema_dict:
-                            schema_dict[c].checks.append(val)
+                            col = schema_dict[c]
+                            if isinstance(col, CfUnion):
+                                for x in col.columns:
+                                    x.checks.append(val)
+                            else:
+                                col.checks.append(val)
                 else:
                     checks.append(val)
 

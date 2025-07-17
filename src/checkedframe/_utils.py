@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import inspect
 import types
+from collections.abc import Iterable
+from typing import Any
 
 
 # Based on the inspect module. We can't use the inspect version directly because it
@@ -54,3 +58,22 @@ def get_class_members(object, predicate=None):
         processed.add(key)
 
     return results
+
+
+def _parse_args_into_iterable(
+    args: tuple[Any, ...] | tuple[Iterable[Any]],
+) -> Iterable[Any]:
+    if len(args) == 1 and isinstance(args[0], Iterable):
+        return args[0]
+
+    return args
+
+
+def _all_equal(x: Iterable) -> bool:
+    x = iter(x)
+    try:
+        first = next(x)
+    except StopIteration:
+        return True
+
+    return all(first == x for x in x)
