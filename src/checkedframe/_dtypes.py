@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import string
 from abc import abstractmethod
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Literal, Optional, Union
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING
 
 import narwhals.stable.v1 as nw
 from narwhals.stable.v1.dtypes import DType as NarwhalsDType
 
+from ._utils import _all_equal, _parse_args_into_iterable
 from .exceptions import CastError
 
 if TYPE_CHECKING:
     from datetime import timezone
+    from typing import Literal, Optional, Union
 
     from ._checks import Check
 
@@ -38,8 +40,8 @@ class _Column:
 
     Parameters
     ----------
-    dtype : nw.dtypes.DType
-        The type of the column
+    name : Optional[str], optional
+        The name of the column, by default None
     nullable : bool, optional
         Whether to allow nulls, by default False
     required : bool, optional
@@ -47,7 +49,7 @@ class _Column:
     cast : bool, optional
         Whether to automatically try to cast the column to the expected data type, by
         default False
-    checks : Optional[list[Check]], optional
+    checks : Optional[Iterable[Check]], optional
         Checks to run on the column, by default None
     """
 
@@ -57,16 +59,16 @@ class _Column:
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         self.name = name
         self.nullable = nullable
         self.cast = cast
         self.required = required
-        self.checks = [] if checks is None else checks
+        self.checks = [] if checks is None else list(checks)
 
 
-class _TypedColumn(_Column, _DType, NarwhalsDType): ...
+class TypedColumn(NarwhalsDType, _DType, _Column): ...
 
 
 def _checked_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
@@ -186,7 +188,24 @@ def _fallback_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
     )
 
 
-class Int8(nw.Int8, _Column, _BoundedDType):
+def _union_cast(cls: type[TypedColumn], s: nw.Series, union: CfUnion) -> nw.Series:
+    error = None
+
+    for to in union.columns:
+        try:
+            return cls._safe_cast(s, to)
+        except CastError as e:
+            # Keep the first error instead of the last
+            if error is None:
+                error = e
+            continue
+
+    # This is fine because we will either return or raise
+    assert error is not None
+    raise error
+
+
+class Int8(nw.Int8, _BoundedDType, TypedColumn):
     _min = -128
     _max = 127
 
@@ -197,7 +216,7 @@ class Int8(nw.Int8, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Int8.__init__(self)
         _Column.__init__(
@@ -214,7 +233,9 @@ class Int8(nw.Int8, _Column, _BoundedDType):
         return nw.Int8
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Int8, s, to_dtype)
         if to_dtype in (Int8, Int16, Int32, Int64, Int128, Float32, Float64, String):
             return _checked_cast(s, to_dtype)
         elif to_dtype in (UInt8, UInt16, UInt32, UInt64, UInt128):
@@ -225,7 +246,7 @@ class Int8(nw.Int8, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class Int16(nw.Int16, _Column, _BoundedDType):
+class Int16(nw.Int16, _BoundedDType, TypedColumn):
     _min = -32_768
     _max = 32_767
 
@@ -236,7 +257,7 @@ class Int16(nw.Int16, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Int16.__init__(self)
         _Column.__init__(
@@ -253,7 +274,10 @@ class Int16(nw.Int16, _Column, _BoundedDType):
         return nw.Int16
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Int16, s, to_dtype)
+
         if to_dtype == Int16:
             return s
         elif to_dtype in (Int32, Int64, Int128, Float32, Float64, String):
@@ -269,7 +293,7 @@ class Int16(nw.Int16, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class Int32(nw.Int32, _Column, _BoundedDType):
+class Int32(nw.Int32, _BoundedDType, TypedColumn):
     _min = -2_147_483_648
     _max = 2_147_483_647
 
@@ -280,7 +304,7 @@ class Int32(nw.Int32, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Int32.__init__(self)
         _Column.__init__(
@@ -297,7 +321,10 @@ class Int32(nw.Int32, _Column, _BoundedDType):
         return nw.Int32
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Int32, s, to_dtype)
+
         if to_dtype == Int32:
             return s
         elif to_dtype in (Int64, Int128, Float64, String):
@@ -313,7 +340,7 @@ class Int32(nw.Int32, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class Int64(nw.Int64, _Column, _BoundedDType):
+class Int64(nw.Int64, TypedColumn, _BoundedDType):
     _min = -9_223_372_036_854_775_808
     _max = 9_223_372_036_854_775_807
 
@@ -324,7 +351,7 @@ class Int64(nw.Int64, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Int64.__init__(self)
         _Column.__init__(
@@ -341,7 +368,10 @@ class Int64(nw.Int64, _Column, _BoundedDType):
         return nw.Int64
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Int64, s, to_dtype)
+
         if to_dtype == Int64:
             return s
         elif to_dtype == Int128:
@@ -357,7 +387,7 @@ class Int64(nw.Int64, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class Int128(nw.Int128, _Column, _BoundedDType):
+class Int128(nw.Int128, TypedColumn, _BoundedDType):
     _min = -170141183460469231731687303715884105728
     _max = 170141183460469231731687303715884105727
 
@@ -368,7 +398,7 @@ class Int128(nw.Int128, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Int128.__init__(self)
         _Column.__init__(
@@ -385,7 +415,10 @@ class Int128(nw.Int128, _Column, _BoundedDType):
         return nw.Int128
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Int128, s, to_dtype)
+
         if to_dtype == Int128:
             return s
         elif to_dtype == Boolean:
@@ -410,7 +443,7 @@ class Int128(nw.Int128, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class UInt8(nw.UInt8, _Column, _BoundedDType):
+class UInt8(nw.UInt8, TypedColumn, _BoundedDType):
     _min = 0
     _max = 255
 
@@ -421,7 +454,7 @@ class UInt8(nw.UInt8, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.UInt8.__init__(self)
         _Column.__init__(
@@ -438,7 +471,10 @@ class UInt8(nw.UInt8, _Column, _BoundedDType):
         return nw.UInt8
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(UInt8, s, to_dtype)
+
         if to_dtype == UInt8:
             return s
         elif to_dtype in (
@@ -463,7 +499,7 @@ class UInt8(nw.UInt8, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class UInt16(nw.UInt16, _Column, _BoundedDType):
+class UInt16(nw.UInt16, TypedColumn, _BoundedDType):
     _min = 0
     _max = 65_535
 
@@ -474,7 +510,7 @@ class UInt16(nw.UInt16, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.UInt16.__init__(self)
         _Column.__init__(
@@ -491,7 +527,10 @@ class UInt16(nw.UInt16, _Column, _BoundedDType):
         return nw.UInt16
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(UInt16, s, to_dtype)
+
         if to_dtype == UInt16:
             return s
         elif to_dtype in (
@@ -514,7 +553,7 @@ class UInt16(nw.UInt16, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class UInt32(nw.UInt32, _Column, _BoundedDType):
+class UInt32(nw.UInt32, TypedColumn, _BoundedDType):
     _min = 0
     _max = 4_294_967_295
 
@@ -525,7 +564,7 @@ class UInt32(nw.UInt32, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.UInt32.__init__(self)
         _Column.__init__(
@@ -542,7 +581,10 @@ class UInt32(nw.UInt32, _Column, _BoundedDType):
         return nw.UInt32
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(UInt32, s, to_dtype)
+
         if to_dtype == UInt32:
             return s
         elif to_dtype in (
@@ -562,7 +604,7 @@ class UInt32(nw.UInt32, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class UInt64(nw.UInt64, _Column, _BoundedDType):
+class UInt64(nw.UInt64, TypedColumn, _BoundedDType):
     _min = 0
     _max = 18_446_744_073_709_551_615
 
@@ -573,7 +615,7 @@ class UInt64(nw.UInt64, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.UInt64.__init__(self)
         _Column.__init__(
@@ -590,7 +632,10 @@ class UInt64(nw.UInt64, _Column, _BoundedDType):
         return nw.UInt64
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(UInt64, s, to_dtype)
+
         if to_dtype == UInt64:
             return s
         elif to_dtype in (
@@ -617,7 +662,7 @@ class UInt64(nw.UInt64, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class UInt128(nw.UInt128, _Column, _BoundedDType):
+class UInt128(nw.UInt128, TypedColumn, _BoundedDType):
     _min = 0
     _max = 340_282_366_920_938_463_463_374_607_431_768_211_455
 
@@ -628,7 +673,7 @@ class UInt128(nw.UInt128, _Column, _BoundedDType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.UInt128.__init__(self)
         _Column.__init__(
@@ -645,7 +690,10 @@ class UInt128(nw.UInt128, _Column, _BoundedDType):
         return nw.UInt128
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(UInt128, s, to_dtype)
+
         if to_dtype == UInt128:
             return s
         elif to_dtype == Boolean:
@@ -669,7 +717,7 @@ class UInt128(nw.UInt128, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class Float32(nw.Float32, _Column, _BoundedDType):
+class Float32(nw.Float32, TypedColumn, _BoundedDType):
     # min and max represent min/max representible int that can be converted without loss
     # of precision
     _min = -16_777_216
@@ -684,7 +732,7 @@ class Float32(nw.Float32, _Column, _BoundedDType):
         allow_inf: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Float32.__init__(self)
         _Column.__init__(
@@ -704,7 +752,10 @@ class Float32(nw.Float32, _Column, _BoundedDType):
         return nw.Float32
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Float32, s, to_dtype)
+
         if to_dtype == Float32:
             return s
         elif to_dtype == Float64:
@@ -728,7 +779,7 @@ class Float32(nw.Float32, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class Float64(nw.Float64, _Column, _BoundedDType):
+class Float64(nw.Float64, TypedColumn, _BoundedDType):
     _min = -9_007_199_254_740_991
     _max = 9_007_199_254_740_991
 
@@ -741,7 +792,7 @@ class Float64(nw.Float64, _Column, _BoundedDType):
         allow_inf: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Float64.__init__(self)
         _Column.__init__(
@@ -761,7 +812,10 @@ class Float64(nw.Float64, _Column, _BoundedDType):
         return nw.Float64
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Float64, s, to_dtype)
+
         if to_dtype == Float64:
             return s
         elif to_dtype == Boolean:
@@ -784,7 +838,7 @@ class Float64(nw.Float64, _Column, _BoundedDType):
         return _checked_cast(s, to_dtype)
 
 
-class Decimal(nw.Decimal, _Column, _DType):
+class Decimal(nw.Decimal, TypedColumn, _DType):
     def __init__(
         self,
         *,
@@ -792,7 +846,7 @@ class Decimal(nw.Decimal, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Decimal.__init__(self)
         _Column.__init__(
@@ -809,11 +863,13 @@ class Decimal(nw.Decimal, _Column, _DType):
         return nw.Decimal
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Decimal, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Binary(nw.Binary, _Column, _DType):
+class Binary(nw.Binary, TypedColumn, _DType):
     def __init__(
         self,
         *,
@@ -821,7 +877,7 @@ class Binary(nw.Binary, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Binary.__init__(self)
         _Column.__init__(
@@ -838,11 +894,13 @@ class Binary(nw.Binary, _Column, _DType):
         return nw.Binary
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Binary, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Boolean(nw.Boolean, _Column, _DType):
+class Boolean(nw.Boolean, TypedColumn, _DType):
     def __init__(
         self,
         *,
@@ -850,7 +908,7 @@ class Boolean(nw.Boolean, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Boolean.__init__(self)
         _Column.__init__(
@@ -867,11 +925,13 @@ class Boolean(nw.Boolean, _Column, _DType):
         return nw.Boolean
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Boolean, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Categorical(nw.Categorical, _Column, _DType):
+class Categorical(nw.Categorical, TypedColumn, _DType):
     def __init__(
         self,
         *,
@@ -879,7 +939,7 @@ class Categorical(nw.Categorical, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Categorical.__init__(self)
         _Column.__init__(
@@ -896,11 +956,13 @@ class Categorical(nw.Categorical, _Column, _DType):
         return nw.Categorical
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Categorical, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Enum(nw.Enum, _Column, _DType):
+class Enum(nw.Enum, TypedColumn, _DType):
     def __init__(
         self,
         *,
@@ -908,7 +970,7 @@ class Enum(nw.Enum, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Enum.__init__(self)
         _Column.__init__(
@@ -925,11 +987,13 @@ class Enum(nw.Enum, _Column, _DType):
         return nw.Enum
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Enum, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Date(nw.Date, _Column, _DType):
+class Date(nw.Date, TypedColumn, _DType):
     def __init__(
         self,
         *,
@@ -937,7 +1001,7 @@ class Date(nw.Date, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Date.__init__(self)
         _Column.__init__(
@@ -954,11 +1018,13 @@ class Date(nw.Date, _Column, _DType):
         return nw.Date
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Date, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Datetime(nw.Datetime, _Column, _DType):
+class Datetime(nw.Datetime, TypedColumn, _DType):
     def __init__(
         self,
         time_unit: TimeUnit = "us",
@@ -968,7 +1034,7 @@ class Datetime(nw.Datetime, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Datetime.__init__(self, time_unit=time_unit, time_zone=time_zone)
         _Column.__init__(
@@ -1001,11 +1067,13 @@ class Datetime(nw.Datetime, _Column, _DType):
         return Datetime(**column_kwargs)
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Datetime, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Duration(nw.Duration, _Column, _DType):
+class Duration(nw.Duration, TypedColumn, _DType):
     def __init__(
         self,
         time_unit: TimeUnit = "us",
@@ -1014,7 +1082,7 @@ class Duration(nw.Duration, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Duration.__init__(self, time_unit=time_unit)
         _Column.__init__(
@@ -1043,11 +1111,13 @@ class Duration(nw.Duration, _Column, _DType):
         return Duration(**column_kwargs)
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Duration, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class String(nw.String, _Column, _DType):
+class String(nw.String, TypedColumn, _DType):
     def __init__(
         self,
         *,
@@ -1055,7 +1125,7 @@ class String(nw.String, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.String.__init__(self)
         _Column.__init__(
@@ -1072,11 +1142,13 @@ class String(nw.String, _Column, _DType):
         return nw.String
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(String, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Object(nw.Object, _Column, _DType):
+class Object(nw.Object, TypedColumn, _DType):
     def __init__(
         self,
         *,
@@ -1084,7 +1156,7 @@ class Object(nw.Object, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Object.__init__(self)
         _Column.__init__(
@@ -1101,11 +1173,13 @@ class Object(nw.Object, _Column, _DType):
         return nw.Object
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Object, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Unknown(nw.Unknown, _Column, _DType):
+class Unknown(nw.Unknown, TypedColumn, _DType):
     def __init__(
         self,
         *,
@@ -1113,7 +1187,7 @@ class Unknown(nw.Unknown, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Unknown.__init__(self)
         _Column.__init__(
@@ -1130,11 +1204,13 @@ class Unknown(nw.Unknown, _Column, _DType):
         return nw.Unknown
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Unknown, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class Array(nw.Array, _Column, _DType):
+class Array(nw.Array, TypedColumn, _DType):
     def __init__(
         self,
         inner: _DType,
@@ -1144,7 +1220,7 @@ class Array(nw.Array, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Array.__init__(self, inner=inner, shape=shape)  # type: ignore
         _Column.__init__(
@@ -1168,11 +1244,13 @@ class Array(nw.Array, _Column, _DType):
         )
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Array, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
-class List(nw.List, _Column, _DType):
+class List(nw.List, TypedColumn, _DType):
     def __init__(
         self,
         inner: _DType,
@@ -1181,7 +1259,7 @@ class List(nw.List, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.List.__init__(self, inner=inner)  # type: ignore
         _Column.__init__(
@@ -1203,7 +1281,9 @@ class List(nw.List, _Column, _DType):
         return List(_nw_type_to_cf_type(nw_dtype.inner), **column_kwargs)
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(List, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
 
@@ -1216,7 +1296,7 @@ class _Field:
         self.dtype = dtype
 
 
-class Struct(nw.Struct, _Column, _DType):
+class Struct(nw.Struct, TypedColumn, _DType):
     def __init__(
         self,
         fields: Mapping[str, _DType],
@@ -1225,7 +1305,7 @@ class Struct(nw.Struct, _Column, _DType):
         nullable: bool = False,
         required: bool = True,
         cast: bool = False,
-        checks: Optional[list[Check]] = None,
+        checks: Optional[Iterable[Check]] = None,
     ):
         nw.Struct.__init__(self, fields=fields)  # type: ignore
         _Column.__init__(
@@ -1255,8 +1335,100 @@ class Struct(nw.Struct, _Column, _DType):
         return Struct(dct, **column_kwargs)
 
     @staticmethod
-    def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series:
+    def _safe_cast(s: nw.Series, to_dtype: _DType | CfUnion) -> nw.Series:
+        if isinstance(to_dtype, CfUnion):
+            return _union_cast(Struct, s, to_dtype)
         return _checked_cast(s, to_dtype)
+
+
+class CfUnion:
+    """Union type.
+
+    Examples
+    --------
+    .. code-block:: python
+
+        import checkedframe as cf
+        import polars as pl
+
+
+        class S(cf.Schema):
+            by_var = cf.Union(cf.Boolean(), cf.Int64(cast=True))
+
+
+        df = pl.DataFrame({"by_var": [1.0, 5.0]})
+        S.validate(df)
+
+    Output:
+
+    .. code-block:: text
+
+
+
+    """
+
+    def __init__(self, *columns: TypedColumn | Iterable[TypedColumn]):
+        self.columns: Iterable[TypedColumn] = _parse_args_into_iterable(columns)
+        self.required = True
+
+        assert _all_equal(c.name for c in self.columns)
+        if not all(c.required for c in self.columns):
+            raise NotImplementedError(
+                "Currently, non-required Unions are not supported."
+            )
+
+    @staticmethod
+    def is_decimal():
+        return False
+
+    @staticmethod
+    def is_float():
+        return False
+
+    @staticmethod
+    def is_integer():
+        return False
+
+    @staticmethod
+    def is_signed_integer():
+        return False
+
+    @staticmethod
+    def is_unsigned_integer():
+        return False
+
+    @staticmethod
+    def is_numeric():
+        return False
+
+    @staticmethod
+    def is_temporal():
+        return False
+
+    def _resolve(self, s: nw.Series, actual_cf_type: TypedColumn):
+        cast_error = None
+        type_error = None
+        for c in self.columns:
+            if c == actual_cf_type:
+                return c, None
+            else:
+                if c.cast:
+                    try:
+                        s_cast = actual_cf_type._safe_cast(s, c)
+                        return c, s_cast
+                    except CastError as e:
+                        if cast_error is None:
+                            cast_error = e
+                        continue
+                else:
+                    if type_error is None:
+                        type_error = TypeError()
+
+        if type_error is not None:
+            raise TypeError()
+
+        if cast_error is not None:
+            raise cast_error
 
 
 _NARWHALS_DTYPE_TO_CHECKEDFRAME_DTYPE_MAPPER: dict[
@@ -1289,7 +1461,7 @@ _NARWHALS_DTYPE_TO_CHECKEDFRAME_DTYPE_MAPPER: dict[
 
 def _nw_type_to_cf_type(
     nw_dtype: Union[NarwhalsDType, type[NarwhalsDType]], **column_kwargs
-) -> _DType:
+) -> TypedColumn:
     if isinstance(nw_dtype, nw.Array):
         return Array.from_narwhals(nw_dtype, **column_kwargs)
     elif isinstance(nw_dtype, nw.List):

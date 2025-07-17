@@ -127,3 +127,22 @@ def test_float32_to_float64():
     polars.testing.assert_series_equal(
         s_cast.to_native(), s.to_native(), check_dtypes=False
     )
+
+
+def test_union():
+    s = nw.from_native(
+        pl.Series("x", [1.1, 2.0, None]).cast(pl.Float32), series_only=True
+    )
+
+    # Test works
+    s_cast = cf.Float32._safe_cast(s, cf.Union(cf.Int64(), cf.Float64()))
+
+    assert s_cast.dtype == nw.Float64
+
+    polars.testing.assert_series_equal(
+        s_cast.to_native(), s.to_native(), check_dtypes=False
+    )
+
+    # Test it correctly raises
+    with pytest.raises(cf.exceptions.CastError):
+        s_cast = cf.Float32._safe_cast(s, cf.Union(cf.Int32(), cf.Int64()))

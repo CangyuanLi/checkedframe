@@ -104,3 +104,11 @@ def test_temporal_example():
 
     with pytest.raises(cf.exceptions.SchemaError):
         S.validate(df)
+
+
+def test_union():
+    class S(cf.Schema):
+        date = cf.Date()
+        union = cf.Union(cf.Float64(), cf.Float32())
+
+    assert cfs.temporal()(S._parse_into_schema().expected_schema) == ["date"]

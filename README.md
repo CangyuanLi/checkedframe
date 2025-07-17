@@ -27,6 +27,7 @@ The key advantages of **checkedframe** are DataFrame agnosticism (validate Panda
 | **Safe casting**           | ✅                                                          | ✅                                          | ❌                                        | 🟡 (4.)                                                                 | ❌                                                       | ❌                                                     |
 | **Filtering**              | ✅                                                          | ❌                                          | ❌                                        | ✅                                                                      | ❌                                                       | ❌                                                     |
 | **Schema generation**      | ✅                                                          | ❌                                          | ❌                                        | ❌                                                                      | ❌                                                       | ❌                                                     |
+| **Union types**            | 🟡                                                          | ❌                                          | ❌                                        | ❌                                                                      | ❌                                                       | ❌                                                     |
 | **Python version support** | ✅ (3.9+)                                                   | 🟡 (<= 3.12)                                | ✅                                        | ❌ (3.11+)                                                              | ✅                                                       | 🟡  (3.10+)                                            |
 | **Battle-tested**          | ❌ (You can help!)                                          | ✅                                          | 🟡                                        | 🟡                                                                      | ✅                                                       | 🟡                                                     |
 
@@ -36,7 +37,7 @@ The key advantages of **checkedframe** are DataFrame agnosticism (validate Panda
 
 1. While **pandera** does support multiple libraries, it requires code changes to switch between them. Feature completeness also varies across different engines.
 2. This is quite subjective, but I find writing non-trivial checks (e.g. those requiring multiple columns, group-by, etc.) non-intuitive and difficult
-3. Checks must return an expr, which hampers checks such as a t-test between two columns
+3. Checks must return an expr, which hampers boolean checks, such as a t-test between two columns
 4. Either all columns are cast or none are
 
 
