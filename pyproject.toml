@@ -32,6 +32,8 @@ dev = [
     "ruff",
     "mypy",
     "ipykernel",
+    "build",
+    "twine",
     { include-group = "docs" },
     { include-group = "typing" },
     { include-group = "tests" },
