@@ -1,12 +1,11 @@
 import subprocess
 import time
-
-import toml
+import tomllib
 
 
 def main():
-    with open("pyproject.toml", "r") as f:
-        pyproject_toml = toml.load(f)
+    with open("pyproject.toml", "rb") as f:
+        pyproject_toml = tomllib.load(f)
 
     version = pyproject_toml["project"]["version"]
 
