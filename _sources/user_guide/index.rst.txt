@@ -6,3 +6,5 @@ User Guide
 
     quickstart.rst
     installation.rst
+    advanced_usage.rst
+    

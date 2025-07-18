@@ -391,7 +391,15 @@
 <td><p>❌</p></td>
 <td><p>❌</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>Python version support</strong></p></td>
+<tr class="row-even"><td><p><strong>Union types</strong></p></td>
+<td><p>🟡</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Python version support</strong></p></td>
 <td><p>✅ (3.9+)</p></td>
 <td><p>🟡 (&lt;= 3.12)</p></td>
 <td><p>✅</p></td>
@@ -399,7 +407,7 @@
 <td><p>✅</p></td>
 <td><p>🟡  (3.10+)</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>Battle-tested</strong></p></td>
+<tr class="row-even"><td><p><strong>Battle-tested</strong></p></td>
 <td><p>❌ (You can help!)</p></td>
 <td><p>✅</p></td>
 <td><p>🟡</p></td>
@@ -418,7 +426,7 @@
 <ol class="arabic simple">
 <li><p>While <strong>pandera</strong> does support multiple libraries, it requires code changes to switch between them. Feature completeness also varies across different engines.</p></li>
 <li><p>This is quite subjective, but I find writing non-trivial checks (e.g. those requiring multiple columns, group-by, etc.) non-intuitive and difficult</p></li>
-<li><p>Checks must return an expr, which hampers checks such as a t-test between two columns</p></li>
+<li><p>Checks must return an expr, which hampers boolean checks, such as a t-test between two columns</p></li>
 <li><p>Either all columns are cast or none are</p></li>
 </ol>
 </section>
