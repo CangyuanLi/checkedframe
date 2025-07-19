@@ -81,6 +81,12 @@ def test_exclude():
     assert cfs.numeric().exclude("int8")(SCHEMA) == ["float32"]
     assert cfs.numeric().exclude(cfs.by_name("int8"))(SCHEMA) == ["float32"]
     assert cfs.numeric().exclude(["int8"])(SCHEMA) == ["float32"]
+    assert cfs.all().exclude("list_string", "list_list_string")(SCHEMA) == [
+        "string",
+        "int8",
+        "float32",
+        "boolean",
+    ]
 
 
 def test_temporal_example():

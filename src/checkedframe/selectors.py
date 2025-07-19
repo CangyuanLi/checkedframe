@@ -5,6 +5,7 @@ from collections.abc import Iterable, Mapping
 from typing import Callable, Union
 
 from ._dtypes import Boolean, Categorical, CfUnion, Date, Datetime, String, TypedColumn
+from ._utils import _parse_args_into_iterable
 
 TypeOrInstance = Union[TypedColumn, type[TypedColumn], CfUnion]
 
@@ -41,13 +42,19 @@ class Selector:
             lambda col, dtype: self.condition(col, dtype) != other.condition(col, dtype)
         )
 
-    def exclude(self, other: str | Iterable[str] | Selector) -> Selector:
-        if not isinstance(other, Selector):
-            selector_other = by_name(other)
-        else:
-            selector_other = other
+    def exclude(self, *other: str | Iterable[str] | Selector) -> Selector:
 
-        return self.__sub__(selector_other)
+        other_list = _parse_args_into_iterable(other)
+
+        for o in other_list:
+            if not isinstance(o, Selector):
+                selector_other = by_name(o)
+            else:
+                selector_other = o
+
+            self = self.__sub__(selector_other)
+
+        return self
 
 
 def _flatten_str_iterable(lst: Iterable[str | Iterable[str]]) -> list[str]:

@@ -63,8 +63,11 @@ def get_class_members(object, predicate=None):
 def _parse_args_into_iterable(
     args: tuple[Any, ...] | tuple[Iterable[Any]],
 ) -> Iterable[Any]:
-    if len(args) == 1 and isinstance(args[0], Iterable):
-        return args[0]
+    if len(args) == 1:
+        x = args[0]
+
+        if isinstance(x, Iterable) and not isinstance(x, str):
+            return x
 
     return args
 
