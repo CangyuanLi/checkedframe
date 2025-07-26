@@ -32,6 +32,7 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
   
   <!-- So that users can add custom icons -->
   <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -44,6 +45,7 @@
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/tabs.js?v=3030b3cb"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/checks';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -341,7 +343,7 @@
 <h1>Checks<a class="headerlink" href="#checks" title="Link to this heading">#</a></h1>
 <section id="custom-checks">
 <h2>Custom Checks<a class="headerlink" href="#custom-checks" title="Link to this heading">#</a></h2>
-<p><strong>checkedframe</strong> aims to maximize your control over the checks you write. Checks take 4 types of inputs: a Series, a string, a DataFrame, or nothing. Checks then allow 3 types of outputs: a Series, a boolean, or an Expression. In addition, checks can be “native”, which means they are written using the DataFrame library you are using, or they can be written in a DataFrame-agnostic way using <strong>narwhals</strong>. Let’s take a look at some examples.</p>
+<p><strong>checkedframe</strong> aims to maximize your control over the checks you write. Checks take 4 types of inputs: a Series, a string, a DataFrame, or nothing. Checks then allow 3 types of outputs: a Series, a boolean, or an Expression. In addition, checks can be “native”, which means they are written using the DataFrame library you are using, or they can be written in a DataFrame-agnostic way. Let’s take a look at some examples using Polars.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
 
@@ -352,37 +354,89 @@
    <span class="n">savings_balance</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span>
 
 
-<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
-   <span class="s2">&quot;x&quot;</span><span class="p">:</span>
-<span class="p">})</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+   <span class="p">{</span>
+      <span class="s2">&quot;customer_id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;TV09&quot;</span><span class="p">,</span> <span class="s2">&quot;DTG9&quot;</span><span class="p">],</span>
+      <span class="s2">&quot;checking_balance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">400.4</span><span class="p">,</span> <span class="mf">20.2</span><span class="p">],</span>
+      <span class="s2">&quot;savings_balance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1_000.1</span><span class="p">,</span> <span class="mf">89.91</span><span class="p">],</span>
+   <span class="p">}</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>In this example, we have a check that operates on a Series and returns a Series.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">)</span>
+<p>In this example, we have a check that operates on a Series and returns a Series. The <code class="docutils literal notranslate"><span class="pre">columns</span></code> argument tells <strong>checkedframe</strong> apply this check to the “checking_balance” Series. Since our return type is a Series, <strong>checkedframe</strong> is able to tell us exactly which rows fail this check as well. In addition, in error reporting, this check will be attached to the “checking_balance” column.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-UG9sYXJz" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-0-UG9sYXJz" name="UG9sYXJz" role="tab" tabindex="0">Polars</button><button aria-controls="panel-0-QWdub3N0aWM=" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-0-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tab" tabindex="-1">Agnostic</button></div><div aria-labelledby="tab-0-UG9sYXJz" class="sphinx-tabs-panel group-tab" id="panel-0-UG9sYXJz" name="UG9sYXJz" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">series_series_check</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
    <span class="k">return</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">100</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">columns</span></code> argument tells <strong>checkedframe</strong> apply this check to the “checking_balance” Series. Since our return type is a Series, <strong>checkedframe</strong> is able to tell us exactly which rows fail this check as well.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">)</span>
+</div><div aria-labelledby="tab-0-QWdub3N0aWM=" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-0-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">series_series_check</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cf</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+   <span class="k">return</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</div></div>
+<p>Similarly, we can use expressions. Expression checks usually take a string and return an expression. Since expressions are series-like, we similarly get detailed error reporting. Furthermore, expressions are run in parallel (if your engine runs expressions in parallel). To get the best performance, use expressions.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-UG9sYXJz" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-1-UG9sYXJz" name="UG9sYXJz" role="tab" tabindex="0">Polars</button><button aria-controls="panel-1-QWdub3N0aWM=" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-1-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tab" tabindex="-1">Agnostic</button></div><div aria-labelledby="tab-1-UG9sYXJz" class="sphinx-tabs-panel group-tab" id="panel-1-UG9sYXJz" name="UG9sYXJz" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">str_expr_check</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
    <span class="k">return</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">100</span>
 </pre></div>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span>
+</div><div aria-labelledby="tab-1-QWdub3N0aWM=" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-1-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">str_expr_check</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cf</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
+   <span class="k">return</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</div></div>
+<p>We also can operate at the DataFrame level using expressions.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-UG9sYXJz" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-2-UG9sYXJz" name="UG9sYXJz" role="tab" tabindex="0">Polars</button><button aria-controls="panel-2-QWdub3N0aWM=" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-2-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tab" tabindex="-1">Agnostic</button></div><div aria-labelledby="tab-2-UG9sYXJz" class="sphinx-tabs-panel group-tab" id="panel-2-UG9sYXJz" name="UG9sYXJz" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">expr_check</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
    <span class="k">return</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">100</span>
 </pre></div>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span>
+</div><div aria-labelledby="tab-2-QWdub3N0aWM=" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-2-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">expr_check</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">cf</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
+   <span class="k">return</span> <span class="n">cf</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</div></div>
+<p>We can also just take the DataFrame in directly.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-UG9sYXJz" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-3-UG9sYXJz" name="UG9sYXJz" role="tab" tabindex="0">Polars</button><button aria-controls="panel-3-QWdub3N0aWM=" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-3-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tab" tabindex="-1">Agnostic</button></div><div aria-labelledby="tab-3-UG9sYXJz" class="sphinx-tabs-panel group-tab" id="panel-3-UG9sYXJz" name="UG9sYXJz" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">df_check</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
    <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">100</span>
 </pre></div>
 </div>
+</div><div aria-labelledby="tab-3-QWdub3N0aWM=" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-3-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">df_check</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cf</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+   <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</div></div>
+<p>While not particularly useful when operating on a single column, DataFrame-level checks shine when multi-column checks are needed.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The above examples use type hints to indicate the input and return types. A check without type hints would look like this:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-UG9sYXJz" aria-selected="true" class="sphinx-tabs-tab group-tab" id="tab-4-UG9sYXJz" name="UG9sYXJz" role="tab" tabindex="0">Polars</button><button aria-controls="panel-4-QWdub3N0aWM=" aria-selected="false" class="sphinx-tabs-tab group-tab" id="tab-4-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tab" tabindex="-1">Agnostic</button></div><div aria-labelledby="tab-4-UG9sYXJz" class="sphinx-tabs-panel group-tab" id="panel-4-UG9sYXJz" name="UG9sYXJz" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;Series&quot;</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;Series&quot;</span><span class="p">,</span> <span class="n">native</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">series_series_check</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+   <span class="k">return</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-QWdub3N0aWM=" class="sphinx-tabs-panel group-tab" hidden="true" id="panel-4-QWdub3N0aWM=" name="QWdub3N0aWM=" role="tabpanel" tabindex="0"><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;checking_balance&quot;</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;Series&quot;</span><span class="p">,</span> <span class="n">return_type</span><span class="o">=</span><span class="s2">&quot;Series&quot;</span><span class="p">,</span> <span class="n">native</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">series_series_check</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+   <span class="k">return</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</div></div>
+</div>
 </section>
-<section id="module-checkedframe._checks">
-<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-checkedframe._checks" title="Link to this heading">#</a></h2>
-<dl class="py class">
+<section id="built-in-checks">
+<h2>Built-in Checks<a class="headerlink" href="#built-in-checks" title="Link to this heading">#</a></h2>
+<p><strong>checkedframe</strong> also comes with a large suite of built-in checks. Built-in checks are always agnostic, so you can use them the same way regardless of your DataFrame library.</p>
+<dl class="py class" id="module-checkedframe._checks">
 <dt class="sig sig-object py" id="checkedframe._checks.Check">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe._checks.</span></span><span class="sig-name descname"><span class="pre">Check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Selector</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Frame'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'str'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Series'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'bool'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Expr'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Series'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">native</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._checks.Check" title="Link to this definition">#</a></dt>
 <dd><p>Represents a check to run.</p>
@@ -1111,7 +1165,7 @@ column names.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-checks">Custom Checks</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-checkedframe._checks">Functions</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-checks">Built-in Checks</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check"><code class="docutils literal notranslate"><span class="pre">Check</span></code></a><ul class="visible nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.approx_eq"><code class="docutils literal notranslate"><span class="pre">Check.approx_eq()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._checks.Check.eq"><code class="docutils literal notranslate"><span class="pre">Check.eq()</span></code></a></li>
