@@ -1,1 +1,1 @@
-Code style should follow ruff and isort
+Code style should follow ruff and isort, including in documentation examples. For instance, prefer double-quotes when creating strings. When generating documentation, please mimic the tone and style of existing documentation. Try to use code examples where approriate.
