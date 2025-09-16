@@ -17,7 +17,6 @@ pyperclip = ["pyperclip>=1.0.0"]
 [dependency-groups]
 typing = ["typing_extensions"]
 docs = [
-    "checkedframe",
     "ghp-import==2.1.0",
     "pydata-sphinx-theme==0.16.1",
     "sphinx==8.2.3",
@@ -53,6 +52,8 @@ profile = "black"
 plugins = ["checkedframe.mypy"]
 allow_redefinition = true
 
+[tool.ruff]
+ignore = ["E741"]
 
 [tool.ruff.format]
 docstring-code-format = true

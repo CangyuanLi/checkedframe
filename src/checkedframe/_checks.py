@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import functools
 import inspect
-from collections.abc import Collection, Sequence
-from typing import Any, Callable, Literal, Optional, get_type_hints
+from collections.abc import Collection, Iterable, Sequence
+from typing import Any, Callable, Literal, Optional, get_args, get_type_hints
 
 import narwhals.stable.v1 as nw
+import narwhals.stable.v1.typing as nwt
 from narwhals.stable.v1.dependencies import (
     get_cudf,
     get_modin,
@@ -261,7 +262,14 @@ def _is_sorted(s: nw.Series, descending: bool) -> bool:
 
 def _is_id(df: nw.DataFrame, subset: str | list[str]) -> bool:
     n_rows = df.shape[0]
-    n_unique_rows = df.select(subset).unique().shape[0]
+
+    # n_unique on dataframes is not available on narhwals, so if we have only one
+    # column specified as the subset, take a potential fast path, otherwise fallback to
+    # a generic version
+    if isinstance(subset, str):
+        n_unique_rows = df[subset].n_unique()
+    else:
+        n_unique_rows = df.select(subset).unique().shape[0]
 
     return n_rows == n_unique_rows
 
@@ -362,6 +370,69 @@ def _str_starts_with(name: str, prefix: str) -> nw.Expr:
 
 def _str_contains(name: str, pattern: str, literal: bool = False) -> nw.Expr:
     return nw.col(name).str.contains(pattern, literal=literal)
+
+
+CardinalityRatio = Literal["1:1", "1:m", "m:1"]
+
+
+def _cardinality_ratio(
+    df: nw.DataFrame,
+    left: str,
+    right: str,
+    cardinality: CardinalityRatio,
+    by: str | list[str] | None = None,
+    allow_duplicates: bool = False,
+):
+    index_col = "__checkedframe_temp_cardinality_ratio_private_index__"
+    result_col = left
+
+    original_lf = df.with_row_index(index_col).lazy()
+
+    if by is None:
+        by = "__checkedframe_temp_cardinality_ratio_private_by__"
+        original_lf = original_lf.with_columns(nw.lit(1).alias(by))
+
+    if isinstance(by, str):
+        by = [by]
+
+    lf = original_lf.select(left, right, *by)
+
+    if allow_duplicates:
+        lf = lf.unique()
+
+    if cardinality == "1:1":
+        result_lf = (
+            lf.group_by(by)
+            .agg(
+                nw.col(left).n_unique().__eq__(nw.len()),
+                nw.col(right).n_unique().__eq__(nw.len()),
+            )
+            .select(*by, nw.col(left).__and__(nw.col(right)).alias(result_col))
+        )
+    elif cardinality == "1:m":
+        result_lf = (
+            lf.group_by(by)
+            .agg(nw.col(left).n_unique().__eq__(nw.len()).alias(result_col))
+            .select(*by, result_col)
+        )
+    elif cardinality == "m:1":
+        result_lf = (
+            lf.group_by(by)
+            .agg(nw.col(right).n_unique().__eq__(nw.len()).alias(result_col))
+            .select(*by, result_col)
+        )
+    else:
+        raise ValueError(
+            f"Invalid cardinality `{cardinality}`, must be one of `{get_args(CardinalityRatio)}`"
+        )
+
+    return (
+        original_lf.select(index_col, *by)
+        .join(result_lf, on=by, how="left")
+        .sort(index_col)  # joins are not guaranteed to preserve order
+        .select(result_col)
+        .collect()[result_col]
+    )
 
 
 CheckInputType = Optional[Literal["auto", "Frame", "str", "Series"]]
@@ -1370,8 +1441,9 @@ class Check:
 
 
             class MySchema(cf.Schema):
-                __dataframe_checks__ = [cf.Check.is_id("group")]
                 group = cf.String()
+
+                _id_check = cf.Check.is_id("group")
 
 
             df = pl.DataFrame({"group": ["A", "B", "A"]})
@@ -1382,8 +1454,7 @@ class Check:
         .. code-block:: text
 
             SchemaError: Found 1 error(s)
-              __dataframe__: 1 error(s)
-                - is_id failed: 'group' must uniquely identify the DataFrame
+              * is_id failed for 3 / 3 (100.00%) rows: group must uniquely identify the DataFrame
 
         """
         return Check(
@@ -1393,4 +1464,28 @@ class Check:
             native=False,
             name="is_id",
             description=f"{subset} must uniquely identify the DataFrame",
+        )
+
+    @staticmethod
+    def cardinality_ratio(
+        left: str,
+        right: str,
+        cardinality: CardinalityRatio,
+        by: str | list[str] | None = None,
+        allow_duplicates: bool = False,
+    ) -> Check:
+        return Check(
+            func=functools.partial(
+                _cardinality_ratio,
+                left=left,
+                right=right,
+                cardinality=cardinality,
+                by=by,
+                allow_duplicates=allow_duplicates,
+            ),
+            input_type="Frame",
+            return_type="Series",
+            native=False,
+            name="cardinality_ratio",
+            description=f"The relationship between {left} and {right} must be {cardinality} (by={by}, allow_duplicates={allow_duplicates})",
         )
