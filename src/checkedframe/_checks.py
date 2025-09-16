@@ -261,7 +261,14 @@ def _is_sorted(s: nw.Series, descending: bool) -> bool:
 
 def _is_id(df: nw.DataFrame, subset: str | list[str]) -> bool:
     n_rows = df.shape[0]
-    n_unique_rows = df.select(subset).unique().shape[0]
+
+    # n_unique on dataframes is not available on narhwals, so if we have only one
+    # column specified as the subset, take a potential fast path, otherwise fallback to
+    # a generic version
+    if isinstance(subset, str):
+        n_unique_rows = df[subset].n_unique()
+    else:
+        n_unique_rows = df.select(subset).unique().shape[0]
 
     return n_rows == n_unique_rows
 
