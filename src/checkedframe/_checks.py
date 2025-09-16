@@ -1370,8 +1370,9 @@ class Check:
 
 
             class MySchema(cf.Schema):
-                __dataframe_checks__ = [cf.Check.is_id("group")]
                 group = cf.String()
+
+                _id_check = cf.Check.is_id("group")
 
 
             df = pl.DataFrame({"group": ["A", "B", "A"]})
@@ -1382,8 +1383,7 @@ class Check:
         .. code-block:: text
 
             SchemaError: Found 1 error(s)
-              __dataframe__: 1 error(s)
-                - is_id failed: 'group' must uniquely identify the DataFrame
+              * is_id failed for 3 / 3 (100.00%) rows: group must uniquely identify the DataFrame
 
         """
         return Check(
