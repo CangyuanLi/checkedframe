@@ -4,6 +4,7 @@ import polars as pl
 import pytest
 
 import checkedframe as cf
+from checkedframe.exceptions import SchemaError
 
 ENGINES = [pd.DataFrame, pl.DataFrame]
 
@@ -336,5 +337,42 @@ def test_is_id(engine):
 
     class S(cf.Schema):
         _c = cf.Check.is_id(["a", "b"])
+
+    S.validate(df)
+
+
+@pytest.mark.parametrize("engine", ENGINES)
+def test_cardinality_ratio(engine):
+    df = engine(
+        {
+            "feature": ["f1", "f1", "f1", "f2"],
+            "special_value": [-1, -6, -4, -7],
+            "imputed": [None, None, "MAX_WIN_P1", None],
+            "reason": ["o1", "o1", "o2", "o3"],
+        }
+    )
+
+    class S(cf.Schema):
+        _c = cf.Check.cardinality_ratio("imputed", "reason", "1:1", by="feature")
+
+    with pytest.raises(SchemaError):
+        S.validate(df)
+
+    class S(cf.Schema):
+        _c = cf.Check.cardinality_ratio("imputed", "reason", "1:m", by="feature")
+
+    with pytest.raises(SchemaError):
+        S.validate(df)
+
+    class S(cf.Schema):
+        _c = cf.Check.cardinality_ratio("imputed", "reason", "m:1", by="feature")
+
+    with pytest.raises(SchemaError):
+        S.validate(df)
+
+    class S(cf.Schema):
+        _c = cf.Check.cardinality_ratio(
+            "imputed", "reason", "m:1", by="feature", allow_duplicates=True
+        )
 
     S.validate(df)
