@@ -29,6 +29,10 @@ class _DType:
     @abstractmethod
     def _safe_cast(s: nw.Series, to_dtype: _DType) -> nw.Series: ...
 
+    @staticmethod
+    @abstractmethod
+    def _to_repr(prefix: str = "") -> str: ...
+
 
 class _BoundedDType(_DType):
     _min: int | float
@@ -205,6 +209,33 @@ def _union_cast(cls: type[TypedColumn], s: nw.Series, union: CfUnion) -> nw.Seri
     raise error
 
 
+def _fmt_optional_string(s: str | None) -> str | None:
+    return f'"{s}"' if s is not None else None
+
+
+def _fmt_dict_string(d: dict) -> str:
+    items = []
+    for k, v in d.items():
+        # Format the key with double quotes
+        key = f'"{k}"'
+
+        # Check if the value is a dictionary and recurse
+        if isinstance(v, dict):
+            value = _fmt_dict_string(v)
+        # Check if the value is a string and remove quotes
+        elif isinstance(v, str):
+            value = v
+        # Otherwise, use json.dumps for standard formatting (e.g., numbers, lists)
+        else:
+            raise ValueError(
+                "All keys must be strings and all values must either be strings or dicts"
+            )
+
+        items.append(f"{key}: {value}")
+
+    return "{" + ", ".join(items) + "}"
+
+
 class Int8(nw.Int8, _BoundedDType, TypedColumn):
     _min = -128
     _max = 127
@@ -244,6 +275,10 @@ class Int8(nw.Int8, _BoundedDType, TypedColumn):
             return _numeric_to_boolean_cast(s, to_dtype)
 
         return _checked_cast(s, to_dtype)
+
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Int8"
 
 
 class Int16(nw.Int16, _BoundedDType, TypedColumn):
@@ -292,6 +327,10 @@ class Int16(nw.Int16, _BoundedDType, TypedColumn):
 
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Int16"
+
 
 class Int32(nw.Int32, _BoundedDType, TypedColumn):
     _min = -2_147_483_648
@@ -339,6 +378,10 @@ class Int32(nw.Int32, _BoundedDType, TypedColumn):
 
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Int32"
+
 
 class Int64(nw.Int64, TypedColumn, _BoundedDType):
     _min = -9_223_372_036_854_775_808
@@ -385,6 +428,10 @@ class Int64(nw.Int64, TypedColumn, _BoundedDType):
             return _allowed_range_cast(s, to_dtype)
 
         return _checked_cast(s, to_dtype)
+
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Int64"
 
 
 class Int128(nw.Int128, TypedColumn, _BoundedDType):
@@ -442,6 +489,10 @@ class Int128(nw.Int128, TypedColumn, _BoundedDType):
 
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Int128"
+
 
 class UInt8(nw.UInt8, TypedColumn, _BoundedDType):
     _min = 0
@@ -498,6 +549,10 @@ class UInt8(nw.UInt8, TypedColumn, _BoundedDType):
 
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}UInt8"
+
 
 class UInt16(nw.UInt16, TypedColumn, _BoundedDType):
     _min = 0
@@ -552,6 +607,10 @@ class UInt16(nw.UInt16, TypedColumn, _BoundedDType):
 
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}UInt16"
+
 
 class UInt32(nw.UInt32, TypedColumn, _BoundedDType):
     _min = 0
@@ -602,6 +661,10 @@ class UInt32(nw.UInt32, TypedColumn, _BoundedDType):
             return _allowed_max_cast(s, to_dtype)
 
         return _checked_cast(s, to_dtype)
+
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}UInt32"
 
 
 class UInt64(nw.UInt64, TypedColumn, _BoundedDType):
@@ -661,6 +724,10 @@ class UInt64(nw.UInt64, TypedColumn, _BoundedDType):
 
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}UInt64"
+
 
 class UInt128(nw.UInt128, TypedColumn, _BoundedDType):
     _min = 0
@@ -715,6 +782,10 @@ class UInt128(nw.UInt128, TypedColumn, _BoundedDType):
             return _allowed_max_cast(s, to_dtype)
 
         return _checked_cast(s, to_dtype)
+
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}UInt128"
 
 
 class Float32(nw.Float32, TypedColumn, _BoundedDType):
@@ -778,6 +849,10 @@ class Float32(nw.Float32, TypedColumn, _BoundedDType):
 
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Float32"
+
 
 class Float64(nw.Float64, TypedColumn, _BoundedDType):
     _min = -9_007_199_254_740_991
@@ -837,6 +912,10 @@ class Float64(nw.Float64, TypedColumn, _BoundedDType):
 
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Float64"
+
 
 class Decimal(nw.Decimal, TypedColumn, _DType):
     def __init__(
@@ -867,6 +946,10 @@ class Decimal(nw.Decimal, TypedColumn, _DType):
         if isinstance(to_dtype, CfUnion):
             return _union_cast(Decimal, s, to_dtype)
         return _checked_cast(s, to_dtype)
+
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Decimal"
 
 
 class Binary(nw.Binary, TypedColumn, _DType):
@@ -899,6 +982,10 @@ class Binary(nw.Binary, TypedColumn, _DType):
             return _union_cast(Binary, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Binary"
+
 
 class Boolean(nw.Boolean, TypedColumn, _DType):
     def __init__(
@@ -929,6 +1016,10 @@ class Boolean(nw.Boolean, TypedColumn, _DType):
         if isinstance(to_dtype, CfUnion):
             return _union_cast(Boolean, s, to_dtype)
         return _checked_cast(s, to_dtype)
+
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Boolean"
 
 
 class Categorical(nw.Categorical, TypedColumn, _DType):
@@ -961,6 +1052,10 @@ class Categorical(nw.Categorical, TypedColumn, _DType):
             return _union_cast(Categorical, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Categorical"
+
 
 class Enum(nw.Enum, TypedColumn, _DType):
     def __init__(
@@ -991,6 +1086,10 @@ class Enum(nw.Enum, TypedColumn, _DType):
         if isinstance(to_dtype, CfUnion):
             return _union_cast(Enum, s, to_dtype)
         return _checked_cast(s, to_dtype)
+
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Enum"
 
 
 class Date(nw.Date, TypedColumn, _DType):
@@ -1023,6 +1122,10 @@ class Date(nw.Date, TypedColumn, _DType):
             return _union_cast(Date, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Date"
+
 
 class Datetime(nw.Datetime, TypedColumn, _DType):
     def __init__(
@@ -1047,6 +1150,7 @@ class Datetime(nw.Datetime, TypedColumn, _DType):
         )
 
         self.to_narwhals = self.__to_narwhals  # type: ignore
+        self._to_repr = self.__to_repr  # type: ignore
 
     @staticmethod
     def to_narwhals():
@@ -1072,6 +1176,13 @@ class Datetime(nw.Datetime, TypedColumn, _DType):
             return _union_cast(Datetime, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Datetime"
+
+    def __to_repr(self, prefix: str = "") -> str:
+        return f"{prefix}Datetime(time_unit={_fmt_optional_string(self.time_unit)}, time_zone={_fmt_optional_string(self.time_zone)})"
+
 
 class Duration(nw.Duration, TypedColumn, _DType):
     def __init__(
@@ -1095,6 +1206,7 @@ class Duration(nw.Duration, TypedColumn, _DType):
         )
 
         self.to_narwhals = self.__to_narwhals  # type: ignore
+        self._to_repr = self.__to_repr  # type: ignore
 
     @staticmethod
     def to_narwhals():
@@ -1115,6 +1227,13 @@ class Duration(nw.Duration, TypedColumn, _DType):
         if isinstance(to_dtype, CfUnion):
             return _union_cast(Duration, s, to_dtype)
         return _checked_cast(s, to_dtype)
+
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Duration"
+
+    def __to_repr(self, prefix: str = "") -> str:
+        return f"{prefix}Duration(time_unit={_fmt_optional_string(self.time_unit)})"
 
 
 class String(nw.String, TypedColumn, _DType):
@@ -1147,6 +1266,10 @@ class String(nw.String, TypedColumn, _DType):
             return _union_cast(String, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}String"
+
 
 class Object(nw.Object, TypedColumn, _DType):
     def __init__(
@@ -1178,6 +1301,10 @@ class Object(nw.Object, TypedColumn, _DType):
             return _union_cast(Object, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Object"
+
 
 class Unknown(nw.Unknown, TypedColumn, _DType):
     def __init__(
@@ -1208,6 +1335,10 @@ class Unknown(nw.Unknown, TypedColumn, _DType):
         if isinstance(to_dtype, CfUnion):
             return _union_cast(Unknown, s, to_dtype)
         return _checked_cast(s, to_dtype)
+
+    @staticmethod
+    def _to_repr(prefix: str = "") -> str:
+        return f"{prefix}Unknown"
 
 
 class Array(nw.Array, TypedColumn, _DType):
@@ -1249,6 +1380,9 @@ class Array(nw.Array, TypedColumn, _DType):
             return _union_cast(Array, s, to_dtype)
         return _checked_cast(s, to_dtype)
 
+    def _to_repr(self, prefix="") -> str:  # type: ignore
+        return f"{prefix}Array({self.inner._to_repr(prefix)})"
+
 
 class List(nw.List, TypedColumn, _DType):
     def __init__(
@@ -1285,6 +1419,9 @@ class List(nw.List, TypedColumn, _DType):
         if isinstance(to_dtype, CfUnion):
             return _union_cast(List, s, to_dtype)
         return _checked_cast(s, to_dtype)
+
+    def _to_repr(self, prefix="") -> str:  # type: ignore
+        return f"{prefix}List({self.inner._to_repr(prefix)})"
 
 
 class _Field:
@@ -1339,6 +1476,13 @@ class Struct(nw.Struct, TypedColumn, _DType):
         if isinstance(to_dtype, CfUnion):
             return _union_cast(Struct, s, to_dtype)
         return _checked_cast(s, to_dtype)
+
+    def _to_repr(self, prefix="") -> str:  # type: ignore
+        dct = {}
+        for field in self.fields:
+            dct[field.name] = field.dtype._to_repr(prefix)
+
+        return f"{prefix}Struct({_fmt_dict_string(dct)})"
 
 
 class CfUnion:

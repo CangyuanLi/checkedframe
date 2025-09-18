@@ -147,10 +147,10 @@ def generate_schema_repr(
             kwargs_to_show.append(f"{k}={v}")
 
         display_kwargs = ", ".join(kwargs_to_show)
-        display_dtype = str(cf_dtype).replace("(", f"({import_alias}")
+        display_dtype = cf_dtype._to_repr(import_alias)
 
         columns.append(
-            f"    {sanitized_col} = {import_alias}{display_dtype}({display_kwargs})".replace(
+            f"    {sanitized_col} = {display_dtype}({display_kwargs})".replace(
                 ")(", ", " if len(kwargs_to_show) > 0 else ""
             )
         )
