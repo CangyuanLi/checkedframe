@@ -1,4 +1,4 @@
-import tempfile
+import datetime
 
 import polars as pl
 import pytest
@@ -103,17 +103,27 @@ def test_schema_generation():
         "class AASchema(cf.Schema):\n"
         '    column_0 = cf.Float64(name="reason code", nullable=True, allow_nan=True)\n'
         "    y = cf.List(cf.Int64, nullable=True)\n"
-        "    z = cf.List(cf.List(cf.Int64), nullable=True)"
+        "    z = cf.List(cf.List(cf.Int64), nullable=True)\n"
+        '    datetime = cf.Datetime(time_unit="us", time_zone=None)\n'
+        '    struct = cf.Struct({"a": cf.Int64, "b": cf.Struct({"d": cf.List(cf.Int64)})}, nullable=True)'
+    )
+
+    df = pl.DataFrame(
+        {
+            "reason code": [1.0, float("nan"), None],
+            "y": [[1], [2], None],
+            "z": [[[1]], None, [[3]]],
+            "datetime": datetime.datetime(2016, 1, 22),
+            "struct": [
+                {"a": 1, "b": {"d": [1, 2, 3]}},
+                {"a": 2, "b": {"d": [1, 2, 3]}},
+                None,
+            ],
+        }
     )
 
     schema_repr = cf.generate_schema_repr(
-        pl.DataFrame(
-            {
-                "reason code": [1.0, float("nan"), None],
-                "y": [[1], [2], None],
-                "z": [[[1]], None, [[3]]],
-            }
-        ),
+        df,
         class_name="AASchema",
     )
 
@@ -127,7 +137,9 @@ def test_schema_generation_lazy():
         "class AASchema(cf.Schema):\n"
         '    column_0 = cf.Float64(name="reason code")\n'
         "    y = cf.List(cf.Int64)\n"
-        "    z = cf.List(cf.List(cf.Int64))"
+        "    z = cf.List(cf.List(cf.Int64))\n"
+        '    datetime = cf.Datetime(time_unit="us", time_zone=None)\n'
+        '    struct = cf.Struct({"a": cf.Int64, "b": cf.Struct({"d": cf.List(cf.Int64)})})'
     )
 
     df = pl.DataFrame(
@@ -135,6 +147,12 @@ def test_schema_generation_lazy():
             "reason code": [1.0, float("nan"), None],
             "y": [[1], [2], None],
             "z": [[[1]], None, [[3]]],
+            "datetime": datetime.datetime(2016, 1, 22),
+            "struct": [
+                {"a": 1, "b": {"d": [1, 2, 3]}},
+                {"a": 2, "b": {"d": [1, 2, 3]}},
+                None,
+            ],
         }
     )
 
