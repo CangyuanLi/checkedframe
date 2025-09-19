@@ -1474,6 +1474,74 @@ class Check:
         by: str | list[str] | None = None,
         allow_duplicates: bool = False,
     ) -> Check:
+        """Tests whether the `left` and `right` columns have the specified cardinality
+        ratio. The three possible cardinality ratios are '1:1' (each entity in `left` is
+        related to exactly one entity in `right`), '1:m' (each entity in `left` can be
+        related to many entities in `right`, but each entity in `right` can only be
+        related to one entity in `left`), and 'm:1', which is the same '1:m', except
+        with `left` and `right` swapped.
+
+        Parameters
+        ----------
+        left : str
+            The left column
+        right : str
+            The right column
+        cardinality : CardinalityRatio
+            The cardinality
+        by : str | list[str] | None, optional
+            Variables to group by. If specified, the cardinality ratio is checked within
+            each group, by default None
+        allow_duplicates : bool, optional
+            Whether to allow duplicates by `left` and `right`. For example, if
+            duplicates are allowed, [1, 1, 1], [2, 2, 2] is considered a '1:1'
+            relationship, by default False
+
+        Returns
+        -------
+        Check
+
+        Examples
+        --------
+        .. code-block:: python
+
+            import checkedframe as cf
+            import polars as pl
+
+
+            class MySchema(cf.Schema):
+                feature = cf.String()
+                special_value = cf.Int64()
+                imputed = cf.String(nullable=True)
+                reason = cf.String()
+
+                _cardinality_check = cf.Check.cardinality_ratio(
+                    "imputed",
+                    "reason",
+                    cardinality="m:1",
+                    by="feature",
+                    allow_duplicates=True,
+                )
+
+
+            df = pl.DataFrame(
+                {
+                    "feature": ["f1", "f1", "f1", "f2"],
+                    "special_value": [-1, -6, -4, -7],
+                    "imputed": [None, None, "MAX_WIN_P1", None],
+                    "reason": ["o1", "o1", "o2", "o3"],
+                }
+            )
+
+            MySchema.validate(df)
+
+        Output::
+
+        ..code-block:: text
+
+            SchemaError: Found 1 error(s)
+              * cardinality_ratio failed for 3 / 4 (75.00%) rows: The relationship between imputed and reason must be m:1 (by=feature, allow_duplicates=True)
+        """
         return Check(
             func=functools.partial(
                 _cardinality_ratio,
