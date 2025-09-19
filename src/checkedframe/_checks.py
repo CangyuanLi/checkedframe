@@ -574,7 +574,6 @@ class Check:
               customer_id: 2 error(s)
                 - `nullable=False` failed for 1 / 2 (50.00%) rows: Must not be null
                 - is_not_null failed for 1 / 2 (50.00%) rows: Must not be null
-
         """
         return Check(
             func=_is_not_null,
@@ -615,7 +614,6 @@ class Check:
             SchemaError: Found 1 error(s)
               balances: 1 error(s)
                 - is_not_nan failed for 1 / 3 (33.33%) rows: Must not be NaN
-
         """
         return Check(
             func=_is_not_nan,
@@ -656,7 +654,6 @@ class Check:
             SchemaError: Found 1 error(s)
               balances: 1 error(s)
                 - is_not_inf failed for 1 / 3 (33.33%) rows: Must not be inf/-inf
-
         """
         return Check(
             func=_is_not_inf,
@@ -721,7 +718,6 @@ class Check:
                 - is_between failed for 1 / 3 (33.33%) rows: Must be in range [0, 128]
               med_balance: 1 error(s)
                 - is_between failed for 2 / 3 (66.67%) rows: Must be in range [min_balance, max_balance]
-
         """
         if closed == "both":
             l_paren, r_paren = ("[", "]")
@@ -793,7 +789,6 @@ class Check:
               age: 2 error(s)
                 - less_than failed for 2 / 3 (66.67%) rows: Must be < 10
                 - less_than failed for 1 / 3 (33.33%) rows: Must be < max_age
-
         """
         return Check(
             func=functools.partial(_lt, other=_numeric_to_expr(other)),
@@ -850,7 +845,6 @@ class Check:
             SchemaError: Found 1 error(s)
               age: 1 error(s)
                 - less_than_or_equal_to failed for 1 / 3 (33.33%) rows: Must be <= 10
-
         """
         return Check(
             func=functools.partial(_le, other=_numeric_to_expr(other)),
@@ -908,7 +902,6 @@ class Check:
               age: 2 error(s)
                 - greater_than failed for 2 / 3 (66.67%) rows: Must be > 10
                 - greater_than failed for 1 / 3 (33.33%) rows: Must be > min_age
-
         """
         return Check(
             func=functools.partial(_gt, other=_numeric_to_expr(other)),
@@ -966,7 +959,6 @@ class Check:
               age: 2 error(s)
                 - greater_than_or_equal_to failed for 1 / 3 (33.33%) rows: Must be >= 10
                 - greater_than_or_equal_to failed for 1 / 3 (33.33%) rows: Must be >= min_age
-
         """
         return Check(
             func=functools.partial(_ge, other=_numeric_to_expr(other)),
@@ -1012,7 +1004,6 @@ class Check:
             SchemaError: Found 1 error(s)
               group: 1 error(s)
                 - equal_to failed for 1 / 3 (33.33%) rows: Must be = A
-
         """
         return Check(
             func=functools.partial(_eq, other=_numeric_to_expr(other)),
@@ -1069,7 +1060,6 @@ class Check:
             SchemaError: Found 1 error(s)
               prob: 1 error(s)
                 - approximately_equal_to failed for 1 / 3 (33.33%) rows: Must be approximately equal to 0.5 (rtol=1e-05, atol=1e-08, nan_equal=False)
-
         """
         return Check(
             func=functools.partial(
@@ -1121,7 +1111,6 @@ class Check:
             SchemaError: Found 1 error(s)
               business_type: 1 error(s)
                 - is_in failed for 1 / 3 (33.33%) rows: Must be in allowed values ['tech', 'finance']
-
         """
         return Check(
             func=functools.partial(_is_in, other=other),
@@ -1162,7 +1151,6 @@ class Check:
             SchemaError: Found 1 error(s)
               balances: 1 error(s)
                 - is_finite failed for 1 / 3 (33.33%) rows: All values must be finite
-
         """
         return Check(
             func=_is_finite,
@@ -1208,7 +1196,6 @@ class Check:
             SchemaError: Found 1 error(s)
               emails: 1 error(s)
                 - ends_with failed for 1 / 2 (50.00%) rows: Must end with @gmail.com
-
         """
         return Check(
             func=functools.partial(_str_ends_with, suffix=suffix),
@@ -1254,7 +1241,6 @@ class Check:
             SchemaError: Found 1 error(s)
               ids: 1 error(s)
                 - starts_with failed for 1 / 2 (50.00%) rows: Must start with user_
-
         """
         return Check(
             func=functools.partial(_str_starts_with, prefix=prefix),
@@ -1302,7 +1288,6 @@ class Check:
             SchemaError: Found 1 error(s)
               domains: 1 error(s)
                 - contains failed for 1 / 2 (50.00%) rows: Must contain \.com$
-
         """
         return Check(
             func=functools.partial(_str_contains, pattern=pattern, literal=literal),
@@ -1348,7 +1333,6 @@ class Check:
             SchemaError: Found 1 error(s)
               timestamps: 1 error(s)
                 - is_sorted failed: Must be sorted in ascending order
-
         """
         order = "descending" if descending else "ascending"
 
@@ -1406,7 +1390,6 @@ class Check:
 
             SchemaError: Found 1 error(s)
               * is_sorted_by failed for 3 / 3 (100.00%) rows: Must be sorted by timestamps, where descending is False
-
         """
         return Check(
             func=functools.partial(
@@ -1455,7 +1438,6 @@ class Check:
 
             SchemaError: Found 1 error(s)
               * is_id failed for 3 / 3 (100.00%) rows: group must uniquely identify the DataFrame
-
         """
         return Check(
             func=functools.partial(_is_id, subset=subset),
