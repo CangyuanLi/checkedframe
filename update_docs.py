@@ -34,6 +34,7 @@ if __name__ == "__main__":
         "name": version,
         "version": version,
         "url": f"https://cangyuanli.github.io/checkedframe/{version}",
+        "preferred": False,
     }
 
     main_is_only_version = switcher_dict.get("main", False) and len(switcher_dict) == 1
