@@ -82,11 +82,11 @@ if __name__ == "__main__":
         <meta charset="utf-8">
         <title>Redirecting</title>
         <noscript>
-            <meta http-equiv="refresh" content="1; url=/latest/" />
+            <meta http-equiv="refresh" content="1; url=latest/" />
         </noscript>
         <script>
             window.location.replace(
-            "latest/" + window.location.search + window.location.hash
+                "latest/" + window.location.search + window.location.hash
             );
         </script>
     </head>
