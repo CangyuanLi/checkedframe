@@ -96,13 +96,14 @@ if __name__ == "__main__":
     </html>
     """
 
-    with open("index.html", "w") as f:
+    with open(repo_root / "index.html", "w") as f:
         f.write(redirect_html)
 
     print("pushing changes")
+    subprocess.run(["git", "add", repo_root / "index.html"], check=True)
     subprocess.run(["git", "add", repo_root / version], check=True)
     subprocess.run(["git", "commit", "-m", version], check=True)
     subprocess.run(["git", "push", "-u", "origin", "gh-pages"], check=True)
 
     subprocess.run(["git", "checkout", original_branch], check=True)
-    subprocess.run(["git", "stash", "pop"], check=True)
+    subprocess.run(["git", "stash", "pop"], check=False)
