@@ -1483,6 +1483,8 @@ class Check:
         -------
         Check
 
+        .. versionadded:: 0.1.0
+
         Examples
         --------
         .. code-block:: python
