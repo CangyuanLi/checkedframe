@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import functools
 import inspect
-from collections.abc import Collection, Iterable, Sequence
+from collections.abc import Collection, Sequence
 from typing import Any, Callable, Literal, Optional, get_args, get_type_hints
 
 import narwhals.stable.v1 as nw
-import narwhals.stable.v1.typing as nwt
 from narwhals.stable.v1.dependencies import (
     get_cudf,
     get_modin,
