@@ -22,13 +22,7 @@ project = "checkedframe"
 copyright = "2025, Cangyuan Li"
 author = "Cangyuan Li"
 
-with open(docs_path / "_static" / "switcher.json") as f:
-    switcher: list[dict] = json.load(f)
-
-version = "main"
-for d in switcher:
-    if d.get("preferred", False):
-        version = d["version"]
+version = (docs_path / ".docs-version").read_text().strip()
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

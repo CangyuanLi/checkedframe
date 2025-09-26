@@ -23,6 +23,8 @@ if __name__ == "__main__":
 
     version = sys.argv[1] if len(sys.argv) > 1 else "main"
 
+    Path(repo_root / "docs" / ".docs-version").write_text(version)
+
     with open(repo_root / "docs" / "_static" / "switcher.json") as f:
         switcher: list[dict] = json.load(f)
 
