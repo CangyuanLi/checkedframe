@@ -2,6 +2,7 @@
     {
         "name": "main",
         "version": "main",
-        "url": "https://cangyuanli.github.io/checkedframe/main"
+        "url": "https://cangyuanli.github.io/checkedframe/main",
+        "preferred": true
     }
 ]
