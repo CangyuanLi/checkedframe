@@ -22,7 +22,9 @@ def main():
     )
 
     print("uploading docs")
-    subprocess.run(["python", "update_docs.py", version])
+    subprocess.run(["python", "update_docs.py", version], check=True)
+    subprocess.run(["git", "commit", "-am", version], check=True)
+    subprocess.run(["git", "push"], check=True)
 
     print("uploading to pypi")
     subprocess.run(["pyproject", "upload"])
