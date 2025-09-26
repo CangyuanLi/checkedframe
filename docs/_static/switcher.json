@@ -1,8 +1,7 @@
 [
     {
-        "name": "latest",
-        "version": "latest",
-        "url": "https://cangyuanli.github.io/checkedframe/",
-        "preferred": true
+        "name": "main",
+        "version": "main",
+        "url": "https://cangyuanli.github.io/checkedframe/main"
     }
 ]

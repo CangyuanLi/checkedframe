@@ -5,10 +5,14 @@
 
 import importlib
 import inspect
+import json
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath("."))
+
+docs_path = Path(__file__).resolve().parent
 
 
 # -- Project information -----------------------------------------------------
@@ -17,6 +21,14 @@ sys.path.insert(0, os.path.abspath("."))
 project = "checkedframe"
 copyright = "2025, Cangyuan Li"
 author = "Cangyuan Li"
+
+with open(docs_path / "_static" / "switcher.json") as f:
+    switcher: list[dict] = json.load(f)
+
+version = "main"
+for d in switcher:
+    if d.get("preferred", False):
+        version = d["version"]
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -79,10 +91,11 @@ html_theme_options = {
     "show_nav_level": 2,
     "show_toc_level": 3,
     "collapse_navigation": False,
-    # "switcher": {
-    #     "json_url": "https://github.com/CangyuanLi/checkedframe/_static/switcher.json",
-    #     "version_match": "latest",
-    # },
+    "switcher": {
+        "json_url": "https://github.com/CangyuanLi/checkedframe/latest/_static/switcher.json",
+        "version_match": version,
+    },
+    "navbar_start": ["navbar-logo", "version-switcher"],
 }
 html_static_path = ["_static"]
 html_show_sourcelink = False
