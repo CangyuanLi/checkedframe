@@ -92,7 +92,7 @@ html_theme_options = {
     "show_toc_level": 3,
     "collapse_navigation": False,
     "switcher": {
-        "json_url": "https://github.com/CangyuanLi/checkedframe/latest/_static/switcher.json",
+        "json_url": "https://cangyuanli.github.io/checkedframe/latest/_static/switcher.json",
         "version_match": version,
     },
     "navbar_start": ["navbar-logo", "version-switcher"],
