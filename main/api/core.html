@@ -274,6 +274,9 @@
 <li class="toctree-l1"><a class="reference internal" href="checks.html">Checks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dtypes.html">Data Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_generation.html">Schema Generation</a></li>
 </ul>
 </div>
 </nav></div>
@@ -337,39 +340,144 @@
   <section id="module-checkedframe._core">
 <span id="core"></span><h1>Core<a class="headerlink" href="#module-checkedframe._core" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="checkedframe._core.Column">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe._core.</span></span><span class="sig-name descname"><span class="pre">Column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nullable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="checks.html#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._core.Column" title="Link to this definition">#</a></dt>
-<dd><p>Represents a column in a DataFrame.</p>
+<dt class="sig sig-object py" id="checkedframe._core.InterrogationResult">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe._core.</span></span><span class="sig-name descname"><span class="pre">InterrogationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">nwt.IntoDataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">nwt.IntoDataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_good</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">nwt.IntoSeries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">nwt.IntoDataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._core.InterrogationResult" title="Link to this definition">#</a></dt>
+<dd><p>All DataFrames and Series are of the same type as the original input DataFrame, e.g.
+pandas in, pandas out.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="checkedframe._core.InterrogationResult.df">
+<span class="sig-name descname"><span class="pre">df</span></span><a class="headerlink" href="#checkedframe._core.InterrogationResult.df" title="Link to this definition">#</a></dt>
+<dd><p>The input DataFrame with sucessful transforms (casting) applied</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dtype</strong> (<em>nw.dtypes.DType</em>) – The type of the column</p></li>
-<li><p><strong>nullable</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to allow nulls, by default False</p></li>
-<li><p><strong>required</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether the column is required to be present, by default True</p></li>
-<li><p><strong>cast</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to automatically try to cast the column to the expected data type, by
-default False</p></li>
-<li><p><strong>checks</strong> (<em>Optional</em><em>[</em><em>Sequence</em><em>[</em><a class="reference internal" href="checks.html#checkedframe._checks.Check" title="checkedframe._checks.Check"><em>Check</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – Checks to run on the column, by default None</p></li>
-</ul>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nwt.IntoDataFrame</p>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="checkedframe._core.InterrogationResult.mask">
+<span class="sig-name descname"><span class="pre">mask</span></span><a class="headerlink" href="#checkedframe._core.InterrogationResult.mask" title="Link to this definition">#</a></dt>
+<dd><p>A boolean DataFrame in the same row order as the input DataFrame where each
+column is whether the specified check passed or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nwt.IntoDataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="checkedframe._core.InterrogationResult.is_good">
+<span class="sig-name descname"><span class="pre">is_good</span></span><a class="headerlink" href="#checkedframe._core.InterrogationResult.is_good" title="Link to this definition">#</a></dt>
+<dd><p>A boolean Series in the same row order as the input DataFrame that indicates
+whether the row passed all checks or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nwt.IntoSeries</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="checkedframe._core.InterrogationResult.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><a class="headerlink" href="#checkedframe._core.InterrogationResult.summary" title="Link to this definition">#</a></dt>
+<dd><p>A DataFrame of <cite>id</cite>, <cite>column</cite>, <cite>operation</cite>, <cite>n_failed</cite>, and <cite>pct_failed</cite>
+identified by <cite>id</cite>. Usually, <cite>column</cite> and <cite>operation</cite> are enough, but it is
+possible that the same operation is applied multiple times to the same column.
+<cite>column</cite> describes what column the check was attached to (and is set to
+“__dataframe__”) for frame-level checks. <cite>operation</cite> describes the check done to
+the column, e.g. “cast” or “check_length_lt_3”. <cite>n_failed</cite> and <cite>pct_failed</cite> are
+the number / percent of rows that fail the <cite>operation</cite> for that <cite>column</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nwt.IntoDataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="checkedframe._core.Schema">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe._core.</span></span><span class="sig-name descname"><span class="pre">Schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expected_schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#checkedframe._core.Column" title="checkedframe._core.Column"><span class="pre">Column</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="checks.html#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._core.Schema" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe._core.</span></span><span class="sig-name descname"><span class="pre">Schema</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expected_schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="dtypes.html#checkedframe._dtypes.TypedColumn" title="checkedframe._dtypes.TypedColumn"><span class="pre">TypedColumn</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="dtypes.html#checkedframe._dtypes.CfUnion" title="checkedframe._dtypes.CfUnion"><span class="pre">CfUnion</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="checks.html#checkedframe._checks.Check" title="checkedframe._checks.Check"><span class="pre">Check</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._core.Schema" title="Link to this definition">#</a></dt>
 <dd><p>A lightweight schema representing a DataFrame. Briefly, a schema consists of
 columns and their associated data types. In addition, the schema stores checks that
 can be run either on a specific column or the entire DataFrame. Since <cite>checkedframe</cite>
 leverages <cite>narwhals</cite>, any Narwhals-compatible DataFrame (Pandas, Polars, Modin,
 PyArrow, cuDF) is valid.</p>
 <p>A Schema can be used in two ways. It can either be initialized directly from a
-dictionary or inherited from in a class.</p>
+dictionary or inherited from in a class. The class-based method should be preferred.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>expected_schema</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#checkedframe._core.Column" title="checkedframe._core.Column"><em>Column</em></a><em>]</em>) – A dictionary of column names and data types</p></li>
+<li><p><strong>expected_schema</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="dtypes.html#checkedframe._dtypes.TypedColumn" title="checkedframe._dtypes.TypedColumn"><em>TypedColumn</em></a><em>]</em>) – A dictionary of column names and data types</p></li>
 <li><p><strong>checks</strong> (<em>Optional</em><em>[</em><em>Sequence</em><em>[</em><a class="reference internal" href="checks.html#checkedframe._checks.Check" title="checkedframe._checks.Check"><em>Check</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – A list of checks to run, by default None</p></li>
 </ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._core.Schema.columns">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">columns</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#checkedframe._core.Schema.columns" title="Link to this definition">#</a></dt>
+<dd><p>Returns the column names of the schema.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._core.Schema.filter">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">IntoDataFrameT</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">IntoDataFrameT</span></span></span><a class="headerlink" href="#checkedframe._core.Schema.filter" title="Link to this definition">#</a></dt>
+<dd><p>Filter the given DataFrame to passing rows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>nwt.IntoDataFrameT</em>) – Any Narwhals-compatible DataFrame, see <a class="reference external" href="https://narwhals-dev.github.io/narwhals/">https://narwhals-dev.github.io/narwhals/</a>
+for more information</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The input DataFrame filtered to passing rows</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nwt.IntoDataFrameT</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._core.Schema.interrogate">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interrogate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">IntoDataFrameT</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#checkedframe._core.InterrogationResult" title="checkedframe._core.InterrogationResult"><span class="pre">InterrogationResult</span></a></span></span><a class="headerlink" href="#checkedframe._core.Schema.interrogate" title="Link to this definition">#</a></dt>
+<dd><p>Interrogate the DataFrame, returning the input DataFrame, a validation mask,
+a boolean Series indicating which rows pass, and a summary of passes / failures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>nwt.IntoDataFrameT</em>) – Any Narwhals-compatible DataFrame, see <a class="reference external" href="https://narwhals-dev.github.io/narwhals/">https://narwhals-dev.github.io/narwhals/</a>
+for more information</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#checkedframe._core.InterrogationResult" title="checkedframe._core.InterrogationResult">InterrogationResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="checkedframe._core.Schema.validate">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">IntoDataFrameT</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">IntoDataFrameT</span></span></span><a class="headerlink" href="#checkedframe._core.Schema.validate" title="Link to this definition">#</a></dt>
+<dd><p>Validate the given DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>nwt.IntoDataFrameT</em>) – Any Narwhals-compatible DataFrame, see <a class="reference external" href="https://narwhals-dev.github.io/narwhals/">https://narwhals-dev.github.io/narwhals/</a>
+for more information</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Your original DataFrame</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nwt.IntoDataFrameT</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#checkedframe.exceptions.SchemaError" title="checkedframe.exceptions.SchemaError"><strong>SchemaError</strong></a> – If validation fails</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -384,9 +492,9 @@ string, that should be 3 characters.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MySchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
-    <span class="n">col1</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">)</span>
+    <span class="n">col1</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">()</span>
 
-    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;col1&quot;</span><span class="p">)</span>
+    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;col1&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">check_length</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len_bytes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span>
 
@@ -397,8 +505,7 @@ string, that should be 3 characters.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
 
 <span class="n">MySchema</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">({</span>
-    <span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span>
-        <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">,</span>
+    <span class="s2">&quot;col1&quot;</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">(</span>
         <span class="n">checks</span><span class="o">=</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len_bytes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)]</span>
     <span class="p">)</span>
 <span class="p">})</span>
@@ -406,28 +513,6 @@ string, that should be 3 characters.</p>
 <span class="n">MySchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </pre></div>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="checkedframe._core.Schema.validate">
-<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">IntoDataFrameT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">IntoDataFrameT</span></span></span><a class="headerlink" href="#checkedframe._core.Schema.validate" title="Link to this definition">#</a></dt>
-<dd><p>Validate the given DataFrame</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>df</strong> (<em>nwt.IntoDataFrameT</em>) – Any Narwhals-compatible DataFrame, see <a class="reference external" href="https://narwhals-dev.github.io/narwhals/">https://narwhals-dev.github.io/narwhals/</a>
-for more information</p></li>
-<li><p><strong>cast</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to cast columns, by default False</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Your original DataFrame</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>nwt.IntoDataFrameT</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#checkedframe.exceptions.SchemaError" title="checkedframe.exceptions.SchemaError"><strong>SchemaError</strong></a> – If validation fails</p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
@@ -481,8 +566,17 @@ for more information</p></li>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.Column"><code class="docutils literal notranslate"><span class="pre">Column</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.Schema"><code class="docutils literal notranslate"><span class="pre">Schema</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.InterrogationResult"><code class="docutils literal notranslate"><span class="pre">InterrogationResult</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.InterrogationResult.df"><code class="docutils literal notranslate"><span class="pre">InterrogationResult.df</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.InterrogationResult.mask"><code class="docutils literal notranslate"><span class="pre">InterrogationResult.mask</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.InterrogationResult.is_good"><code class="docutils literal notranslate"><span class="pre">InterrogationResult.is_good</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.InterrogationResult.summary"><code class="docutils literal notranslate"><span class="pre">InterrogationResult.summary</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.Schema"><code class="docutils literal notranslate"><span class="pre">Schema</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.Schema.columns"><code class="docutils literal notranslate"><span class="pre">Schema.columns()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.Schema.filter"><code class="docutils literal notranslate"><span class="pre">Schema.filter()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.Schema.interrogate"><code class="docutils literal notranslate"><span class="pre">Schema.interrogate()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._core.Schema.validate"><code class="docutils literal notranslate"><span class="pre">Schema.validate()</span></code></a></li>
 </ul>
 </li>

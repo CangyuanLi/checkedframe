@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Introduction &#8212; checkedframe  documentation</title>
+    <title>Config &#8212; checkedframe  documentation</title>
   
   
   
@@ -44,9 +44,11 @@
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/introduction';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/config';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Schema Generation" href="schema_generation.html" />
+    <link rel="prev" title="Selectors" href="selectors.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -126,14 +128,14 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="index.html">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
     User Guide
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
     API
   </a>
 </li>
@@ -181,6 +183,10 @@
   
 
   
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
 </div>
 
     </header>
@@ -190,8 +196,6 @@
     <div class="bd-container__inner bd-page-width">
       
       
-      
-        
       
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
@@ -210,14 +214,14 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="index.html">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
     User Guide
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../api/index.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
     API
   </a>
 </li>
@@ -246,11 +250,36 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
-<h3>Versions</h3>
-<ul>
-    <li><a href="introduction.html">main</a></li>
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checks.html">Checks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dtypes.html">Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Selectors</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_generation.html">Schema Generation</a></li>
 </ul>
 </div>
+</nav></div>
     </div>
   
   
@@ -288,7 +317,10 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Introduction</span></li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Config</span></li>
   </ul>
 </nav>
 </div>
@@ -305,47 +337,62 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading">#</a></h1>
+  <section id="module-checkedframe._config">
+<span id="config"></span><h1>Config<a class="headerlink" href="#module-checkedframe._config" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="checkedframe._config.Config">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">checkedframe._config.</span></span><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Selector</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Unpack</span><span class="p"><span class="pre">[</span></span><span class="pre">_PossibleConfigs</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._config.Config" title="Link to this definition">#</a></dt>
+<dd><p>See <a class="reference internal" href="#checkedframe._config.apply_configs" title="checkedframe._config.apply_configs"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_configs()</span></code></a> for how this class is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>columns</strong> (<em>str</em><em> | </em><em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>Selector</em>) – The columns to apply the configuration to</p></li>
+<li><p><strong>**kwargs</strong> (<em>Unpack</em><em>[</em><em>_PossibleConfigs</em><em>]</em>) – <p>Valid keyword arguments are:</p>
+<dl class="simple">
+<dt>nullable<span class="classifier">bool</span></dt><dd><p>Whether the column is nullable or not</p>
+</dd>
+<dt>required<span class="classifier">bool</span></dt><dd><p>Whether the column is required to exist or not</p>
+</dd>
+<dt>cast<span class="classifier">bool</span></dt><dd><p>Whether to cast to the specified datatype</p>
+</dd>
+<dt>allow_nan<span class="classifier">bool</span></dt><dd><p>Whether the column can have NaNs or not</p>
+</dd>
+<dt>allow_inf<span class="classifier">bool</span></dt><dd><p>Whether the column can have inf/-inf or not</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="checkedframe._config.apply_configs">
+<span class="sig-prename descclassname"><span class="pre">checkedframe._config.</span></span><span class="sig-name descname"><span class="pre">apply_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#checkedframe._config.Config" title="checkedframe._config.Config"><span class="pre">Config</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#checkedframe._config.apply_configs" title="Link to this definition">#</a></dt>
+<dd><p>Change the configuration options of columns.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Config changes done by <cite>apply_configs</cite> will overwrite per-column configurations.</p>
+</div>
+<p class="rubric">Examples</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">checkedframe.selectors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cfs</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">checkedframe.polars</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataFrame</span>
+
+<span class="nd">@cf</span><span class="o">.</span><span class="n">apply_configs</span><span class="p">(</span>
+    <span class="n">cf</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span><span class="n">cfs</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">allow_nan</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">S</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+    <span class="n">check_bal</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">()</span>
+    <span class="n">sav_bal</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">(</span><span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">AASchema</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
-    <span class="n">reason_code</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">)</span>
-    <span class="n">reason_code_description</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">String</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">shap</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">Float64</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">rank</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">UInt8</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-
-    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;reason_code&quot;</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">check_reason_code_length</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reason codes must be exactly 3 chars&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">len_bytes</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span>
-
-    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">&quot;reason_code&quot;</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">check_is_id</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reason code must uniquely identify dataset&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">n_unique</span><span class="p">()</span> <span class="o">==</span> <span class="n">s</span><span class="o">.</span><span class="n">len</span><span class="p">()</span>
-
-    <span class="nd">@cf</span><span class="o">.</span><span class="n">Check</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">check_row_height</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;DataFrame must have 2 rows&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">height</span> <span class="o">==</span> <span class="mi">2</span>
-
-
-
-<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
-    <span class="s2">&quot;reason_code&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;abc&quot;</span><span class="p">,</span> <span class="s2">&quot;abc&quot;</span><span class="p">,</span> <span class="s2">&quot;o9&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;reason_code_description&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;a desc here&quot;</span><span class="p">,</span> <span class="s2">&quot;another desc&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
-    <span class="s2">&quot;shap&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
-    <span class="s2">&quot;rank&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
-<span class="p">})</span>
-
-<span class="n">df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">[</span><span class="n">AASchema</span><span class="p">]</span> <span class="o">=</span> <span class="n">AASchema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;check_bal&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">100.4</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)],</span> <span class="s2">&quot;sav_bal&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">88.99</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)]})</span>
+<span class="n">S</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>  <span class="c1"># passes!</span>
 </pre></div>
 </div>
+</dd></dl>
+
 </section>
 
 
@@ -358,12 +405,49 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="selectors.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Selectors</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="schema_generation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Schema Generation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
             </div>
             
             
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._config.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkedframe._config.apply_configs"><code class="docutils literal notranslate"><span class="pre">apply_configs()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
