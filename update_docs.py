@@ -73,6 +73,9 @@ if __name__ == "__main__":
         shutil.copytree(repo_root / "docs" / "_build", repo_root / "latest")
         subprocess.run(["git", "add", repo_root / "latest"], check=True)
 
+    nojekyll = repo_root / ".nojekyll"
+    nojekyll.touch(exist_ok=True)
+
     print("pushing changes")
     subprocess.run(["git", "add", repo_root / version], check=True)
     subprocess.run(["git", "commit", "-m", version], check=True)
