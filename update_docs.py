@@ -79,19 +79,19 @@ if __name__ == "__main__":
     redirect_html = """<!DOCTYPE html>
     <html>
     <head>
-    <meta charset="utf-8">
-    <title>Redirecting</title>
-    <noscript>
-        <meta http-equiv="refresh" content="1; url=/latest/" />
-    </noscript>
-    <script>
-        window.location.replace(
-        "/latest/" + window.location.search + window.location.hash
-        );
-    </script>
+        <meta charset="utf-8">
+        <title>Redirecting</title>
+        <noscript>
+            <meta http-equiv="refresh" content="1; url=/latest/" />
+        </noscript>
+        <script>
+            window.location.replace(
+            "latest/" + window.location.search + window.location.hash
+            );
+        </script>
     </head>
     <body>
-    Redirecting to <a href="/latest/">latest/</a>...
+        Redirecting to <a href="latest/">latest/</a>...
     </body>
     </html>
     """
