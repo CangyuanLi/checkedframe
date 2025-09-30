@@ -85,7 +85,7 @@ def _is_expr(x: Any) -> bool:
 
 def _is_dataframe(x: Any) -> bool:
     return (
-        isinstance(x, nw.DataFrame)
+        issubclass(x, nw.DataFrame)
         or _is_polars_dataframe(x)
         or _is_pandas_dataframe(x)
         or _is_modin_dataframe(x)
@@ -117,25 +117,13 @@ def _infer_input_type(
     return "auto"
 
 
-def _infer_return_type(
-    type_hints: dict[str, Any], input_type: CheckInputType
-) -> CheckReturnType:
-    try:
-        # Try to get it from the type hints first
-        type_hint = type_hints["return"]
-
-        if issubclass(type_hint, bool):
-            return "bool"
-        elif _is_expr(type_hint):
-            return "Expr"
-        elif _is_series(type_hint):
-            return "Series"
-    except KeyError:
-        # If type hints don't exist, we try to infer from the input_type
-        pass
-
-    if input_type == "str" or input_type is None:
+def _infer_return_type(typ) -> CheckReturnType:
+    if issubclass(typ, bool):
+        return "bool"
+    elif _is_expr(typ):
         return "Expr"
+    elif _is_series(typ):
+        return "Series"
 
     return "auto"
 
@@ -501,10 +489,12 @@ class Check:
             self.input_type = _infer_input_type(type_hints, signature)
 
         if auto_return_type:
-            self.return_type = _infer_return_type(
-                type_hints,
-                self.input_type,
-            )
+            try:
+                self.return_type = _infer_return_type(
+                    type_hints["return"],
+                )
+            except KeyError:
+                self.return_type = "auto"
 
         if self.native == "auto":
             raise ValueError(
@@ -514,11 +504,6 @@ class Check:
         if self.input_type == "auto":
             raise ValueError(
                 f"Input type of `{self.name}` could not be automatically determined from context"
-            )
-
-        if self.return_type == "auto":
-            raise ValueError(
-                f"Return type of `{self.name}` could not be automatically determined from context"
             )
 
         if self.name is None:

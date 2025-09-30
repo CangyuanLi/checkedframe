@@ -91,6 +91,30 @@ def test_type_inference_pandas():
     assert col_checks["a_check3"].return_type == "bool"
 
 
+def test_raises_if_type_inference_fails():
+    with pytest.raises(ValueError):
+
+        class S(cf.Schema):
+            a = cf.String()
+
+            @cf.Check(columns="a")
+            def invalid_input(s) -> pl.Series:
+                return s.str.len_chars() < 3
+
+
+def test_type_inference_from_object():
+    class S(cf.Schema):
+        a = cf.String()
+
+        @cf.Check(columns="a")
+        def a_check(s: pl.Series):
+            return s.str.len_chars().lt(3)
+
+    df = pl.DataFrame({"a": ["a", "b", "c"]})
+
+    S.validate(df)
+
+
 @pytest.mark.parametrize("engine", ENGINES)
 def test_is_between(engine):
     df = engine({"a": [1, 2, 3]})
