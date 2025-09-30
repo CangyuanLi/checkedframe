@@ -9,9 +9,10 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, os.path.abspath("."))
+DOCS_PATH = Path(__file__).resolve().parent
+REPO_PATH = DOCS_PATH.parent
 
-docs_path = Path(__file__).resolve().parent
+sys.path.insert(0, str(REPO_PATH / "src"))
 
 
 # -- Project information -----------------------------------------------------
@@ -21,7 +22,8 @@ project = "checkedframe"
 copyright = "2025, Cangyuan Li"
 author = "Cangyuan Li"
 
-version = (docs_path / ".docs-version").read_text().strip()
+version = (DOCS_PATH / ".docs-version").read_text().strip()
+commit = version if version == "main" else f"v{version}"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -43,7 +45,6 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 def linkcode_resolve(domain, info):
-    commit = "main"
     code_url = f"https://github.com/CangyuanLi/checkedframe/blob/{commit}"
 
     assert domain == "py", "expected only Python objects"
@@ -67,10 +68,13 @@ def linkcode_resolve(domain, info):
     except TypeError:
         # e.g. object is a typing.Union
         return None
-    file = os.path.relpath(file, os.path.abspath(".."))
+
+    file = os.path.relpath(file, REPO_PATH)
+
     if not file.startswith("src/checkedframe"):
         # e.g. object is a typing.NewType
         return None
+
     start, end = lines[1], lines[1] + len(lines[0]) - 1
 
     return f"{code_url}/{file}#L{start}-L{end}"
