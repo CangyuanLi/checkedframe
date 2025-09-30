@@ -5,7 +5,6 @@
 
 import importlib
 import inspect
-import os
 import sys
 from pathlib import Path
 
@@ -69,7 +68,7 @@ def linkcode_resolve(domain, info):
         # e.g. object is a typing.Union
         return None
 
-    file = os.path.relpath(file, REPO_PATH)
+    file = str(Path(file).relative_to(REPO_PATH))
 
     if not file.startswith("src/checkedframe"):
         # e.g. object is a typing.NewType
