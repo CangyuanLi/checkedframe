@@ -131,7 +131,9 @@ While not particularly useful when operating on a single column, DataFrame-level
 
             @cf.Check(columns="checking_balance", input_type="Series", return_type="Series", native=False)
             def series_series_check(s):
-               return s <= 100 
+               return s <= 100
+
+   In addition, it is possible to omit the *return* type hint or the *return_type* parameter, in which case **checkedframe** will inspect the resulting object to try and infer the return type. However, it is required to type hint the *input* or specify the *input_type* parameter.
 
 
 Built-in Checks
