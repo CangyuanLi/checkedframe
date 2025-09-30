@@ -9,7 +9,7 @@ from typing import Any, Optional
 import narwhals.stable.v1 as nw
 import narwhals.stable.v1.typing as nwt
 
-from ._checks import Check
+from ._checks import Check, _infer_return_type
 from ._config import ConfigList
 from ._dtypes import CastError, CfUnion, TypedColumn, _nw_type_to_cf_type
 from ._utils import get_class_members
@@ -75,67 +75,78 @@ def _run_check(
         {"check_name": check_name, "check_description": check.description}
     )
 
-    if check.return_type == "Expr":
-        if check.input_type == "str":
-            expr = check.func(series_name)
-        else:
-            expr = check.func()
+    if check.input_type == "str":
+        res = check.func(series_name)
+    elif check.input_type is None:
+        res = check.func()
+    elif check.input_type == "Series":
+        if series_name is None:
+            raise ValueError(
+                "Series cannot be automatically determined in this context"
+            )
 
-        assert isinstance(check.native, bool)
-
-        return _ResultWrapper(
-            expr,
-            msg=err_msg,
-            identifier=new_check_name,
-            column=column_name,
-            operation=check_name,
-            native=check.native,
-            is_expr=True,
-        )
-    else:
-        if check.input_type == "Series":
-            if series_name is None:
-                raise ValueError(
-                    "Series cannot be automatically determined in this context"
-                )
-
-            input_ = nw_df[series_name]
-        elif check.input_type == "Frame":
-            # mypy complains here that the input type is Series, not DataFrame, but it
-            # is only a Series if the above branch is hit, which means this branch is
-            # not
-
-            input_ = nw_df  # type: ignore[assignment]
-        else:
-            raise ValueError("Invalid input type")
+        input_ = nw_df[series_name]
 
         if check.native:
             input_ = input_.to_native()
 
         res = check.func(input_)
+    elif check.input_type == "Frame":
+        # mypy complains here that the input type is Series, not DataFrame, but it
+        # is only a Series if the above branch is hit, which means this branch is
+        # not
+        input_ = nw_df  # type: ignore[assignment]
 
-        if check.return_type == "Series":
-            res = nw.from_native(res, series_only=True)
-            return _ResultWrapper(
-                res,
-                msg=err_msg,
-                identifier=new_check_name,
-                column=column_name,
-                operation=check_name,
-                native=False,
-                is_expr=False,
-            )
-        elif check.return_type == "bool":
-            res = nw.lit(res)
-            return _ResultWrapper(
-                res,
-                msg=err_msg,
-                identifier=new_check_name,
-                column=column_name,
-                operation=check_name,
-                native=False,
-                is_expr=True,
-            )
+        if check.native:
+            input_ = input_.to_native()
+
+        res = check.func(input_)
+    else:
+        # We should never hit this branch since the input type always needs to be
+        # specified statically
+        raise ValueError("Invalid input type")
+
+    check_return_type = check.return_type
+
+    if check_return_type == "auto":
+        # We need to get the type (the class) instead of the instance
+        check_return_type = _infer_return_type(type(res))
+
+    if check_return_type == "Expr":
+        return _ResultWrapper(
+            res,
+            msg=err_msg,
+            identifier=new_check_name,
+            column=column_name,
+            operation=check_name,
+            # We have already transformed this to a boolean
+            native=check.native,  # type: ignore[arg-type]
+            is_expr=True,
+        )
+    elif check_return_type == "Series":
+        res = nw.from_native(res, series_only=True)
+        return _ResultWrapper(
+            res,
+            msg=err_msg,
+            identifier=new_check_name,
+            column=column_name,
+            operation=check_name,
+            native=False,
+            is_expr=False,
+        )
+    elif check_return_type == "bool":
+        res = nw.lit(res)
+        return _ResultWrapper(
+            res,
+            msg=err_msg,
+            identifier=new_check_name,
+            column=column_name,
+            operation=check_name,
+            native=False,
+            is_expr=True,
+        )
+    else:
+        raise ValueError(f"Invalid return_type {check_return_type}")
 
 
 @dataclasses.dataclass
