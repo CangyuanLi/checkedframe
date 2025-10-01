@@ -1,10 +1,29 @@
+import argparse
 import json
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
+
+def branch_exists(branch: str) -> bool:
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", branch],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True,
+    )
+
+    return result.returncode == 0
+
+
 if __name__ == "__main__":
+    latest = False
+    commit = True
+    push = True
+    pages_branch = "gh-pages"
+
     repo_root = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         check=True,
@@ -13,19 +32,14 @@ if __name__ == "__main__":
     ).stdout.strip()
 
     repo_root = Path(repo_root)
-
-    original_branch = subprocess.run(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
+    docs_version_path = repo_root / "docs" / ".docs-version"
+    switcher_path = repo_root / "docs" / "_static" / "switcher.json"
 
     version = sys.argv[1] if len(sys.argv) > 1 else "main"
 
-    Path(repo_root / "docs" / ".docs-version").write_text(version)
+    docs_version_path.write_text(version)
 
-    with open(repo_root / "docs" / "_static" / "switcher.json") as f:
+    with open(switcher_path) as f:
         switcher: list[dict] = json.load(f)
 
     switcher_dict = {dct["version"]: dct for dct in switcher}
@@ -37,18 +51,27 @@ if __name__ == "__main__":
         "preferred": False,
     }
 
-    main_is_only_version = switcher_dict.get("main", False) and len(switcher_dict) == 1
-
-    if version != "main" or main_is_only_version:
+    if latest:
         for v in switcher_dict.values():
-            # set the currently built version to true, and everything else to false
             if v["version"] == version:
                 v["preferred"] = True
             else:
                 v["preferred"] = False
 
-    with open(repo_root / "docs" / "_static" / "switcher.json", "w") as f:
-        json.dump(list(switcher_dict.values()), f, indent=4)
+    switcher_new = list(switcher_dict.values())
+
+    if switcher != switcher_new:
+        with open(switcher_path, "w") as f:
+            json.dump(list(switcher_dict.values()), f, indent=4)
+
+        if commit:
+            subprocess.run(
+                ["git", "commit", switcher_path, "-am", "docs: update switcher.json"],
+                check=True,
+            )
+
+        if push:
+            subprocess.run(["git", "push"], check=True)
 
     print("building docs")
     subprocess.run(
@@ -56,57 +79,81 @@ if __name__ == "__main__":
         check=True,
     )
 
-    print(f"copying docs to {version}")
-    subprocess.run(["git", "stash", "push", "-m", "WIP before gh-pages"], check=True)
+    print(f"copying docs to {pages_branch}")
 
-    try:
-        subprocess.run(["git", "checkout", "gh-pages"], check=True)
-    except subprocess.CalledProcessError:
-        subprocess.run(["git", "checkout", "-b", "gh-pages"], check=True)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
 
-    if (repo_root / version).exists():
-        shutil.rmtree(repo_root / version)
+        try:
+            if not branch_exists(pages_branch):
+                subprocess.run(["git", "checkout", "-b", pages_branch])
 
-    shutil.copytree(repo_root / "docs" / "_build", repo_root / version)
+            if commit:
+                subprocess.run(
+                    ["git", "worktree", "add", tmpdir_path, pages_branch], check=True
+                )
 
-    if version != "main" or main_is_only_version:
-        if (repo_root / "latest").exists():
-            shutil.rmtree(repo_root / "latest")
+            version_path = tmpdir_path / version
 
-        shutil.copytree(repo_root / "docs" / "_build", repo_root / "latest")
-        subprocess.run(["git", "add", repo_root / "latest"], check=True)
+            if version_path.exists():
+                shutil.rmtree(version_path)
 
-    nojekyll = repo_root / ".nojekyll"
-    nojekyll.touch(exist_ok=True)
+            shutil.copytree(repo_root / "docs" / "_build", version_path)
 
-    redirect_html = """<!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Redirecting</title>
-        <noscript>
-            <meta http-equiv="refresh" content="1; url=latest/" />
-        </noscript>
-        <script>
-            window.location.replace(
-                "latest/" + window.location.search + window.location.hash
-            );
-        </script>
-    </head>
-    <body>
-        Redirecting to <a href="latest/">latest/</a>...
-    </body>
-    </html>
-    """
+            if latest:
+                latest_path = tmpdir_path / "latest"
+                if latest_path.exists():
+                    shutil.rmtree(latest_path)
 
-    with open(repo_root / "index.html", "w") as f:
-        f.write(redirect_html)
+                shutil.copytree(repo_root / "docs" / "_build", latest_path)
+                subprocess.run(["git", "add", latest_path], check=True)
 
-    print("pushing changes")
-    subprocess.run(["git", "add", repo_root / "index.html"], check=True)
-    subprocess.run(["git", "add", repo_root / version], check=True)
-    subprocess.run(["git", "commit", "-m", version], check=True)
-    subprocess.run(["git", "push", "-u", "origin", "gh-pages"], check=True)
+            nojekyll = tmpdir_path / ".nojekyll"
+            nojekyll.touch(exist_ok=True)
 
-    subprocess.run(["git", "checkout", original_branch], check=True)
-    subprocess.run(["git", "stash", "pop"], check=False)
+            redirect_html = """<!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Redirecting</title>
+                <noscript>
+                    <meta http-equiv="refresh" content="1; url=latest/" />
+                </noscript>
+                <script>
+                    window.location.replace(
+                        "latest/" + window.location.search + window.location.hash
+                    );
+                </script>
+            </head>
+            <body>
+                Redirecting to <a href="latest/">latest/</a>...
+            </body>
+            </html>
+            """
+
+            index_path = tmpdir_path / "index.html"
+
+            with open(index_path, "w") as f:
+                f.write(redirect_html)
+
+            if commit:
+                subprocess.run(["git", "add", index_path], cwd=tmpdir_path, check=True)
+                subprocess.run(
+                    ["git", "add", version_path], cwd=tmpdir_path, check=True
+                )
+                subprocess.run(
+                    ["git", "commit", "-m", version], cwd=tmpdir_path, check=True
+                )
+
+            if push:
+                print(f"pushing to {pages_branch}")
+                subprocess.run(
+                    ["git", "push", "-u", "origin", pages_branch],
+                    cwd=tmpdir_path,
+                    check=True,
+                )
+        finally:
+            print("removing git worktree")
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", tmpdir_path], check=True
+            )
