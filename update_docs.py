@@ -189,5 +189,5 @@ if __name__ == "__main__":
                 print(f"pushing to {pages_branch}")
                 run(["git", "push", "-u", "origin", pages_branch], cwd=tmpdir_path)
         finally:
-            print("removing git worktree")
+            print(f"removing git worktree at {tmpdir_path}")
             run(["git", "worktree", "remove", "--force", tmpdir_path])
