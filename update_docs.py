@@ -18,24 +18,73 @@ def branch_exists(branch: str) -> bool:
     return result.returncode == 0
 
 
-if __name__ == "__main__":
-    latest = False
-    commit = True
-    push = True
-    pages_branch = "gh-pages"
+def run(args, **kwargs):
+    if "check" not in kwargs:
+        kwargs["check"] = True
 
-    repo_root = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        check=True,
-        capture_output=True,
-        text=True,
+    if "text" not in kwargs:
+        kwargs["text"] = True
+
+    return subprocess.run(args, **kwargs)
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "version",
+        type=str,
+        help="A string specifying the documentation version, e.g. '0.1.0' or 'main'",
+    )
+    parser.add_argument(
+        "-c",
+        "--commit",
+        action="store_true",
+        help="Commit the changes, by default False",
+    )
+    parser.add_argument(
+        "-p",
+        "--push",
+        action="store_true",
+        help="Push the changes to the specified branch. If this is set to true, `-c` or `--commit` is automatically set to true, by default False",
+    )
+    parser.add_argument(
+        "-l",
+        "--latest",
+        action="store_true",
+        help="Indicate the version being built is the latest version, by default False",
+    )
+    parser.add_argument(
+        "-b",
+        "--branch",
+        type=str,
+        default="gh-pages",
+        help="The branch to deploy the documentation to, by default gh-pages",
+    )
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = get_args()
+
+    version = args.version
+    latest = args.latest
+    commit = args.commit
+    push = args.push
+
+    if push:
+        commit = True
+
+    pages_branch = args.branch
+
+    repo_root = run(
+        ["git", "rev-parse", "--show-toplevel"], capture_output=True
     ).stdout.strip()
 
     repo_root = Path(repo_root)
     docs_version_path = repo_root / "docs" / ".docs-version"
     switcher_path = repo_root / "docs" / "_static" / "switcher.json"
-
-    version = sys.argv[1] if len(sys.argv) > 1 else "main"
 
     docs_version_path.write_text(version)
 
@@ -65,19 +114,15 @@ if __name__ == "__main__":
             json.dump(list(switcher_dict.values()), f, indent=4)
 
         if commit:
-            subprocess.run(
+            run(
                 ["git", "commit", switcher_path, "-am", "docs: update switcher.json"],
-                check=True,
             )
 
         if push:
-            subprocess.run(["git", "push"], check=True)
+            run(["git", "push"])
 
     print("building docs")
-    subprocess.run(
-        ["sphinx-build", repo_root / "docs", repo_root / "docs" / "_build"],
-        check=True,
-    )
+    run(["sphinx-build", "-E", repo_root / "docs", repo_root / "docs" / "_build"])
 
     print(f"copying docs to {pages_branch}")
 
@@ -86,12 +131,10 @@ if __name__ == "__main__":
 
         try:
             if not branch_exists(pages_branch):
-                subprocess.run(["git", "checkout", "-b", pages_branch])
+                run(["git", "checkout", "-b", pages_branch])
 
             if commit:
-                subprocess.run(
-                    ["git", "worktree", "add", tmpdir_path, pages_branch], check=True
-                )
+                run(["git", "worktree", "add", tmpdir_path, pages_branch])
 
             version_path = tmpdir_path / version
 
@@ -106,7 +149,7 @@ if __name__ == "__main__":
                     shutil.rmtree(latest_path)
 
                 shutil.copytree(repo_root / "docs" / "_build", latest_path)
-                subprocess.run(["git", "add", latest_path], check=True)
+                run(["git", "add", latest_path])
 
             nojekyll = tmpdir_path / ".nojekyll"
             nojekyll.touch(exist_ok=True)
@@ -137,23 +180,14 @@ if __name__ == "__main__":
                 f.write(redirect_html)
 
             if commit:
-                subprocess.run(["git", "add", index_path], cwd=tmpdir_path, check=True)
-                subprocess.run(
-                    ["git", "add", version_path], cwd=tmpdir_path, check=True
-                )
-                subprocess.run(
-                    ["git", "commit", "-m", version], cwd=tmpdir_path, check=True
-                )
+                run(["git", "add", index_path], cwd=tmpdir_path)
+                run(["git", "add", version_path], cwd=tmpdir_path)
+
+                run(["git", "commit", "-m", version], cwd=tmpdir_path)
 
             if push:
                 print(f"pushing to {pages_branch}")
-                subprocess.run(
-                    ["git", "push", "-u", "origin", pages_branch],
-                    cwd=tmpdir_path,
-                    check=True,
-                )
+                run(["git", "push", "-u", "origin", pages_branch], cwd=tmpdir_path)
         finally:
             print("removing git worktree")
-            subprocess.run(
-                ["git", "worktree", "remove", "--force", tmpdir_path], check=True
-            )
+            run(["git", "worktree", "remove", "--force", tmpdir_path])
